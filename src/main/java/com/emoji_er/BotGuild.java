@@ -47,13 +47,17 @@ public class BotGuild {
     {
             String ret;
             Statement stmt ;
+            ResultSet rs;
             try {
                 stmt = conn.createStatement();
-                if(stmt.execute("SELECT * FROM roles WHERE guildid="+guild+" AND roleid="+role.getIdLong())) {
+                rs = stmt.executeQuery("SELECT * FROM roles WHERE guildid="+guild+" AND roleid="+role.getIdLong());
+                if(rs.next()) {
+                    rs.close();
                     stmt.execute("DELETE FROM roles WHERE guildid=" + guild + " AND roleid=" + role.getIdLong());
                     stmt.execute("COMMIT");
                     ret = output.getString("modrole-remove");
                 }else{
+                    rs.close();
                     ret = output.getString("error-modrole-missing");
                 }
                 stmt.close();
@@ -70,13 +74,17 @@ public class BotGuild {
     {
         String ret;
             Statement stmt;
+            ResultSet rs;
             try {
                 stmt = conn.createStatement();
-                if(!stmt.execute("SELECT * FROM roles WHERE guildid="+guild+" AND roleid="+role.getIdLong())) {
+                rs = stmt.executeQuery("SELECT * FROM roles WHERE guildid="+guild+" AND roleid="+role.getIdLong());
+                if(!rs.next()) {
+                    rs.close();
                     stmt.execute("INSERT INTO roles (guildid,roleid,rolename) VALUES (" + guild + "," + role.getIdLong() + ",'" + role.getName() + "')");
                     stmt.execute("COMMIT");
                     ret = output.getString("modrole-add");
                 }else{
+                    rs.close();
                     ret = output.getString("error-modrole-exists");
                 }
                 stmt.close();
@@ -144,6 +152,7 @@ public class BotGuild {
     public void autoModRole(Guild guild)
     {
         Statement stmt;
+        ResultSet rs;
         long guildId = guild.getIdLong();
         for (Role role : guild.getRoles())
         {
@@ -154,10 +163,13 @@ public class BotGuild {
                     role.hasPermission(Permission.MANAGE_ROLES))
                 try {
                     stmt = conn.createStatement();
-                    if(!stmt.execute("SELECT * FROM roles WHERE guildid="+guildId+" AND roleid="+role.getIdLong())) {
+                    rs = stmt.executeQuery("SELECT * FROM roles WHERE guildid="+guildId+" AND roleid="+role.getIdLong());
+                    if(!rs.next()) {
+                        rs.close();
                         stmt.execute("INSERT INTO roles (guildid,roleid,rolename) VALUES (" + guildId + "," + role.getIdLong() + ",'" + role.getName() + "')");
                         stmt.execute("COMMIT");
                     }
+                    rs.close();
                     stmt.close();
                 }catch (SQLException ex) {
                     System.out.println("SQLException: " + ex.getMessage());
