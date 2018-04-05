@@ -33,30 +33,6 @@ public class MyListener extends ListenerAdapter {
     @Override
     public void onReady(ReadyEvent event) {
         Statement stmt;
-        try {
-            stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT guildid FROM guilds");
-            List<Long> to_remove = new ArrayList<>();
-            while (rs.next()) {
-                boolean found = false;
-                for (Guild guild : event.getJDA().getSelfUser().getMutualGuilds()) {
-                    if (guild.getIdLong() == rs.getLong(1)) {
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found)
-                    to_remove.add(rs.getLong(1));
-            }
-            rs.close();
-            stmt.close();
-            for (Long guildId : to_remove)
-                guildDeleteDB(conn, guildId);
-        } catch (SQLException ex) {
-            System.out.println("SQLException: " + ex.getMessage());
-            System.out.println("SQLState: " + ex.getSQLState());
-            System.out.println("VendorError: " + ex.getErrorCode());
-        }
 
         updateServerCount(event.getJDA());
     }
@@ -307,18 +283,6 @@ public class MyListener extends ListenerAdapter {
     public void onGuildLeave(GuildLeaveEvent event) {
         try {
             Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT * FROM guilds WHERE guildid=" + event.getGuild().getIdLong());
-            if (rs.next()) {
-                rs.close();
-                rs = stmt.executeQuery("SELECT groupid FROM groups WHERE guildid=" + event.getGuild().getIdLong());
-                while (rs.next()) {
-                    stmt.execute("DELETE FROM grouproles WHERE groupid=" + rs.getLong(1));
-                }
-                rs.close();
-                stmt.execute("DELETE FROM groups WHERE guildid=" + event.getGuild().getIdLong());
-                stmt.execute("DELETE FROM roles WHERE guildid=" + event.getGuild().getIdLong());
-            } else
-                rs.close();
             stmt.execute("DELETE FROM active_emoji_guilds WHERE emoji_guildID=" + event.getGuild().getIdLong() + " OR guildid=" + event.getGuild().getIdLong());
             stmt.execute("DELETE FROM registered_emoji_server WHERE guildid=" + event.getGuild().getIdLong());
             stmt.execute("DELETE FROM guilds WHERE guildid=" + event.getGuild().getIdLong());
