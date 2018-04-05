@@ -6,7 +6,7 @@ plugins {
 }
 
 group 'emoji-er'
-version 'v1.0 - em prj'
+version '1.0'
 
 
 mainClassName = 'BOT'
