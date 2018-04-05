@@ -16,6 +16,9 @@ public class EmojiGuild {
         StringBuilder ret=new StringBuilder();
         Statement stmt;
         ResultSet rs;
+        if(title.contains("emoji")){
+            ret.append(output.getString("error-title-not_usable"));
+        }else
         try
         {
             stmt=conn.createStatement();
