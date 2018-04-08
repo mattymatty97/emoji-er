@@ -112,13 +112,15 @@ public class EmojiGuild {
             rs = stmt.executeQuery("SELECT guildid FROM registered_emoji_server WHERE title='"+title+"'");
             if(rs.next()) {
                 Guild guild = api.getGuildById(rs.getLong(1));
-                ret.append(guild.getName());
-                List<Emote> emoji = guild.getEmotes();
-                for (Emote emote : emoji){
-                    ret.append("\n");
-                    ret.append(title).append(".");
-                    ret.append(emote.getName());
-                    ret.append("   ").append(emote.getAsMention());
+                if(guild!=null) {
+                    ret.append(guild.getName());
+                    List<Emote> emoji = guild.getEmotes();
+                    for (Emote emote : emoji) {
+                        ret.append("\n");
+                        ret.append(title).append(".");
+                        ret.append(emote.getName());
+                        ret.append("   ").append(emote.getAsMention());
+                    }
                 }
             }
             rs.close();
@@ -139,10 +141,13 @@ public class EmojiGuild {
             stmt = conn.createStatement();
             rs = stmt.executeQuery("SELECT guildid,title FROM registered_emoji_server");
             while (rs.next()){
-                ret.append("\n");
-                ret.append(rs.getString(2));
-                ret.append("   ");
-                ret.append(api.getGuildById(rs.getLong(1)).getName());
+                Guild guild = api.getGuildById(rs.getLong(1));
+                if(guild!=null) {
+                    ret.append("\n");
+                    ret.append(rs.getString(2));
+                    ret.append("   ");
+                    ret.append(guild.getName());
+                }
             }
             stmt.close();
         }catch (SQLException ex)

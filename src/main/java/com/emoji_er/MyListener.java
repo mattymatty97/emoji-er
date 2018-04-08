@@ -32,8 +32,36 @@ public class MyListener extends ListenerAdapter {
 
     @Override
     public void onReady(ReadyEvent event) {
-        Statement stmt;
-
+        List<Guild> guilds = event.getJDA().getSelfUser().getMutualGuilds();
+        Statement stmt1 , stmt2;
+        ResultSet rs;
+        try {
+            stmt1 = conn.createStatement();
+            stmt2 = conn.createStatement();
+            rs = stmt1.executeQuery("SELECT guildid FROM guilds");
+            while (rs.next()){
+                boolean found = false;
+                for (Guild guild: guilds){
+                    if(guild.getIdLong()==rs.getLong(1)){
+                        found=true;
+                        break;
+                    }
+                }
+                if(!found){
+                    stmt2.execute("DELETE FROM disabled_emoji_servers WHERE emoji_guildiD=" + rs.getLong(1) + " OR guildid=" + rs.getLong(1));
+                    stmt2.execute("DELETE FROM registered_emoji_server WHERE guildid=" + rs.getLong(1));
+                    stmt2.execute("DELETE FROM roles WHERE guildid=" + rs.getLong(1));
+                    stmt2.execute("DELETE FROM guilds WHERE guildid=" + rs.getLong(1));
+                    stmt2.execute("COMMIT");
+                }
+            }
+            stmt2.close();
+            stmt1.close();
+        } catch (SQLException ex) {
+            System.out.println("SQLException: " + ex.getMessage());
+            System.out.println("SQLState: " + ex.getSQLState());
+            System.out.println("VendorError: " + ex.getErrorCode());
+        }
         updateServerCount(event.getJDA());
     }
 
@@ -276,6 +304,16 @@ public class MyListener extends ListenerAdapter {
                 channel.sendMessage(output.getString("event-join")).queue();
             });
         }
+        try {
+            Statement stmt = conn.createStatement();
+            stmt.execute("INSERT INTO guilds(guildid, guildname) VALUES ("+event.getGuild().getIdLong()+",'"+event.getGuild().getName()+"')");
+            stmt.execute("COMMIT");
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("SQLException: " + ex.getMessage());
+            System.out.println("SQLState: " + ex.getSQLState());
+            System.out.println("VendorError: " + ex.getErrorCode());
+        }
         updateServerCount(event.getJDA());
     }
 
@@ -283,8 +321,9 @@ public class MyListener extends ListenerAdapter {
     public void onGuildLeave(GuildLeaveEvent event) {
         try {
             Statement stmt = conn.createStatement();
-            stmt.execute("DELETE FROM active_emoji_guilds WHERE emoji_guildID=" + event.getGuild().getIdLong() + " OR guildid=" + event.getGuild().getIdLong());
+            stmt.execute("DELETE FROM disabled_emoji_servers WHERE emoji_guildiD=" + event.getGuild().getIdLong() + " OR guildid=" + event.getGuild().getIdLong());
             stmt.execute("DELETE FROM registered_emoji_server WHERE guildid=" + event.getGuild().getIdLong());
+            stmt.execute("DELETE FROM roles WHERE guildid=" + event.getGuild().getIdLong());
             stmt.execute("DELETE FROM guilds WHERE guildid=" + event.getGuild().getIdLong());
             stmt.execute("COMMIT");
             stmt.close();
