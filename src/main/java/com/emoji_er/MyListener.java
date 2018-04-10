@@ -77,7 +77,10 @@ public class MyListener extends ListenerAdapter {
             //if i cant write
             if (!PermissionUtil.checkPermission(event.getTextChannel(), event.getGuild().getSelfMember(), Permission.MESSAGE_WRITE))
                 return;
+
             Guild guild = event.getGuild();
+
+            updateDatabase(guild);
             //name of sender server
             String guildname = event.getGuild().getName();
             //get sender member
@@ -88,8 +91,8 @@ public class MyListener extends ListenerAdapter {
             Message message = event.getMessage();
             //get text
             if (message.getContent().matches(System.getenv("DEFAULT_EMOJI_PREFIX")+"emoji\\.\\w+"+System.getenv("DEFAULT_EMOJI_PREFIX"))||message.getContent().matches(System.getenv("DEFAULT_EMOJI_PREFIX")+"emoji\\.\\w+"+System.getenv("DEFAULT_EMOJI_PREFIX")+".+")) {
-                String args[] = message.getContent().split(System.getenv("DEFAULT_EMOJI_PREFIX"));
-                String command = args[1].split("\\.")[1];
+                String args[] = message.getContent().split(" ");
+                String command = args[0].split(System.getenv("DEFAULT_EMOJI_PREFIX"))[1].split("\\.")[1];
                 switch (command){
 //------USER---------------------HELP--------------------------------------
 
@@ -437,5 +440,28 @@ public class MyListener extends ListenerAdapter {
             e.printStackTrace();
         }
     }
+
+    private void updateDatabase(Guild guild){
+        try {
+            Statement stmt1 = conn.createStatement();
+            ResultSet rs;
+            rs = stmt1.executeQuery("SELECT * FROM guilds WHERE guildid="+guild.getIdLong());
+            if(rs.next()){
+                rs.close();
+                stmt1.execute("UPDATE guilds SET guildname='"+guild.getName()+"' WHERE guildid="+guild.getIdLong());
+                stmt1.execute("COMMIT");
+            }else {
+                rs.close();
+                stmt1.execute("INSERT INTO guilds(guildid, guildname) VALUES (" + guild.getIdLong() + ",'" + guild.getName() + "')");
+                stmt1.execute("COMMIT");
+            }
+            stmt1.close();
+        } catch (SQLException ex) {
+            System.out.println("SQLException: " + ex.getMessage());
+            System.out.println("SQLState: " + ex.getSQLState());
+            System.out.println("VendorError: " + ex.getErrorCode());
+        }
+    }
+
 
 }
