@@ -109,8 +109,8 @@ public class MyListener extends ListenerAdapter {
                         break;
 //------USER-------------------LIST----------------------------------------
                     case "list":
-                        if(args.length==3) {
-                            channel.sendMessage(output.getString("emoji-list")+"\n"+ emojiGuild.getEmojiList(args[2].replace(" ",""),event.getJDA())).queue();
+                        if(args.length==2) {
+                            channel.sendMessage(output.getString("emoji-list")+"\n"+ emojiGuild.getEmojiList(args[1].replace(" ",""),event.getJDA())).queue();
                             System.out.println("emoji list shown in guild: '" + guildname + "'");
                         }else{
                             channel.sendMessage(output.getString("error-emoji-list")).queue();
@@ -126,9 +126,9 @@ public class MyListener extends ListenerAdapter {
 //------MOD--------------------REGISTER------------------------------------
                     case "register":
                         if (member.isOwner() || botGuild.memberIsMod(member,guild.getIdLong())) {
-                            if(args.length==3){
+                            if(args.length==2){
                                 if(args[2].length()<=10){
-                                    channel.sendMessage(emojiGuild.registerGuild(guild.getIdLong(),args[2].replace(" ",""),output)).queue();
+                                    channel.sendMessage(emojiGuild.registerGuild(guild.getIdLong(),args[1].replace(" ",""),output)).queue();
                                 }else{
                                     System.out.println("emoji register failed in guild: '" + guildname + "'");
                                     channel.sendMessage(output.getString("error-long-title")).queue();
@@ -145,7 +145,7 @@ public class MyListener extends ListenerAdapter {
 //------MOD------------------UNREGISTER------------------------------------
                     case "unregister":
                         if (member.isOwner() || botGuild.memberIsMod(member,guild.getIdLong())) {
-                            if(args.length==3){
+                            if(args.length==1){
                                 channel.sendMessage(emojiGuild.unRegisterGuild(guild.getIdLong(),output)).queue();
                             }else{
                                 System.out.println("command syntax in guild: '" + guildname + "'");
@@ -161,11 +161,11 @@ public class MyListener extends ListenerAdapter {
                         //if member is allowed
                         if (member.isOwner() || botGuild.memberIsMod(member,guild.getIdLong())) {
                             //if there are other arguments
-                            if (args.length>2) {
+                            if (args.length>1) {
                                 //get mentioned roles
                                 List<Role> mentions = message.getMentionedRoles();
                                 //test on second arg
-                                switch (args[2]) {
+                                switch (args[1]) {
                                     case "add":
                                         //if there is a mentioned role
                                         if (mentions.size() == 1) {
