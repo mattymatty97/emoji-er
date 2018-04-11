@@ -130,7 +130,6 @@ public class Logger {
     }
 
 
-    @Nullable
     private static FileWriter openFile(Guild guild)
     {
         String date = sdf.format(new Date());
