@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
+import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.*;
 
@@ -155,7 +156,8 @@ public class BotGuild {
                 boolean enabled = rs.getBoolean(1);
                 rs.close();
                 stmt.execute("UPDATE guilds SET enabled="+!enabled+" WHERE guildid="+guild.getIdLong());
-                ret.append(output.getString(enabled?"toggle-disabled":"toggle-enabled"));
+                ret.append(output.getString(enabled?"disabled":"enabled"));
+                System.out.print("Emoji"+(!enabled?"ENABLED":"DISABLED)"));
             }else
                 rs.close();
             stmt.close();
@@ -166,6 +168,280 @@ public class BotGuild {
             System.out.println("VendorError: " + ex.getErrorCode());
             return null;
         }
+        return ret.toString();
+    }
+
+    public String registerGuild(long guildId,String title,ResourceBundle output){
+        StringBuilder ret=new StringBuilder();
+        Statement stmt;
+        ResultSet rs;
+        if(title.contains("emoji")){
+            ret.append(output.getString("error-title-not_usable"));
+        }else
+            try
+            {
+                stmt=conn.createStatement();
+                rs = stmt.executeQuery("SELECT * FROM registered_emoji_server WHERE guildid="+guildId);
+                if(rs.next()){
+                    ret.append(output.getString("error-emoji-registered"));
+                    System.out.print("emoji not registered");
+                    rs.close();
+                }else {
+                    rs.close();
+                    rs = stmt.executeQuery("SELECT * FROM registered_emoji_server WHERE title='" + title + "'");
+                    if (rs.next()) {
+                        ret.append(output.getString("error-emoji-title-used"));
+                        System.out.print("emoji not registered");
+                    } else {
+                        stmt.execute("INSERT INTO registered_emoji_server(guildid, title) VALUES (" + guildId + ",'" + title + "')");
+                        ret.append(output.getString("emoji-guild-registered"));
+                        System.out.print("emoji registered");
+                    }
+                }
+                stmt.close();
+            }catch (SQLException ex) {
+                System.out.println("SQLException: " + ex.getMessage());
+                System.out.println("SQLState: " + ex.getSQLState());
+                System.out.println("VendorError: " + ex.getErrorCode());
+            }
+        return ret.toString();
+    }
+
+    public String unRegisterGuild(long guildId,ResourceBundle output){
+        StringBuilder ret=new StringBuilder();
+        Statement stmt;
+        ResultSet rs;
+        try
+        {
+            stmt=conn.createStatement();
+            rs = stmt.executeQuery("SELECT * FROM registered_emoji_server WHERE guildid="+guildId);
+            if(rs.next()) {
+                rs.close();
+                stmt.execute("DELETE FROM disabled_emoji_servers WHERE emoji_guildID=" + guildId);
+                stmt.execute("DELETE FROM registered_emoji_server WHERE guildid=" + guildId);
+                System.out.print("emoji unregistered");
+                ret.append(output.getString("emoji-guild-unregistered"));
+            }else{
+                System.out.print("emoji not unregistered");
+                ret.append(output.getString("error-emoji-unregistered"));
+            }
+            stmt.close();
+        }catch (SQLException ex) {
+            System.out.println("SQLException: " + ex.getMessage());
+            System.out.println("SQLState: " + ex.getSQLState());
+            System.out.println("VendorError: " + ex.getErrorCode());
+        }
+        return ret.toString();
+    }
+
+    public String getEmoji(String arg,long guildid,JDA api){
+        String ret = null;
+        Statement stmt;
+        ResultSet rs;
+        String args[] = arg.split("\\.");
+        try
+        {
+            stmt=conn.createStatement();
+            rs = stmt.executeQuery("SELECT R.guildid FROM registered_emoji_server R WHERE title='"+args[0]+"' AND R.guildid NOT IN (SELECT emoji_guildid FROM disabled_emoji_servers D WHERE D.guildid="+guildid+")");
+            if(rs.next()) {
+                Guild guild = api.getGuildById(rs.getLong(1));
+                List<Emote> emoji = guild.getEmotesByName(args[1],false);
+                if(emoji.size()==1)
+                {
+                    ret = emoji.get(0).getAsMention();
+                }
+            }
+            rs.close();
+            stmt.close();
+        }catch (SQLException ex) {
+            System.out.println("SQLException: " + ex.getMessage());
+            System.out.println("SQLState: " + ex.getSQLState());
+            System.out.println("VendorError: " + ex.getErrorCode());
+        }
+        return ret;
+    }
+
+    public String getEmojiList(String title,JDA api){
+        StringBuilder ret = new StringBuilder();
+        Statement stmt;
+        ResultSet rs;
+        try
+        {
+            stmt=conn.createStatement();
+            rs = stmt.executeQuery("SELECT guildid FROM registered_emoji_server WHERE title='"+title+"'");
+            if(rs.next()) {
+                Guild guild = api.getGuildById(rs.getLong(1));
+                if(guild!=null) {
+                    ret.append(guild.getName());
+                    List<Emote> emoji = guild.getEmotes();
+                    for (Emote emote : emoji) {
+                        ret.append("\n");
+                        ret.append(title).append(".");
+                        ret.append(emote.getName());
+                        ret.append("   ").append(emote.getAsMention());
+                    }
+                }
+            }
+            rs.close();
+            stmt.close();
+        }catch (SQLException ex) {
+            System.out.println("SQLException: " + ex.getMessage());
+            System.out.println("SQLState: " + ex.getSQLState());
+            System.out.println("VendorError: " + ex.getErrorCode());
+        }
+        return ret.toString();
+    }
+
+    public String printServers(long guildid,JDA api){
+        StringBuilder ret = new StringBuilder();
+        Statement stmt;
+        ResultSet rs;
+        try{
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery("SELECT R.guildid,title FROM registered_emoji_server R WHERE R.guildid NOT IN (SELECT emoji_guildid FROM disabled_emoji_servers D WHERE D.guildid="+guildid+")");
+            while (rs.next()){
+                Guild guild = api.getGuildById(rs.getLong(1));
+                if(guild!=null) {
+                    ret.append("\n");
+                    ret.append(rs.getString(2));
+                    ret.append("   ");
+                    ret.append(guild.getName());
+                }
+            }
+            rs.close();
+            rs = stmt.executeQuery("SELECT R.guildid,title FROM registered_emoji_server R WHERE R.guildid IN (SELECT emoji_guildid FROM disabled_emoji_servers D WHERE D.guildid="+guildid+")");
+            while (rs.next()){
+                Guild guild = api.getGuildById(rs.getLong(1));
+                if(guild!=null) {
+                    ret.append("\n");
+                    ret.append("~~");
+                    ret.append(rs.getString(2));
+                    ret.append("   ");
+                    ret.append(guild.getName());
+                    ret.append("~~");
+                }
+            }
+            rs.close();
+            stmt.close();
+        }catch (SQLException ex)
+        {
+            System.out.println("SQLException: " + ex.getMessage());
+            System.out.println("SQLState: " + ex.getSQLState());
+            System.out.println("VendorError: " + ex.getErrorCode());
+        }
+        return ret.toString();
+    }
+
+    public String disableGuild(long guildId,String title,ResourceBundle output) {
+        StringBuilder ret = new StringBuilder();
+        Statement stmt;
+        ResultSet rs;
+        try {
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery("SELECT guildid FROM registered_emoji_server WHERE title='"+title+"'");
+            if(rs.next()) {
+                long id = rs.getLong(1);
+                rs.close();
+                rs = stmt.executeQuery("SELECT * FROM disabled_emoji_servers WHERE guildid=" + guildId + " AND " +
+                        "emoji_guildid="+id);
+                if (rs.next()) {
+                    ret.append(output.getString("error-disabled"));
+                    System.out.print("emoji server already disabled");
+                    rs.close();
+                } else {
+                    rs.close();
+                    stmt.execute("INSERT INTO disabled_emoji_servers(guildid, emoji_guildid) VALUES ("+guildId+","+id+")");
+                    ret.append(output.getString("disable-success"));
+                    System.out.print(title+" server disabled");
+                }
+            }else{
+                ret.append(output.getString("error-disabled-404"));
+                System.out.print("emoji server not exist");
+            }
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("SQLException: " + ex.getMessage());
+            System.out.println("SQLState: " + ex.getSQLState());
+            System.out.println("VendorError: " + ex.getErrorCode());
+        }
+        return ret.toString();
+    }
+
+    public String enableGuild(long guildId,String title,ResourceBundle output)
+    {
+        StringBuilder ret = new StringBuilder();
+        Statement stmt;
+        ResultSet rs;
+        try {
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery("SELECT guildid FROM registered_emoji_server WHERE title='"+title+"'");
+            if(rs.next()) {
+                long id = rs.getLong(1);
+                rs.close();
+                stmt.execute("DELETE FROM disabled_emoji_servers WHERE guildid="+guildId+" AND emoji_guildid="+id);
+                ret.append(output.getString("enable-success"));
+                System.out.print(title+" server enabled");
+            }else{
+                ret.append(output.getString("error-enable-404"));
+                System.out.print("emoji server not exist");
+            }
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("SQLException: " + ex.getMessage());
+            System.out.println("SQLState: " + ex.getSQLState());
+            System.out.println("VendorError: " + ex.getErrorCode());
+        }
+        return ret.toString();
+    }
+
+    public String printStatus(Guild guild,ResourceBundle output){
+        String title=null;
+        long disabled=0;
+        boolean status=false;
+        long modroles=0;
+        boolean found=false;
+        StringBuilder ret = new StringBuilder();
+        Statement stmt;
+        ResultSet rs;
+        try {
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery("SELECT G.enabled,R.title,RO.count,DS.count " +
+                    "FROM guilds G " +
+                    "FULL OUTER JOIN registered_emoji_server R ON G.guildid = R.guildid "+
+                    "FULL OUTER JOIN ("+
+                    "SELECT guildid,COUNT(*) as count "+
+                    "FROM roles RL "+
+                    "GROUP BY guildid "+
+                    ") as RO ON G.guildid = RO.guildid "+
+                    "FULL OUTER JOIN ("+
+                    "SELECT guildid,COUNT(*) as count "+
+                    "FROM disabled_emoji_servers DSA "+
+                    "GROUP BY guildid "+
+                    ")as DS ON G.guildid = DS.guildid "+
+                    "WHERE G.guildid="+guild.getIdLong());
+            if(rs.next()) {
+                status=rs.getBoolean(1);
+                title=rs.getString(2);
+                modroles=rs.getLong(3);
+                disabled=rs.getLong(4);
+                found=true;
+            }
+            rs.close();
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("SQLException: " + ex.getMessage());
+            System.out.println("SQLState: " + ex.getSQLState());
+            System.out.println("VendorError: " + ex.getErrorCode());
+        }
+        if(found){
+            ret.append(output.getString("status-head")).append("\n");
+            ret.append(output.getString("status-emoji")).append(" ").append(output.getString(status?"enabled":"disabled")).append("\n");
+            ret.append(output.getString("status-registered")).append(" ").append(output.getString((title!=null)?"registered":"unregistered")).append("\n");
+            ret.append(output.getString("status-title")).append(" ").append(title!=null?title:"").append("\n");
+            ret.append(output.getString("status-modroles")).append(" ").append(modroles).append("\n");
+            ret.append(output.getString("status-disabled")).append(" ").append(disabled).append("\n");
+        }
+
         return ret.toString();
     }
 

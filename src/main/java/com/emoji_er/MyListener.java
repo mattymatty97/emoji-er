@@ -27,7 +27,6 @@ import java.util.List;
 public class MyListener extends ListenerAdapter {
     private Connection conn;
     private BotGuild botGuild;
-    private EmojiGuild emojiGuild;
     public static boolean deleted = false;
 
     @Override
@@ -110,7 +109,7 @@ public class MyListener extends ListenerAdapter {
 //------USER-------------------LIST----------------------------------------
                     case "list":
                         if(args.length==2) {
-                            channel.sendMessage(output.getString("emoji-list")+"\n"+ emojiGuild.getEmojiList(args[1].replace(" ",""),event.getJDA())).queue();
+                            channel.sendMessage(output.getString("emoji-list")+"\n"+ botGuild.getEmojiList(args[1].replace(" ",""),event.getJDA())).queue();
                             System.out.println("emoji list shown in guild: '" + guildname + "'");
                         }else{
                             channel.sendMessage(output.getString("error-emoji-list")).queue();
@@ -119,7 +118,7 @@ public class MyListener extends ListenerAdapter {
                         break;
 //------USER-------------------SERVER--------------------------------------
                     case "servers":
-                        String result = emojiGuild.printServers(event.getJDA());
+                        String result = botGuild.printServers(guild.getIdLong(),event.getJDA());
                         channel.sendMessage(output.getString("emoji-server-list")+"\n"+result).queue();
                         System.out.println("emoji server list shown in guild: '" + guildname + "'");
                         break;
@@ -128,7 +127,7 @@ public class MyListener extends ListenerAdapter {
                         if (member.isOwner() || botGuild.memberIsMod(member,guild.getIdLong())) {
                             if(args.length==2){
                                 if(args[1].length()<=10){
-                                    channel.sendMessage(emojiGuild.registerGuild(guild.getIdLong(),args[1],output)).queue();
+                                    channel.sendMessage(botGuild.registerGuild(guild.getIdLong(),args[1],output)).queue();
                                 }else{
                                     System.out.println("emoji register failed in guild: '" + guildname + "'");
                                     channel.sendMessage(output.getString("error-long-title")).queue();
@@ -146,7 +145,7 @@ public class MyListener extends ListenerAdapter {
                     case "unregister":
                         if (member.isOwner() || botGuild.memberIsMod(member,guild.getIdLong())) {
                             if(args.length==1){
-                                channel.sendMessage(emojiGuild.unRegisterGuild(guild.getIdLong(),output)).queue();
+                                channel.sendMessage(botGuild.unRegisterGuild(guild.getIdLong(),output)).queue();
                             }else{
                                 System.out.println("command syntax in guild: '" + guildname + "'");
                                 channel.sendMessage(output.getString("error-wrong-syntax")).queue();
@@ -228,17 +227,17 @@ public class MyListener extends ListenerAdapter {
                         break;
 //------MOD------------------STATUS---------------------------------------
                     case "status":
-                        if (member.isOwner() || botGuild.memberIsMod(member,guild.getIdLong())){
-
-                        }else {
-                            channel.sendMessage(output.getString("error-user-permission")).queue();
-                            System.out.println("no permission in guild: '" + guildname + "'");
-                        }
+                        channel.sendMessage(botGuild.printStatus(guild,output)).queue();
                         break;
 //------MOD------------------ENABLE---------------------------------------
                     case "enable":
                         if (member.isOwner() || botGuild.memberIsMod(member,guild.getIdLong())){
-
+                            if(args.length==2){
+                                channel.sendMessage(botGuild.enableGuild(guild.getIdLong(),args[1],output)).queue();
+                            }else{
+                                System.out.println("command syntax in guild: '" + guildname + "'");
+                                channel.sendMessage(output.getString("error-wrong-syntax")).queue();
+                            }
                         }else {
                             channel.sendMessage(output.getString("error-user-permission")).queue();
                             System.out.println("no permission in guild: '" + guildname + "'");
@@ -247,7 +246,12 @@ public class MyListener extends ListenerAdapter {
 //------MOD------------------DISABLE---------------------------------------
                     case "disable":
                         if (member.isOwner() || botGuild.memberIsMod(member,guild.getIdLong())){
-
+                            if(args.length==2){
+                                channel.sendMessage(botGuild.disableGuild(guild.getIdLong(),args[1],output)).queue();
+                            }else{
+                                System.out.println("command syntax in guild: '" + guildname + "'");
+                                channel.sendMessage(output.getString("error-wrong-syntax")).queue();
+                            }
                         }else {
                             channel.sendMessage(output.getString("error-user-permission")).queue();
                             System.out.println("no permission in guild: '" + guildname + "'");
@@ -269,7 +273,7 @@ public class MyListener extends ListenerAdapter {
                                 if (arg.matches("\\w+\\.\\w+")) {
                                     String[] param = arg.split("\\.");
                                     String emoji;
-                                    emoji = emojiGuild.getEmoji(arg, event.getJDA());
+                                    emoji = botGuild.getEmoji(arg,guild.getIdLong(),event.getJDA());
                                     if (emoji != null) {
                                         ret.append(emoji);
                                         found = true;
@@ -395,6 +399,7 @@ public class MyListener extends ListenerAdapter {
             helpMsg.addField("ping", output.getString("help-def-ping"), false);
             helpMsg.addField("list", output.getString("help-def-list"), false);
             helpMsg.addField("servers", output.getString("help-def-servers"), false);
+            helpMsg.addField("status", output.getString("help-def-status"), false);
 
             //if is allowed to use mod commands
             if (member.isOwner() || botGuild.memberIsMod(member,guild.getIdLong())) {
@@ -408,6 +413,10 @@ public class MyListener extends ListenerAdapter {
                 helpMsg.addField("unregister", output.getString("help-def-unregister"), false);
 
                 helpMsg.addField("toggle", output.getString("help-def-toggle"), false);
+
+                helpMsg.addField("enable",output.getString("help-def-enable"), false);
+
+                helpMsg.addField("disable",output.getString("help-def-disable"), false);
 
             }
             helpMsg.setFooter(output.getString("help-footer"), null);
@@ -428,10 +437,9 @@ public class MyListener extends ListenerAdapter {
         return false;
     }
 
-    public MyListener(Connection conn, List<BotGuild> savedGuilds) {
+    public MyListener(Connection conn) {
         this.conn = conn;
         this.botGuild = new BotGuild(conn);
-        this.emojiGuild = new EmojiGuild(conn);
     }
 
     private static void guildDeleteDB(Connection conn, Long guildId) {

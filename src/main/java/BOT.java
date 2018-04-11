@@ -16,7 +16,6 @@ public class BOT
     {
         Connection conn=null;
 
-        List<BotGuild> savedGuilds=new ArrayList<BotGuild>();
         try {
             Class.forName("org.postgresql.Driver");
         } catch (ClassNotFoundException e) {
@@ -42,8 +41,8 @@ public class BOT
 
         JDA api = new JDABuilder(AccountType.BOT).setToken(System.getenv("BOT_TOKEN")).buildAsync();
 
-        api.addEventListener(new MyListener(conn,savedGuilds));
-        api.getPresence().setGame(Game.playing("v1.3.0 - em prj"));
+        api.addEventListener(new MyListener(conn));
+        api.getPresence().setGame(Game.playing("v1.4.0 - em prj"));
     }
 
 
