@@ -18,7 +18,6 @@ public class Reconnector {
         boolean connected=false;
         Connection conn = null;
 
-        List<BotGuild> savedGuilds = new ArrayList<BotGuild>();
         while (!connected) {
             try {
                 TimeUnit.SECONDS.sleep(5);
@@ -59,7 +58,7 @@ public class Reconnector {
         }
         try {
             JDA api = new JDABuilder(AccountType.BOT).setToken(System.getenv("BOT_TOKEN")).buildAsync();
-            api.addEventListener(new MyListener(conn, savedGuilds));
+            api.addEventListener(new MyListener(conn));
             api.getPresence().setGame(Game.listening("suggestions :/"));
         }catch (Exception e) {
             e.printStackTrace();
