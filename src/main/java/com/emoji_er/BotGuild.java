@@ -1,10 +1,12 @@
 package com.emoji_er;
+import java.awt.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
+import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.*;
@@ -16,108 +18,86 @@ import net.dv8tion.jda.core.entities.*;
 public class BotGuild {
     private Connection conn;
 
-    public boolean memberIsMod(Member member,long guild)
-    {
-        List<Role> roles = member.getRoles();
-        Statement stmt;
-        ResultSet rs;
-        try {
-            stmt = conn.createStatement();
-            rs = stmt.executeQuery("SELECT roleid FROM roles WHERE guildid="+guild);
-            while (rs.next()){
-                for (Role role : roles) {
-                    if(role.getIdLong()==rs.getLong(1)){
-                        rs.close();
-                        stmt.close();
-                        return true;
-                    }
-                }
-            }
-            rs.close();
-            stmt.close();
-        }catch (SQLException ex) {
-            System.out.println("SQLException: " + ex.getMessage());
-            System.out.println("SQLState: " + ex.getSQLState());
-            System.out.println("VendorError: " + ex.getErrorCode());
-        }
-
-        return false;
-    }
-
-    public String removeModRole(Role role,long guild,ResourceBundle output)
+    public String removeModRole(Role role,Guild guild,ResourceBundle output,long messageId)
     {
             String ret;
             Statement stmt ;
             ResultSet rs;
             try {
                 stmt = conn.createStatement();
-                rs = stmt.executeQuery("SELECT * FROM roles WHERE guildid="+guild+" AND roleid="+role.getIdLong());
+                rs = stmt.executeQuery("SELECT * FROM roles WHERE guildid="+guild.getId()+" AND roleid="+role.getIdLong());
                 if(rs.next()) {
                     rs.close();
-                    stmt.execute("DELETE FROM roles WHERE guildid=" + guild + " AND roleid=" + role.getIdLong());
+                    stmt.execute("DELETE FROM roles WHERE guildid=" + guild.getId() + " AND roleid=" + role.getIdLong());
                     stmt.execute("COMMIT");
                     ret = output.getString("modrole-remove");
+                    Logger.logReponse("removed role "+role.getName(),guild,messageId);
                 }else{
                     rs.close();
                     ret = output.getString("error-modrole-missing");
+                    Logger.logReponse("role not modrole",guild,messageId);
                 }
                 stmt.close();
             }catch (SQLException ex) {
-                System.out.println("SQLException: " + ex.getMessage());
-                System.out.println("SQLState: " + ex.getSQLState());
-                System.out.println("VendorError: " + ex.getErrorCode());
+                Logger.logGeneral("SQLException: " + ex.getMessage());
+                Logger.logGeneral("SQLState: " + ex.getSQLState());
+                Logger.logGeneral("VendorError: " + ex.getErrorCode());
                 return null;
             }
             return ret;
     }
 
-    public String addModRole(Role role,long guild,ResourceBundle output)
+    public String addModRole(Role role,Guild guild,ResourceBundle output,long messageId)
     {
         String ret;
             Statement stmt;
             ResultSet rs;
             try {
                 stmt = conn.createStatement();
-                rs = stmt.executeQuery("SELECT * FROM roles WHERE guildid="+guild+" AND roleid="+role.getIdLong());
+                rs = stmt.executeQuery("SELECT * FROM roles WHERE guildid="+guild.getId()+" AND roleid="+role.getIdLong());
                 if(!rs.next()) {
                     rs.close();
-                    stmt.execute("INSERT INTO roles (guildid,roleid,rolename) VALUES (" + guild + "," + role.getIdLong() + ",'" + role.getName() + "')");
+                    stmt.execute("INSERT INTO roles (guildid,roleid,rolename) VALUES (" + guild.getId() + "," + role.getIdLong() + ",'" + role.getName() + "')");
                     stmt.execute("COMMIT");
                     ret = output.getString("modrole-add");
+                    Logger.logReponse("added role "+role.getName(),guild,messageId);
                 }else{
                     rs.close();
                     ret = output.getString("error-modrole-exists");
+                    Logger.logReponse("role is modrole",guild,messageId);
                 }
                 stmt.close();
             }catch (SQLException ex) {
-                System.out.println("SQLException: " + ex.getMessage());
-                System.out.println("SQLState: " + ex.getSQLState());
-                System.out.println("VendorError: " + ex.getErrorCode());
-                return null;
+                Logger.logGeneral("SQLException: " + ex.getMessage());
+                Logger.logGeneral("SQLState: " + ex.getSQLState());
+                Logger.logGeneral("VendorError: " + ex.getErrorCode());
+                return "";
             }
         return ret;
     }
 
-    public String clearModrole(long guild,ResourceBundle output)
+    public String clearModrole(Guild guild,ResourceBundle output,long messageId)
     {
         String ret;
         Statement stmt;
         try{
             stmt = conn.createStatement();
-            stmt.execute("DELETE FROM roles WHERE guildid="+guild);
+            stmt.execute("DELETE FROM roles WHERE guildid="+guild.getId());
             stmt.execute("COMMIT ");
             ret= output.getString("modrole-clear");
+            Logger.logReponse("cleared modroles",guild,messageId);
             stmt.close();
         }catch (SQLException ex)
         {
-            System.out.println("SQLException: " + ex.getMessage());
-            System.out.println("SQLState: " + ex.getSQLState());
-            System.out.println("VendorError: " + ex.getErrorCode());
-            return null;
+            Logger.logGeneral("SQLException: " + ex.getMessage());
+            Logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            return "";
         }
         return ret;
     }
-    public String listModrole(Guild guild,ResourceBundle output)
+
+    public String listModrole(Guild guild,ResourceBundle output,long messageId)
     {
         StringBuilder ret = new StringBuilder(output.getString("modrole-list"));
         Statement stmt;
@@ -137,15 +117,16 @@ public class BotGuild {
             stmt.close();
         }catch (SQLException ex)
         {
-            System.out.println("SQLException: " + ex.getMessage());
-            System.out.println("SQLState: " + ex.getSQLState());
-            System.out.println("VendorError: " + ex.getErrorCode());
-            return null;
+            Logger.logGeneral("SQLException: " + ex.getMessage());
+            Logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            return "";
         }
+        Logger.logReponse("listed modroles",guild,messageId);
         return ret.toString();
     }
 
-    public String toggleEmoji(Guild guild,ResourceBundle output){
+    public String toggleEmoji(Guild guild,ResourceBundle output,long messageId){
         StringBuilder ret = new StringBuilder(output.getString("toggle-head")).append(" ");
         try{
             Statement stmt;
@@ -157,21 +138,21 @@ public class BotGuild {
                 rs.close();
                 stmt.execute("UPDATE guilds SET enabled="+!enabled+" WHERE guildid="+guild.getIdLong());
                 ret.append(output.getString(enabled?"disabled":"enabled"));
-                System.out.print("Emoji"+(!enabled?"ENABLED":"DISABLED)"));
+                Logger.logReponse("Emoji"+(!enabled?"ENABLED":"DISABLED)"),guild,messageId);
             }else
                 rs.close();
             stmt.close();
         }catch (SQLException ex)
         {
-            System.out.println("SQLException: " + ex.getMessage());
-            System.out.println("SQLState: " + ex.getSQLState());
-            System.out.println("VendorError: " + ex.getErrorCode());
-            return null;
+            Logger.logGeneral("SQLException: " + ex.getMessage());
+            Logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            return "";
         }
         return ret.toString();
     }
 
-    public String registerGuild(long guildId,String title,ResourceBundle output){
+    public String registerGuild(Guild guild,String title,ResourceBundle output,long messageId){
         StringBuilder ret=new StringBuilder();
         Statement stmt;
         ResultSet rs;
@@ -181,60 +162,62 @@ public class BotGuild {
             try
             {
                 stmt=conn.createStatement();
-                rs = stmt.executeQuery("SELECT * FROM registered_emoji_server WHERE guildid="+guildId);
+                rs = stmt.executeQuery("SELECT * FROM registered_emoji_server WHERE guildid="+guild.getId());
                 if(rs.next()){
                     ret.append(output.getString("error-emoji-registered"));
-                    System.out.print("emoji not registered");
+                    Logger.logReponse("guild found",guild,messageId);
                     rs.close();
                 }else {
                     rs.close();
                     rs = stmt.executeQuery("SELECT * FROM registered_emoji_server WHERE title='" + title + "'");
                     if (rs.next()) {
                         ret.append(output.getString("error-emoji-title-used"));
-                        System.out.print("emoji not registered");
+                        Logger.logReponse("title used",guild,messageId);
                     } else {
-                        stmt.execute("INSERT INTO registered_emoji_server(guildid, title) VALUES (" + guildId + ",'" + title + "')");
+                        stmt.execute("INSERT INTO registered_emoji_server(guildid, title) VALUES (" + guild.getId() + ",'" + title + "')");
                         ret.append(output.getString("emoji-guild-registered"));
-                        System.out.print("emoji registered");
+                        Logger.logReponse("guild registered",guild,messageId);
                     }
                 }
                 stmt.close();
             }catch (SQLException ex) {
-                System.out.println("SQLException: " + ex.getMessage());
-                System.out.println("SQLState: " + ex.getSQLState());
-                System.out.println("VendorError: " + ex.getErrorCode());
+                Logger.logGeneral("SQLException: " + ex.getMessage());
+                Logger.logGeneral("SQLState: " + ex.getSQLState());
+                Logger.logGeneral("VendorError: " + ex.getErrorCode());
+                return "";
             }
         return ret.toString();
     }
 
-    public String unRegisterGuild(long guildId,ResourceBundle output){
+    public String unRegisterGuild(Guild guild,ResourceBundle output,long messageId){
         StringBuilder ret=new StringBuilder();
         Statement stmt;
         ResultSet rs;
         try
         {
             stmt=conn.createStatement();
-            rs = stmt.executeQuery("SELECT * FROM registered_emoji_server WHERE guildid="+guildId);
+            rs = stmt.executeQuery("SELECT * FROM registered_emoji_server WHERE guildid="+guild.getId());
             if(rs.next()) {
                 rs.close();
-                stmt.execute("DELETE FROM disabled_emoji_servers WHERE emoji_guildID=" + guildId);
-                stmt.execute("DELETE FROM registered_emoji_server WHERE guildid=" + guildId);
-                System.out.print("emoji unregistered");
+                stmt.execute("DELETE FROM disabled_emoji_servers WHERE emoji_guildID=" + guild.getId());
+                stmt.execute("DELETE FROM registered_emoji_server WHERE guildid=" + guild.getId());
+                Logger.logReponse("guild unregistered",guild,messageId);
                 ret.append(output.getString("emoji-guild-unregistered"));
             }else{
-                System.out.print("emoji not unregistered");
+                Logger.logReponse("guild was not registered",guild,messageId);
                 ret.append(output.getString("error-emoji-unregistered"));
             }
             stmt.close();
         }catch (SQLException ex) {
-            System.out.println("SQLException: " + ex.getMessage());
-            System.out.println("SQLState: " + ex.getSQLState());
-            System.out.println("VendorError: " + ex.getErrorCode());
+            Logger.logGeneral("SQLException: " + ex.getMessage());
+            Logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            return "";
         }
         return ret.toString();
     }
 
-    public String getEmoji(String arg,long guildid,JDA api){
+    public String getEmoji(String arg,long guildId,JDA api){
         String ret = null;
         Statement stmt;
         ResultSet rs;
@@ -242,7 +225,7 @@ public class BotGuild {
         try
         {
             stmt=conn.createStatement();
-            rs = stmt.executeQuery("SELECT R.guildid FROM registered_emoji_server R WHERE title='"+args[0]+"' AND R.guildid NOT IN (SELECT emoji_guildid FROM disabled_emoji_servers D WHERE D.guildid="+guildid+")");
+            rs = stmt.executeQuery("SELECT R.guildid FROM registered_emoji_server R WHERE title='"+args[0]+"' AND R.guildid NOT IN (SELECT emoji_guildid FROM disabled_emoji_servers D WHERE D.guildid="+guildId+")");
             if(rs.next()) {
                 Guild guild = api.getGuildById(rs.getLong(1));
                 List<Emote> emoji = guild.getEmotesByName(args[1],false);
@@ -254,9 +237,10 @@ public class BotGuild {
             rs.close();
             stmt.close();
         }catch (SQLException ex) {
-            System.out.println("SQLException: " + ex.getMessage());
-            System.out.println("SQLState: " + ex.getSQLState());
-            System.out.println("VendorError: " + ex.getErrorCode());
+            Logger.logGeneral("SQLException: " + ex.getMessage());
+            Logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            return "";
         }
         return ret;
     }
@@ -285,20 +269,21 @@ public class BotGuild {
             rs.close();
             stmt.close();
         }catch (SQLException ex) {
-            System.out.println("SQLException: " + ex.getMessage());
-            System.out.println("SQLState: " + ex.getSQLState());
-            System.out.println("VendorError: " + ex.getErrorCode());
+            Logger.logGeneral("SQLException: " + ex.getMessage());
+            Logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            return "";
         }
         return ret.toString();
     }
 
-    public String printServers(long guildid,JDA api){
+    public String printServers(long guildId,JDA api){
         StringBuilder ret = new StringBuilder();
         Statement stmt;
         ResultSet rs;
         try{
             stmt = conn.createStatement();
-            rs = stmt.executeQuery("SELECT R.guildid,title FROM registered_emoji_server R WHERE R.guildid NOT IN (SELECT emoji_guildid FROM disabled_emoji_servers D WHERE D.guildid="+guildid+")");
+            rs = stmt.executeQuery("SELECT R.guildid,title FROM registered_emoji_server R WHERE R.guildid NOT IN (SELECT emoji_guildid FROM disabled_emoji_servers D WHERE D.guildid="+guildId+")");
             while (rs.next()){
                 Guild guild = api.getGuildById(rs.getLong(1));
                 if(guild!=null) {
@@ -309,7 +294,7 @@ public class BotGuild {
                 }
             }
             rs.close();
-            rs = stmt.executeQuery("SELECT R.guildid,title FROM registered_emoji_server R WHERE R.guildid IN (SELECT emoji_guildid FROM disabled_emoji_servers D WHERE D.guildid="+guildid+")");
+            rs = stmt.executeQuery("SELECT R.guildid,title FROM registered_emoji_server R WHERE R.guildid IN (SELECT emoji_guildid FROM disabled_emoji_servers D WHERE D.guildid="+guildId+")");
             while (rs.next()){
                 Guild guild = api.getGuildById(rs.getLong(1));
                 if(guild!=null) {
@@ -325,14 +310,15 @@ public class BotGuild {
             stmt.close();
         }catch (SQLException ex)
         {
-            System.out.println("SQLException: " + ex.getMessage());
-            System.out.println("SQLState: " + ex.getSQLState());
-            System.out.println("VendorError: " + ex.getErrorCode());
+            Logger.logGeneral("SQLException: " + ex.getMessage());
+            Logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            return "";
         }
         return ret.toString();
     }
 
-    public String disableGuild(long guildId,String title,ResourceBundle output) {
+    public String disableGuild(Guild guild,String title,ResourceBundle output,long messageId) {
         StringBuilder ret = new StringBuilder();
         Statement stmt;
         ResultSet rs;
@@ -342,32 +328,33 @@ public class BotGuild {
             if(rs.next()) {
                 long id = rs.getLong(1);
                 rs.close();
-                rs = stmt.executeQuery("SELECT * FROM disabled_emoji_servers WHERE guildid=" + guildId + " AND " +
+                rs = stmt.executeQuery("SELECT * FROM disabled_emoji_servers WHERE guildid=" + guild.getId() + " AND " +
                         "emoji_guildid="+id);
                 if (rs.next()) {
                     ret.append(output.getString("error-disabled"));
-                    System.out.print("emoji server already disabled");
+                    Logger.logReponse("guild is disabled",guild,messageId);
                     rs.close();
                 } else {
                     rs.close();
-                    stmt.execute("INSERT INTO disabled_emoji_servers(guildid, emoji_guildid) VALUES ("+guildId+","+id+")");
+                    stmt.execute("INSERT INTO disabled_emoji_servers(guildid, emoji_guildid) VALUES ("+guild.getId()+","+id+")");
                     ret.append(output.getString("disable-success"));
-                    System.out.print(title+" server disabled");
+                    Logger.logReponse(title+" server disabled",guild,messageId);
                 }
             }else{
                 ret.append(output.getString("error-disabled-404"));
-                System.out.print("emoji server not exist");
+                Logger.logReponse("guild not registered",guild,messageId);
             }
             stmt.close();
         } catch (SQLException ex) {
-            System.out.println("SQLException: " + ex.getMessage());
-            System.out.println("SQLState: " + ex.getSQLState());
-            System.out.println("VendorError: " + ex.getErrorCode());
+            Logger.logGeneral("SQLException: " + ex.getMessage());
+            Logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            return "";
         }
         return ret.toString();
     }
 
-    public String enableGuild(long guildId,String title,ResourceBundle output)
+    public String enableGuild(Guild guild,String title,ResourceBundle output,long messageId)
     {
         StringBuilder ret = new StringBuilder();
         Statement stmt;
@@ -378,29 +365,31 @@ public class BotGuild {
             if(rs.next()) {
                 long id = rs.getLong(1);
                 rs.close();
-                stmt.execute("DELETE FROM disabled_emoji_servers WHERE guildid="+guildId+" AND emoji_guildid="+id);
+                stmt.execute("DELETE FROM disabled_emoji_servers WHERE guildid="+guild.getId()+" AND emoji_guildid="+id);
                 ret.append(output.getString("enable-success"));
-                System.out.print(title+" server enabled");
+                Logger.logReponse(title+" server enabled",guild,messageId);
             }else{
                 ret.append(output.getString("error-enable-404"));
-                System.out.print("emoji server not exist");
+                Logger.logReponse("guild not registered",guild,messageId);
             }
             stmt.close();
         } catch (SQLException ex) {
-            System.out.println("SQLException: " + ex.getMessage());
-            System.out.println("SQLState: " + ex.getSQLState());
-            System.out.println("VendorError: " + ex.getErrorCode());
+            Logger.logGeneral("SQLException: " + ex.getMessage());
+            Logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            return "";
         }
         return ret.toString();
     }
 
-    public String printStatus(Guild guild,ResourceBundle output){
+    public MessageEmbed printStatus(Guild guild,ResourceBundle output,long messageId){
         String title=null;
         long disabled=0;
         boolean status=false;
         long modroles=0;
         boolean found=false;
-        StringBuilder ret = new StringBuilder();
+        EmbedBuilder ret = new EmbedBuilder();
+        ret.setColor(Color.GREEN);
         Statement stmt;
         ResultSet rs;
         try {
@@ -429,20 +418,56 @@ public class BotGuild {
             rs.close();
             stmt.close();
         } catch (SQLException ex) {
-            System.out.println("SQLException: " + ex.getMessage());
-            System.out.println("SQLState: " + ex.getSQLState());
-            System.out.println("VendorError: " + ex.getErrorCode());
+            Logger.logGeneral("SQLException: " + ex.getMessage());
+            Logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            return ret.build();
         }
         if(found){
-            ret.append(output.getString("status-head")).append("\n");
-            ret.append(output.getString("status-emoji")).append(" ").append(output.getString(status?"enabled":"disabled")).append("\n");
-            ret.append(output.getString("status-registered")).append(" ").append(output.getString((title!=null)?"registered":"unregistered")).append("\n");
-            ret.append(output.getString("status-title")).append(" ").append(title!=null?title:"").append("\n");
-            ret.append(output.getString("status-modroles")).append(" ").append(modroles).append("\n");
-            ret.append(output.getString("status-disabled")).append(" ").append(disabled).append("\n");
+            ret.setTitle(output.getString("status-head"));
+            ret.addField(output.getString("status-emoji"),output.getString(status?"enabled":"disabled"),false);
+            ret.addField(output.getString("status-registered"),output.getString((title!=null)?"registered":"unregistered"),false);
+            ret.addField(output.getString("status-title"),title!=null?title:"",false);
+            ret.addField(output.getString("status-modroles"),Long.toString(modroles),false);
+            ret.addField(output.getString("status-disabled"),Long.toString(disabled),false);
+            Logger.logReponse("printed status",guild,messageId);
         }
 
-        return ret.toString();
+        return ret.build();
+    }
+
+
+    BotGuild(Connection actconn)
+    {
+        this.conn = actconn;
+    }
+
+    public boolean memberIsMod(Member member,long guild)
+    {
+        List<Role> roles = member.getRoles();
+        Statement stmt;
+        ResultSet rs;
+        try {
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery("SELECT roleid FROM roles WHERE guildid="+guild);
+            while (rs.next()){
+                for (Role role : roles) {
+                    if(role.getIdLong()==rs.getLong(1)){
+                        rs.close();
+                        stmt.close();
+                        return true;
+                    }
+                }
+            }
+            rs.close();
+            stmt.close();
+        }catch (SQLException ex) {
+            Logger.logGeneral("SQLException: " + ex.getMessage());
+            Logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+        }
+
+        return false;
     }
 
     public boolean emojiEnabled(Guild guild){
@@ -461,17 +486,12 @@ public class BotGuild {
             stmt.close();
         }catch (SQLException ex)
         {
-            System.out.println("SQLException: " + ex.getMessage());
-            System.out.println("SQLState: " + ex.getSQLState());
-            System.out.println("VendorError: " + ex.getErrorCode());
+            Logger.logGeneral("SQLException: " + ex.getMessage());
+            Logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logGeneral("VendorError: " + ex.getErrorCode());
             return false;
         }
         return ret;
-    }
-
-    BotGuild(Connection actconn)
-    {
-        this.conn = actconn;
     }
 
     public void autoModRole(Guild guild)
@@ -497,9 +517,9 @@ public class BotGuild {
                     rs.close();
                     stmt.close();
                 }catch (SQLException ex) {
-                    System.out.println("SQLException: " + ex.getMessage());
-                    System.out.println("SQLState: " + ex.getSQLState());
-                    System.out.println("VendorError: " + ex.getErrorCode());
+                    Logger.logGeneral("SQLException: " + ex.getMessage());
+                    Logger.logGeneral("SQLState: " + ex.getSQLState());
+                    Logger.logGeneral("VendorError: " + ex.getErrorCode());
                 }
         }
     }
@@ -517,9 +537,9 @@ public class BotGuild {
             }
             stmt.close();
         }catch (SQLException ex) {
-            System.out.println("SQLException: " + ex.getMessage());
-            System.out.println("SQLState: " + ex.getSQLState());
-            System.out.println("VendorError: " + ex.getErrorCode());
+            Logger.logGeneral("SQLException: " + ex.getMessage());
+            Logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logGeneral("VendorError: " + ex.getErrorCode());
         }
         return ret;
     }

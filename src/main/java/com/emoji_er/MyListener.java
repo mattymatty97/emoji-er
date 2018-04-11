@@ -57,11 +57,12 @@ public class MyListener extends ListenerAdapter {
             stmt2.close();
             stmt1.close();
         } catch (SQLException ex) {
-            System.out.println("SQLException: " + ex.getMessage());
-            System.out.println("SQLState: " + ex.getSQLState());
-            System.out.println("VendorError: " + ex.getErrorCode());
+            Logger.logGeneral("SQLException: " + ex.getMessage());
+            Logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logGeneral("VendorError: " + ex.getErrorCode());
         }
         updateServerCount(event.getJDA());
+        Logger.logGeneral("------------SYSTEM READY---------------\r\n");
     }
 
     @Override
@@ -88,7 +89,8 @@ public class MyListener extends ListenerAdapter {
             MessageChannel channel = event.getChannel();
             //get message
             Message message = event.getMessage();
-            //get text
+            //get id
+            long messageId = message.getIdLong();
             if (message.getContent().matches(System.getenv("DEFAULT_EMOJI_PREFIX")+"emoji\\.\\w+"+System.getenv("DEFAULT_EMOJI_PREFIX"))||message.getContent().matches(System.getenv("DEFAULT_EMOJI_PREFIX")+"emoji\\.\\w+"+System.getenv("DEFAULT_EMOJI_PREFIX")+" .+")) {
                 String args[] = message.getContent().split(" ");
                 String command = args[0].split(System.getenv("DEFAULT_EMOJI_PREFIX"))[1].split("\\.")[1];
@@ -96,63 +98,63 @@ public class MyListener extends ListenerAdapter {
 //------USER---------------------HELP--------------------------------------
 
                     case "help":
-                        System.out.println("help shown in guild: '" + guildname + "'");
+                        Logger.logMessage("help",message);
                         PrintHelp(channel, member, guild);
+                        Logger.logReponse("help shown",guild,messageId);
                         break;
 
 //------USER--------------------PING---------------------------------------
 
                     case "ping":
-                        System.out.println("Ping executed in guild: '" + guildname + "'");
+                        Logger.logMessage("Ping",message);
                         channel.sendMessage(output.getString("pong")).queue();
+                        Logger.logReponse("Ping shown",guild,messageId);
                         break;
 //------USER-------------------LIST----------------------------------------
                     case "list":
-                        if(args.length==2) {
+                        Logger.logMessage("list",message);
+                        if(args.length>=2) {
                             channel.sendMessage(output.getString("emoji-list")+"\n"+ botGuild.getEmojiList(args[1].replace(" ",""),event.getJDA())).queue();
-                            System.out.println("emoji list shown in guild: '" + guildname + "'");
+                            Logger.logReponse("emoji list shown",guild,messageId);
                         }else{
                             channel.sendMessage(output.getString("error-emoji-list")).queue();
-                            System.out.println("error emoji list in guild: '" + guildname + "'");
+                            Logger.logReponse("error emoji list",guild,messageId);
                         }
                         break;
 //------USER-------------------SERVER--------------------------------------
                     case "servers":
+                        Logger.logMessage("servers",message);
                         String result = botGuild.printServers(guild.getIdLong(),event.getJDA());
                         channel.sendMessage(output.getString("emoji-server-list")+"\n"+result).queue();
-                        System.out.println("emoji server list shown in guild: '" + guildname + "'");
+                        Logger.logReponse("server list shown",guild,messageId);
                         break;
 //------MOD--------------------REGISTER------------------------------------
                     case "register":
+                        Logger.logMessage("register",message);
                         if (member.isOwner() || botGuild.memberIsMod(member,guild.getIdLong())) {
-                            if(args.length==2){
+                            if(args.length>=2){
                                 if(args[1].length()<=10){
-                                    channel.sendMessage(botGuild.registerGuild(guild.getIdLong(),args[1],output)).queue();
+                                    channel.sendMessage(botGuild.registerGuild(guild,args[1],output,messageId)).queue();
                                 }else{
-                                    System.out.println("emoji register failed in guild: '" + guildname + "'");
+                                    Logger.logReponse("long server title",guild,messageId);
                                     channel.sendMessage(output.getString("error-long-title")).queue();
                                 }
                             }else{
-                                System.out.println("command syntax in guild: '" + guildname + "'");
-                                channel.sendMessage(output.getString("error-wrong-syntax")).queue();
+                                Logger.logReponse("syntax",guild,messageId);
                             }
                         }else {
                             channel.sendMessage(output.getString("error-user-permission")).queue();
-                            System.out.println("no permission in guild: '" + guildname + "'");
+                            Logger.logReponse("user not allowed",guild,messageId);
                         }
                         break;
 //------MOD------------------UNREGISTER------------------------------------
                     case "unregister":
+                        Logger.logMessage("unregister",message);
                         if (member.isOwner() || botGuild.memberIsMod(member,guild.getIdLong())) {
-                            if(args.length==1){
-                                channel.sendMessage(botGuild.unRegisterGuild(guild.getIdLong(),output)).queue();
-                            }else{
-                                System.out.println("command syntax in guild: '" + guildname + "'");
-                                channel.sendMessage(output.getString("error-wrong-syntax")).queue();
-                            }
+                            channel.sendMessage(botGuild.unRegisterGuild(guild,output,messageId)).queue();
                         }else {
                             channel.sendMessage(output.getString("error-user-permission")).queue();
-                            System.out.println("no permission in guild: '" + guildname + "'");
+                            Logger.logReponse("user not allowed",guild,messageId);
                         }
                         break;
 //------MOD------------------MODROLE---------------------------------------
@@ -167,94 +169,86 @@ public class MyListener extends ListenerAdapter {
                                 switch (args[1]) {
                                     case "add":
                                         //if there is a mentioned role
-                                        if (mentions.size() == 1) {
+                                        Logger.logMessage("modrole add",message);
+                                        if (mentions.size()>= 1) {
                                             //call class method to add roles
-                                            System.out.println("adding modrole '" + mentions.get(0).getName() + "' to guild '" + guildname + "'");
-                                            channel.sendMessage(botGuild.addModRole(mentions.get(0),guild.getIdLong(),output)).queue();
-                                        } else {
-                                            System.out.println("modrole syntax in guild: '" + guildname + "'");
-                                            channel.sendMessage(output.getString("error-wrong-syntax")).queue();
+                                            channel.sendMessage(botGuild.addModRole(mentions.get(0),guild,output,messageId)).queue();
                                         }
                                         break;
                                     case "remove":
                                         //if there is a mentioned user
-                                        if (mentions.size() == 1) {
+                                        Logger.logMessage("modrole remove",message);
+                                        if (mentions.size()>= 1) {
                                             //call class method to remove roles
-                                            System.out.println("removing modrole '" + mentions.get(0).getName() + "' from guild '" + guildname + "'");
-                                            channel.sendMessage(botGuild.removeModRole(mentions.get(0),guild.getIdLong(),output)).queue();
-                                        } else {
-                                            System.out.println("modrole syntax in guild: '" + guildname + "'");
-                                            channel.sendMessage(output.getString("error-wrong-syntax")).queue();
+                                            channel.sendMessage(botGuild.removeModRole(mentions.get(0),guild,output,messageId)).queue();
                                         }
                                         break;
                                     case "clear":
-                                        channel.sendMessage(botGuild.clearModrole(guild.getIdLong(),output)).queue();
+                                        Logger.logMessage("modrole clear",message);
+                                        channel.sendMessage(botGuild.clearModrole(guild,output,messageId)).queue();
+                                        Logger.logReponse("modroles cleared",guild,messageId);
                                         break;
                                     case "auto":
+                                        Logger.logMessage("modrole auto",message);
                                         botGuild.autoModRole(event.getGuild());
                                         channel.sendMessage(output.getString("modrole-auto")).queue();
-                                        System.out.println("auto adding moroles to guild: "+guildname);
+                                        Logger.logReponse("modroles updated",guild,messageId);
                                     case "list":
                                         //list all modroles
-                                        System.out.println("listing modroles in guild: '" + guildname + "'");
-                                        channel.sendMessage(botGuild.listModrole(guild,output)).queue();
+                                        Logger.logMessage("modrole list",message);
+                                        channel.sendMessage(botGuild.listModrole(guild,output,messageId)).queue();
                                         break;
-                                    default:
-                                        System.out.println("command syntax in guild: '" + guildname + "'");
-                                        channel.sendMessage(output.getString("error-wrong-syntax")).queue();
                                 }
 
                             }
                             break;
                         } else {
+                            Logger.logMessage("modrole",message);
                             channel.sendMessage(output.getString("error-user-permission")).queue();
-                            System.out.println("no permission in guild: '" + guildname + "'");
+                            Logger.logReponse("user not allowed",guild,messageId);
                         }
                         break;
 //------MOD------------------TOGGLE---------------------------------------
                     case "toggle":
+                        Logger.logMessage("toggle",message);
                         if (member.isOwner() || botGuild.memberIsMod(member,guild.getIdLong())){
-                            if(args.length==1){
-                                channel.sendMessage(botGuild.toggleEmoji(guild,output)).queue();
-                            }else{
-                                System.out.println("command syntax in guild: '" + guildname + "'");
-                                channel.sendMessage(output.getString("error-wrong-syntax")).queue();
-                            }
+                            channel.sendMessage(botGuild.toggleEmoji(guild,output,messageId)).queue();
                         }else {
                             channel.sendMessage(output.getString("error-user-permission")).queue();
-                            System.out.println("no permission in guild: '" + guildname + "'");
+                            Logger.logReponse("user not allowed",guild,messageId);
                         }
                         break;
 //------MOD------------------STATUS---------------------------------------
                     case "status":
-                        channel.sendMessage(botGuild.printStatus(guild,output)).queue();
+                        Logger.logMessage("status",message);
+                        channel.sendMessage(botGuild.printStatus(guild,output,messageId)).queue();
                         break;
 //------MOD------------------ENABLE---------------------------------------
                     case "enable":
+                        Logger.logMessage("enable",message);
                         if (member.isOwner() || botGuild.memberIsMod(member,guild.getIdLong())){
-                            if(args.length==2){
-                                channel.sendMessage(botGuild.enableGuild(guild.getIdLong(),args[1],output)).queue();
+                            if(args.length>=2){
+                                channel.sendMessage(botGuild.enableGuild(guild,args[1],output,messageId)).queue();
                             }else{
-                                System.out.println("command syntax in guild: '" + guildname + "'");
-                                channel.sendMessage(output.getString("error-wrong-syntax")).queue();
+                                Logger.logReponse("syntax",guild,messageId);
                             }
                         }else {
                             channel.sendMessage(output.getString("error-user-permission")).queue();
-                            System.out.println("no permission in guild: '" + guildname + "'");
+                            Logger.logReponse("user not allowed",guild,messageId);
                         }
                         break;
 //------MOD------------------DISABLE---------------------------------------
                     case "disable":
+                        Logger.logMessage("disable",message);
                         if (member.isOwner() || botGuild.memberIsMod(member,guild.getIdLong())){
-                            if(args.length==2){
-                                channel.sendMessage(botGuild.disableGuild(guild.getIdLong(),args[1],output)).queue();
+                            if(args.length>=2){
+                                channel.sendMessage(botGuild.disableGuild(guild,args[1],output,messageId)).queue();
                             }else{
-                                System.out.println("command syntax in guild: '" + guildname + "'");
-                                channel.sendMessage(output.getString("error-wrong-syntax")).queue();
+                                Logger.logReponse("syntax",guild,messageId);
                             }
                         }else {
                             channel.sendMessage(output.getString("error-user-permission")).queue();
-                            System.out.println("no permission in guild: '" + guildname + "'");
+                            Logger.logReponse("user not allowed",guild,messageId);
                         }
                         break;
                 }
@@ -291,20 +285,21 @@ public class MyListener extends ListenerAdapter {
                         }
                     }
                     if (used) {
+                        Logger.logMessage("an emoji",message);
                         if (PermissionUtil.checkPermission(event.getGuild().getTextChannelById(channel.getId()), event.getGuild().getSelfMember(), Permission.MESSAGE_MANAGE)) {
                             message.delete().queue();
+                            Logger.logReponse("message deleted",guild,messageId);
                         }
                         EmbedBuilder eb = new EmbedBuilder();
                         eb.setColor(member.getColor());
                         eb.setFooter(member.getEffectiveName(), member.getUser().getAvatarUrl());
                         channel.sendMessage(eb.build()).queue();
                         channel.sendMessage(ret.toString()).queue();
-                        return;
+                        Logger.logReponse("message reposted",guild,messageId);
                     }
                 }
             }
         } else
-
         {
             event.getJDA().shutdown();
             Reconnector.reconnect();
@@ -321,13 +316,13 @@ public class MyListener extends ListenerAdapter {
 
             if(botGuild.onRoleDeleted(event.getRole())) {
                 deleted = false;
-                System.out.println("role deleted in guild: " + guildname);
+                Logger.logEvent("role deleted in guild: ",event.getGuild());
                 try {
                     TextChannel channel =  event.getGuild().getDefaultChannel();
                     channel.sendMessage(output.getString("event-role-deleted")).queue();
                     channel.sendMessage(output.getString("event-role-deleted-2")).queue();
                 } catch (InsufficientPermissionException ex) {
-                    event.getGuild().getOwner().getUser().openPrivateChannel().queue((channel) ->
+                    event.getGuild().getOwner().getUser().openPrivateChannel().queue((PrivateChannel channel) ->
                     {
                         channel.sendMessage(output.getString("event-role-deleted")).queue();
                         channel.sendMessage(output.getString("event-role-deleted-2")).queue();
@@ -346,14 +341,12 @@ public class MyListener extends ListenerAdapter {
         ResourceBundle output = ResourceBundle.getBundle("messages");
         //search for existent informations class for server
         botGuild.autoModRole(event.getGuild());
-        System.out.println("guild " + event.getGuild().getName() + " added");
+        Logger.logEvent("GUILD HAS JOINED",event.getGuild());
         try {
             event.getGuild().getDefaultChannel().sendMessage(output.getString("event-join")).queue();
         } catch (InsufficientPermissionException ex) {
-            event.getGuild().getOwner().getUser().openPrivateChannel().queue((channel) ->
-            {
-                channel.sendMessage(output.getString("event-join")).queue();
-            });
+            event.getGuild().getOwner().getUser().openPrivateChannel().queue((PrivateChannel channel) ->
+                    channel.sendMessage(output.getString("event-join")).queue());
         }
         try {
             Statement stmt = conn.createStatement();
@@ -361,9 +354,9 @@ public class MyListener extends ListenerAdapter {
             stmt.execute("COMMIT");
             stmt.close();
         } catch (SQLException ex) {
-            System.out.println("SQLException: " + ex.getMessage());
-            System.out.println("SQLState: " + ex.getSQLState());
-            System.out.println("VendorError: " + ex.getErrorCode());
+            Logger.logGeneral("SQLException: " + ex.getMessage());
+            Logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logGeneral("VendorError: " + ex.getErrorCode());
         }
         updateServerCount(event.getJDA());
     }
@@ -378,11 +371,11 @@ public class MyListener extends ListenerAdapter {
             stmt.execute("DELETE FROM guilds WHERE guildid=" + event.getGuild().getIdLong());
             stmt.execute("COMMIT");
             stmt.close();
-            System.out.println("guild " + event.getGuild().getName() + " has been removed");
+            Logger.logEvent("GUILD HAS LEAVED",event.getGuild());
         } catch (SQLException ex) {
-            System.out.println("SQLException: " + ex.getMessage());
-            System.out.println("SQLState: " + ex.getSQLState());
-            System.out.println("VendorError: " + ex.getErrorCode());
+            Logger.logGeneral("SQLException: " + ex.getMessage());
+            Logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logGeneral("VendorError: " + ex.getErrorCode());
         }
         updateServerCount(event.getJDA());
     }
@@ -430,9 +423,9 @@ public class MyListener extends ListenerAdapter {
             stmt.close();
             return true;
         } catch (SQLException ex) {
-            System.out.println("SQLException: " + ex.getMessage());
-            System.out.println("SQLState: " + ex.getSQLState());
-            System.out.println("VendorError: " + ex.getErrorCode());
+            Logger.logGeneral("SQLException: " + ex.getMessage());
+            Logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logGeneral("VendorError: " + ex.getErrorCode());
         }
         return false;
     }
@@ -440,36 +433,6 @@ public class MyListener extends ListenerAdapter {
     public MyListener(Connection conn) {
         this.conn = conn;
         this.botGuild = new BotGuild(conn);
-    }
-
-    private static void guildDeleteDB(Connection conn, Long guildId) {
-        try {
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT * FROM guilds WHERE guildid=" + guildId);
-            List<Long> to_remove = new ArrayList<>();
-            if (rs.next()) {
-                rs.close();
-                rs = stmt.executeQuery("SELECT groupid FROM groups WHERE guildid=" + guildId);
-                while (rs.next()) {
-                    to_remove.add(rs.getLong(1));
-                }
-                rs.close();
-                for (Long id : to_remove) {
-                    stmt.execute("DELETE FROM grouproles WHERE groupid=" + id);
-                }
-                stmt.execute("DELETE FROM groups WHERE guildid=" + guildId);
-                stmt.execute("DELETE FROM roles WHERE guildid=" + guildId);
-            } else {
-                rs.close();
-            }
-            stmt.execute("DELETE FROM guilds WHERE guildid=" + guildId);
-            stmt.execute("COMMIT");
-            stmt.close();
-        } catch (SQLException ex) {
-            System.out.println("SQLException: " + ex.getMessage());
-            System.out.println("SQLState: " + ex.getSQLState());
-            System.out.println("VendorError: " + ex.getErrorCode());
-        }
     }
 
     private void updateServerCount(JDA api) {
@@ -511,9 +474,9 @@ public class MyListener extends ListenerAdapter {
             }
             stmt1.close();
         } catch (SQLException ex) {
-            System.out.println("SQLException: " + ex.getMessage());
-            System.out.println("SQLState: " + ex.getSQLState());
-            System.out.println("VendorError: " + ex.getErrorCode());
+            Logger.logGeneral("SQLException: " + ex.getMessage());
+            Logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logGeneral("VendorError: " + ex.getErrorCode());
         }
     }
 

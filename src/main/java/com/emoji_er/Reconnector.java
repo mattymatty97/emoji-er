@@ -24,11 +24,11 @@ public class Reconnector {
             }catch(Exception e){
                 e.printStackTrace();
             }
-            System.out.println("trying to reconnect to sql");
+            Logger.logGeneral("trying to reconnect to sql");
             try {
                 Class.forName("org.postgresql.Driver");
             } catch (ClassNotFoundException e) {
-                System.out.println("Missing postgresql JDBC Driver!");
+                Logger.logGeneral("Missing postgresql JDBC Driver!");
                 e.printStackTrace();
                 connected = false;
                 continue;
@@ -39,20 +39,20 @@ public class Reconnector {
                     dbUri = new URI(System.getenv("DATABASE_URL"));
                 }catch (URISyntaxException ex)
                 {
-                    System.out.println("URIException: " + ex.getMessage());
-                    System.out.println("Reason: " + ex.getReason());
+                    Logger.logGeneral("URIException: " + ex.getMessage());
+                    Logger.logGeneral("Reason: " + ex.getReason());
                     continue;
                 }
 
                 String username = dbUri.getUserInfo().split(":")[0];
                 String password = dbUri.getUserInfo().split(":")[1];
                 String dbUrl = "jdbc:postgresql://" + dbUri.getHost() + ':' + dbUri.getPort() + dbUri.getPath() + "?ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory&" + "user=" + username + "&password=" + password;
-                System.out.println("Connecting to: " + dbUrl);
+                Logger.logGeneral("Connecting to: " + dbUrl);
                 conn = DriverManager.getConnection(dbUrl);
-                System.out.println("SQL INITIALIZZATED");
+                Logger.logGeneral("SQL INITIALIZZATED");
                 connected = true;
             } catch (SQLException ex) {
-                System.out.println("NOT CONNECTED RETRY IN 5 SEC");
+                Logger.logGeneral("NOT CONNECTED RETRY IN 5 SEC");
                 connected = false;
             }
         }
