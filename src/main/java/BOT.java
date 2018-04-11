@@ -42,7 +42,7 @@ public class BOT
         JDA api = new JDABuilder(AccountType.BOT).setToken(System.getenv("BOT_TOKEN")).buildAsync();
 
         api.addEventListener(new MyListener(conn));
-        api.getPresence().setGame(Game.playing("v1.4.0 - em prj"));
+        api.getPresence().setGame(Game.playing("v1.4.1 - em prj"));
     }
 
 
