@@ -127,8 +127,8 @@ public class MyListener extends ListenerAdapter {
                     case "register":
                         if (member.isOwner() || botGuild.memberIsMod(member,guild.getIdLong())) {
                             if(args.length==2){
-                                if(args[2].length()<=10){
-                                    channel.sendMessage(emojiGuild.registerGuild(guild.getIdLong(),args[1].replace(" ",""),output)).queue();
+                                if(args[1].length()<=10){
+                                    channel.sendMessage(emojiGuild.registerGuild(guild.getIdLong(),args[1],output)).queue();
                                 }else{
                                     System.out.println("emoji register failed in guild: '" + guildname + "'");
                                     channel.sendMessage(output.getString("error-long-title")).queue();
@@ -156,7 +156,7 @@ public class MyListener extends ListenerAdapter {
                             System.out.println("no permission in guild: '" + guildname + "'");
                         }
                         break;
-
+//------MOD------------------MODROLE---------------------------------------
                     case "modrole":
                         //if member is allowed
                         if (member.isOwner() || botGuild.memberIsMod(member,guild.getIdLong())) {

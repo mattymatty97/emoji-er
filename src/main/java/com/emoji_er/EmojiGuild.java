@@ -58,7 +58,7 @@ public class EmojiGuild {
             rs = stmt.executeQuery("SELECT * FROM registered_emoji_server WHERE guildid="+guildId);
             if(rs.next()) {
                 rs.close();
-                stmt.execute("DELETE FROM active_emoji_guilds WHERE emoji_guildID=" + guildId);
+                stmt.execute("DELETE FROM disabled_emoji_servers WHERE emoji_guildID=" + guildId);
                 stmt.execute("DELETE FROM registered_emoji_server WHERE guildid=" + guildId);
                 System.out.print("emoji unregistered");
                 ret.append(output.getString("emoji-guild-unregistered"));
