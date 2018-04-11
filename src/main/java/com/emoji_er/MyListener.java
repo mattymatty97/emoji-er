@@ -90,7 +90,7 @@ public class MyListener extends ListenerAdapter {
             //get message
             Message message = event.getMessage();
             //get text
-            if (message.getContent().matches(System.getenv("DEFAULT_EMOJI_PREFIX")+"emoji\\.\\w+"+System.getenv("DEFAULT_EMOJI_PREFIX"))||message.getContent().matches(System.getenv("DEFAULT_EMOJI_PREFIX")+"emoji\\.\\w+"+System.getenv("DEFAULT_EMOJI_PREFIX")+".+")) {
+            if (message.getContent().matches(System.getenv("DEFAULT_EMOJI_PREFIX")+"emoji\\.\\w+"+System.getenv("DEFAULT_EMOJI_PREFIX"))||message.getContent().matches(System.getenv("DEFAULT_EMOJI_PREFIX")+"emoji\\.\\w+"+System.getenv("DEFAULT_EMOJI_PREFIX")+" .+")) {
                 String args[] = message.getContent().split(" ");
                 String command = args[0].split(System.getenv("DEFAULT_EMOJI_PREFIX"))[1].split("\\.")[1];
                 switch (command){
@@ -212,47 +212,91 @@ public class MyListener extends ListenerAdapter {
                             System.out.println("no permission in guild: '" + guildname + "'");
                         }
                         break;
+//------MOD------------------TOGGLE---------------------------------------
+                    case "toggle":
+                        if (member.isOwner() || botGuild.memberIsMod(member,guild.getIdLong())){
+                            if(args.length==1){
+                                channel.sendMessage(botGuild.toggleEmoji(guild,output)).queue();
+                            }else{
+                                System.out.println("command syntax in guild: '" + guildname + "'");
+                                channel.sendMessage(output.getString("error-wrong-syntax")).queue();
+                            }
+                        }else {
+                            channel.sendMessage(output.getString("error-user-permission")).queue();
+                            System.out.println("no permission in guild: '" + guildname + "'");
+                        }
+                        break;
+//------MOD------------------STATUS---------------------------------------
+                    case "status":
+                        if (member.isOwner() || botGuild.memberIsMod(member,guild.getIdLong())){
+
+                        }else {
+                            channel.sendMessage(output.getString("error-user-permission")).queue();
+                            System.out.println("no permission in guild: '" + guildname + "'");
+                        }
+                        break;
+//------MOD------------------ENABLE---------------------------------------
+                    case "enable":
+                        if (member.isOwner() || botGuild.memberIsMod(member,guild.getIdLong())){
+
+                        }else {
+                            channel.sendMessage(output.getString("error-user-permission")).queue();
+                            System.out.println("no permission in guild: '" + guildname + "'");
+                        }
+                        break;
+//------MOD------------------DISABLE---------------------------------------
+                    case "disable":
+                        if (member.isOwner() || botGuild.memberIsMod(member,guild.getIdLong())){
+
+                        }else {
+                            channel.sendMessage(output.getString("error-user-permission")).queue();
+                            System.out.println("no permission in guild: '" + guildname + "'");
+                        }
+                        break;
                 }
+/*--------------------EMOJI REPLACEMENT------------------*/
             } else {
-                String args[] = message.getRawContent().split(System.getenv("DEFAULT_EMOJI_PREFIX"));
-                StringBuilder ret = new StringBuilder(args[0]);
-                boolean found = false;
-                boolean last = false;
-                boolean used = false;
-                if (args.length > 1) {
-                    for (int i = 1; i < args.length; i++) {
-                        String arg = args[i];
-                        if (!last) {
-                            if (arg.matches("\\w+\\.\\w+")) {
-                                String[] param = arg.split("\\.");
-                                String emoji;
-                                emoji = emojiGuild.getEmoji(arg, event.getJDA());
-                                if (emoji != null) {
-                                    ret.append(emoji);
-                                    found = true;
-                                    used = true;
+                if(botGuild.emojiEnabled(guild)) {
+                    String args[] = message.getRawContent().split(System.getenv("DEFAULT_EMOJI_PREFIX"));
+                    StringBuilder ret = new StringBuilder(args[0]);
+                    boolean found = false;
+                    boolean last = false;
+                    boolean used = false;
+                    if (args.length > 1) {
+                        for (int i = 1; i < args.length; i++) {
+                            String arg = args[i];
+                            if (!last) {
+                                if (arg.matches("\\w+\\.\\w+")) {
+                                    String[] param = arg.split("\\.");
+                                    String emoji;
+                                    emoji = emojiGuild.getEmoji(arg, event.getJDA());
+                                    if (emoji != null) {
+                                        ret.append(emoji);
+                                        found = true;
+                                        used = true;
+                                    }
                                 }
                             }
+                            if (!found) {
+                                if (!last)
+                                    ret.append(System.getenv("DEFAULT_EMOJI_PREFIX"));
+                                ret.append(arg);
+                            }
+                            last = found;
+                            found = false;
                         }
-                        if (!found) {
-                            if (!last)
-                                ret.append(System.getenv("DEFAULT_EMOJI_PREFIX"));
-                            ret.append(arg);
+                    }
+                    if (used) {
+                        if (PermissionUtil.checkPermission(event.getGuild().getTextChannelById(channel.getId()), event.getGuild().getSelfMember(), Permission.MESSAGE_MANAGE)) {
+                            message.delete().queue();
                         }
-                        last = found;
-                        found = false;
+                        EmbedBuilder eb = new EmbedBuilder();
+                        eb.setColor(member.getColor());
+                        eb.setFooter(member.getEffectiveName(), member.getUser().getAvatarUrl());
+                        channel.sendMessage(eb.build()).queue();
+                        channel.sendMessage(ret.toString()).queue();
+                        return;
                     }
-                }
-                if (used) {
-                    if (PermissionUtil.checkPermission(event.getGuild().getTextChannelById(channel.getId()), event.getGuild().getSelfMember(), Permission.MESSAGE_MANAGE)) {
-                        message.delete().queue();
-                    }
-                    EmbedBuilder eb = new EmbedBuilder();
-                    eb.setColor(member.getColor());
-                    eb.setFooter(member.getEffectiveName(), member.getUser().getAvatarUrl());
-                    channel.sendMessage(eb.build()).queue();
-                    channel.sendMessage(ret.toString()).queue();
-                    return;
                 }
             }
         } else
@@ -362,6 +406,8 @@ public class MyListener extends ListenerAdapter {
                 helpMsg.addField("register", output.getString("help-def-register"), false);
 
                 helpMsg.addField("unregister", output.getString("help-def-unregister"), false);
+
+                helpMsg.addField("toggle", output.getString("help-def-toggle"), false);
 
             }
             helpMsg.setFooter(output.getString("help-footer"), null);

@@ -144,6 +144,55 @@ public class BotGuild {
         return ret.toString();
     }
 
+    public String toggleEmoji(Guild guild,ResourceBundle output){
+        StringBuilder ret = new StringBuilder(output.getString("toggle-head")).append(" ");
+        try{
+            Statement stmt;
+            ResultSet rs;
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery("SELECT enabled FROM guilds WHERE guildid="+guild.getIdLong());
+            if(rs.next()){
+                boolean enabled = rs.getBoolean(1);
+                rs.close();
+                stmt.execute("UPDATE guilds SET enabled="+!enabled+" WHERE guildid="+guild.getIdLong());
+                ret.append(output.getString(enabled?"toggle-disabled":"toggle-enabled"));
+            }else
+                rs.close();
+            stmt.close();
+        }catch (SQLException ex)
+        {
+            System.out.println("SQLException: " + ex.getMessage());
+            System.out.println("SQLState: " + ex.getSQLState());
+            System.out.println("VendorError: " + ex.getErrorCode());
+            return null;
+        }
+        return ret.toString();
+    }
+
+    public boolean emojiEnabled(Guild guild){
+        boolean ret=false;
+        try{
+            Statement stmt;
+            ResultSet rs;
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery("SELECT enabled FROM guilds WHERE guildid="+guild.getIdLong());
+            if(rs.next()){
+                boolean enabled = rs.getBoolean(1);
+                rs.close();
+                ret=enabled;
+            }else
+                rs.close();
+            stmt.close();
+        }catch (SQLException ex)
+        {
+            System.out.println("SQLException: " + ex.getMessage());
+            System.out.println("SQLState: " + ex.getSQLState());
+            System.out.println("VendorError: " + ex.getErrorCode());
+            return false;
+        }
+        return ret;
+    }
+
     BotGuild(Connection actconn)
     {
         this.conn = actconn;
