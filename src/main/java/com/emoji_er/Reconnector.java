@@ -34,21 +34,11 @@ public class Reconnector {
                 continue;
             }
             try {
-                URI dbUri;
-                try {
-                    dbUri = new URI(System.getenv("DATABASE_URL"));
-                }catch (URISyntaxException ex)
-                {
-                    Logger.logGeneral("URIException: " + ex.getMessage());
-                    Logger.logGeneral("Reason: " + ex.getReason());
-                    continue;
-                }
-
-                String username = dbUri.getUserInfo().split(":")[0];
-                String password = dbUri.getUserInfo().split(":")[1];
-                String dbUrl = "jdbc:postgresql://" + dbUri.getHost() + ':' + dbUri.getPort() + dbUri.getPath() + "?ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory&" + "user=" + username + "&password=" + password;
-                Logger.logGeneral("Connecting to: " + dbUrl);
-                conn = DriverManager.getConnection(dbUrl);
+                String url= System.getenv("DATABASE_URL");
+                String username = System.getenv("DATABASE_USER");
+                String password = System.getenv("DATABASE_PASSWORD");
+                Logger.logGeneral("Connecting to: "+ url);
+                conn = DriverManager.getConnection("jdbc:"+url,username,password);
                 Logger.logGeneral("SQL INITIALIZZATED");
                 connected = true;
             } catch (SQLException ex) {

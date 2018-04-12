@@ -16,9 +16,9 @@ public class BOT
         Logger.logInit();
         Logger.logGeneral("-----------SYSTEM STARTED------------");
         try {
-            Class.forName("com.mysql.jdbc.Driver");
+            Class.forName("org.postgresql.Driver");
         } catch (ClassNotFoundException e) {
-            Logger.logGeneral("Missing mysql JDBC Driver!");
+            Logger.logGeneral("Missing posgresql JDBC Driver!");
             e.printStackTrace();
             return;
         }
