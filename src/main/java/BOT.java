@@ -16,20 +16,18 @@ public class BOT
         Logger.logInit();
         Logger.logGeneral("-----------SYSTEM STARTED------------");
         try {
-            Class.forName("org.postgresql.Driver");
+            Class.forName("com.mysql.jdbc.Driver");
         } catch (ClassNotFoundException e) {
-            Logger.logGeneral("Missing postgresql JDBC Driver!");
+            Logger.logGeneral("Missing mysql JDBC Driver!");
             e.printStackTrace();
             return;
         }
         try {
-            URI dbUri = new URI(System.getenv("DATABASE_URL"));
-
-            String username = dbUri.getUserInfo().split(":")[0];
-            String password = dbUri.getUserInfo().split(":")[1];
-            String dbUrl = "jdbc:postgresql://" + dbUri.getHost() + ':' + dbUri.getPort() + dbUri.getPath()+"?ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory&"+"user="+username+"&password="+password;
-            Logger.logGeneral("Connecting to: "+ dbUrl);
-            conn = DriverManager.getConnection(dbUrl);
+            String url= System.getenv("DATABASE_URL");
+            String username = System.getenv("DATABASE_USER");
+            String password = System.getenv("DATABASE_PASSWORD");
+            Logger.logGeneral("Connecting to: "+ url);
+            conn = DriverManager.getConnection("jdbc:"+url,username,password);
             Logger.logGeneral("SQL INITIALIZZATED");
         } catch (SQLException ex) {
             Logger.logGeneral("SQLException: " + ex.getMessage());
@@ -41,7 +39,7 @@ public class BOT
         JDA api = new JDABuilder(AccountType.BOT).setToken(System.getenv("BOT_TOKEN")).buildAsync();
 
         api.addEventListener(new MyListener(conn));
-        api.getPresence().setGame(Game.playing("v1.5.0 - em prj"));
+        api.getPresence().setGame(Game.playing("v1.5.1 - em prj"));
 
     }
 

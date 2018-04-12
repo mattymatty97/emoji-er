@@ -256,46 +256,48 @@ public class MyListener extends ListenerAdapter {
             } else {
                 if(botGuild.emojiEnabled(guild)) {
                     String args[] = message.getRawContent().split(System.getenv("DEFAULT_EMOJI_PREFIX"));
-                    StringBuilder ret = new StringBuilder(args[0]);
-                    boolean found = false;
-                    boolean last = false;
-                    boolean used = false;
-                    if (args.length > 1) {
-                        for (int i = 1; i < args.length; i++) {
-                            String arg = args[i];
-                            if (!last) {
-                                if (arg.matches("\\w+\\.\\w+")) {
-                                    String[] param = arg.split("\\.");
-                                    String emoji;
-                                    emoji = botGuild.getEmoji(arg,guild.getIdLong(),event.getJDA());
-                                    if (emoji != null) {
-                                        ret.append(emoji);
-                                        found = true;
-                                        used = true;
+                    if(args.length>=1){
+                        StringBuilder ret = new StringBuilder(args[0]);
+                        boolean found = false;
+                        boolean last = false;
+                        boolean used = false;
+                        if (args.length > 1) {
+                            for (int i = 1; i < args.length; i++) {
+                                String arg = args[i];
+                                if (!last) {
+                                    if (arg.matches("\\w+\\.\\w+")) {
+                                        String[] param = arg.split("\\.");
+                                        String emoji;
+                                        emoji = botGuild.getEmoji(arg,guild.getIdLong(),event.getJDA());
+                                        if (emoji != null) {
+                                            ret.append(emoji);
+                                            found = true;
+                                            used = true;
+                                        }
                                     }
                                 }
+                                if (!found) {
+                                    if (!last)
+                                        ret.append(System.getenv("DEFAULT_EMOJI_PREFIX"));
+                                    ret.append(arg);
+                                }
+                                last = found;
+                                found = false;
                             }
-                            if (!found) {
-                                if (!last)
-                                    ret.append(System.getenv("DEFAULT_EMOJI_PREFIX"));
-                                ret.append(arg);
+                        }
+                        if (used) {
+                            Logger.logMessage("an emoji",message);
+                            if (PermissionUtil.checkPermission(event.getGuild().getTextChannelById(channel.getId()), event.getGuild().getSelfMember(), Permission.MESSAGE_MANAGE)) {
+                                message.delete().queue();
+                                Logger.logReponse("message deleted",guild,messageId);
                             }
-                            last = found;
-                            found = false;
+                            EmbedBuilder eb = new EmbedBuilder();
+                            eb.setColor(member.getColor());
+                            eb.setFooter(member.getEffectiveName(), member.getUser().getAvatarUrl());
+                            channel.sendMessage(eb.build()).queue();
+                            channel.sendMessage(ret.toString()).queue();
+                            Logger.logReponse("message reposted",guild,messageId);
                         }
-                    }
-                    if (used) {
-                        Logger.logMessage("an emoji",message);
-                        if (PermissionUtil.checkPermission(event.getGuild().getTextChannelById(channel.getId()), event.getGuild().getSelfMember(), Permission.MESSAGE_MANAGE)) {
-                            message.delete().queue();
-                            Logger.logReponse("message deleted",guild,messageId);
-                        }
-                        EmbedBuilder eb = new EmbedBuilder();
-                        eb.setColor(member.getColor());
-                        eb.setFooter(member.getEffectiveName(), member.getUser().getAvatarUrl());
-                        channel.sendMessage(eb.build()).queue();
-                        channel.sendMessage(ret.toString()).queue();
-                        Logger.logReponse("message reposted",guild,messageId);
                     }
                 }
             }

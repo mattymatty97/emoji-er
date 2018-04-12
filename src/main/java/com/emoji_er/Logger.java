@@ -14,6 +14,7 @@ import java.util.Date;
 public class Logger {
     private static final DateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
     private static final DateFormat stf = new SimpleDateFormat("HH:mm:ss");
+
     public static void logMessage(String log,Message message){
 
         String time = stf.format(new Date());
