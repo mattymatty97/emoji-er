@@ -456,7 +456,7 @@ public class MyListener extends ListenerAdapter {
                 .build();
 
         try {
-            new OkHttpClient().newCall(request).execute();
+            new OkHttpClient().newCall(request).execute().close();
         } catch (IOException e) {
             e.printStackTrace();
         }
