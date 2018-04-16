@@ -286,7 +286,7 @@ public class BotGuild {
             rs = stmt.executeQuery("SELECT R.guildid ,R.title," +
                     "(CASE " +
                         "WHEN guildid IN (" +
-                            "SELECT guildid " +
+                            "SELECT emoji_guildid " +
                             "FROM disabled_emoji_servers D " +
                             "WHERE D.guildid="+guildId+" )" +
                         "THEN TRUE " +
