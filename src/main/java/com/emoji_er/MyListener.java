@@ -80,7 +80,7 @@ public class MyListener extends ListenerAdapter {
 
             Guild guild = event.getGuild();
 
-            updateDatabase(guild);
+            updateDatabase(guild,output);
             //name of sender server
             String guildname = event.getGuild().getName();
             //get sender member
@@ -462,7 +462,7 @@ public class MyListener extends ListenerAdapter {
         }
     }
 
-    private void updateDatabase(Guild guild){
+    private void updateDatabase(Guild guild,ResourceBundle output){
         try {
             Statement stmt1 = conn.createStatement();
             ResultSet rs;
@@ -475,6 +475,14 @@ public class MyListener extends ListenerAdapter {
                 rs.close();
                 stmt1.execute("INSERT INTO guilds(guildid, guildname) VALUES (" + guild.getIdLong() + ",'" + guild.getName() + "')");
                 stmt1.execute("COMMIT");
+                botGuild.autoModRole(guild);
+                updateServerCount(guild.getJDA());
+                try {
+                    guild.getDefaultChannel().sendMessage(output.getString("event-join")).queue();
+                } catch (InsufficientPermissionException ex) {
+                    guild.getOwner().getUser().openPrivateChannel().queue((PrivateChannel channel) ->
+                            channel.sendMessage(output.getString("event-join")).queue());
+                }
             }
             stmt1.close();
         } catch (SQLException ex) {
