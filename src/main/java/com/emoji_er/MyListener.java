@@ -309,6 +309,8 @@ public class MyListener extends ListenerAdapter {
 
     }
 
+
+
     @Override
     public void onRoleDelete(RoleDeleteEvent event) {
         ResourceBundle output;
@@ -342,7 +344,6 @@ public class MyListener extends ListenerAdapter {
     public void onGuildJoin(GuildJoinEvent event) {
         ResourceBundle output = ResourceBundle.getBundle("messages");
         //search for existent informations class for server
-        botGuild.autoModRole(event.getGuild());
         Logger.logEvent("GUILD HAS JOINED",event.getGuild());
         try {
             event.getGuild().getDefaultChannel().sendMessage(output.getString("event-join")).queue();
@@ -360,6 +361,7 @@ public class MyListener extends ListenerAdapter {
             Logger.logGeneral("SQLState: " + ex.getSQLState());
             Logger.logGeneral("VendorError: " + ex.getErrorCode());
         }
+        botGuild.autoModRole(event.getGuild());
         updateServerCount(event.getJDA());
     }
 
@@ -481,6 +483,5 @@ public class MyListener extends ListenerAdapter {
             Logger.logGeneral("VendorError: " + ex.getErrorCode());
         }
     }
-
 
 }
