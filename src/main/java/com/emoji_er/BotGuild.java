@@ -283,27 +283,28 @@ public class BotGuild {
         ResultSet rs;
         try{
             stmt = conn.createStatement();
-            rs = stmt.executeQuery("SELECT R.guildid,title FROM registered_emoji_server R WHERE R.guildid NOT IN (SELECT emoji_guildid FROM disabled_emoji_servers D WHERE D.guildid="+guildId+")");
+            rs = stmt.executeQuery("SELECT R.guildid ,R.title," +
+                    "(CASE " +
+                        "WHEN guildid IN (" +
+                            "SELECT guildid " +
+                            "FROM disabled_emoji_servers D " +
+                            "WHERE D.guildid="+guildId+" )" +
+                        "THEN TRUE " +
+                        "ELSE FALSE " +
+                    "END) as disabled " +
+                    "FROM registered_emoji_server R " +
+                    "ORDER BY disabled;");
             while (rs.next()){
                 Guild guild = api.getGuildById(rs.getLong(1));
                 if(guild!=null) {
                     ret.append("\n");
+                    if(rs.getBoolean(3))
+                        ret.append("~~");
                     ret.append(rs.getString(2));
                     ret.append("   ");
                     ret.append(guild.getName());
-                }
-            }
-            rs.close();
-            rs = stmt.executeQuery("SELECT R.guildid,title FROM registered_emoji_server R WHERE R.guildid IN (SELECT emoji_guildid FROM disabled_emoji_servers D WHERE D.guildid="+guildId+")");
-            while (rs.next()){
-                Guild guild = api.getGuildById(rs.getLong(1));
-                if(guild!=null) {
-                    ret.append("\n");
-                    ret.append("~~");
-                    ret.append(rs.getString(2));
-                    ret.append("   ");
-                    ret.append(guild.getName());
-                    ret.append("~~");
+                    if(rs.getBoolean(3))
+                        ret.append("~~");
                 }
             }
             rs.close();
