@@ -63,7 +63,7 @@ public class BotGuild {
             rs = stmt.executeQuery(sql);
             if (!rs.next()) {
                 rs.close();
-                sql = "INSERT INTO roles (guildid,roleid,rolename) VALUES (" + guild.getId() + "," + role.getIdLong() + ",'" + role.getName() + "')";
+                sql = "INSERT INTO roles (guildid,roleid,rolename) VALUES (" + guild.getId() + "," + role.getIdLong() + ",'" + role.getName().replaceAll("[\',\"]","") + "')";
                 stmt.execute(sql);
                 stmt.execute("COMMIT");
                 ret = output.getString("modrole-add");
@@ -131,7 +131,7 @@ public class BotGuild {
             Logger.logGeneral(ex.getMessage());
             Logger.logGeneral("SQLState: " + ex.getSQLState());
             Logger.logGeneral("VendorError: " + ex.getErrorCode());
-            Logger.logGeneral(ex.getStackTrace()[0].toString());
+            Logger.logGeneral(ex.getStackTrace()[1].toString());
             return "";
         }
         Logger.logReponse("listed modroles", guild, messageId);
@@ -570,7 +570,7 @@ public class BotGuild {
                     rs = stmt.executeQuery(sql);
                     if (!rs.next()) {
                         rs.close();
-                        sql = "INSERT INTO roles (guildid,roleid,rolename) VALUES (" + guildId + "," + role.getIdLong() + ",'" + role.getName() + "')";
+                        sql = "INSERT INTO roles (guildid,roleid,rolename) VALUES (" + guildId + "," + role.getIdLong() + ",'" + role.getName().replaceAll("[\',\"]","") + "')";
                         stmt.execute(sql);
                         stmt.execute("COMMIT");
                     }

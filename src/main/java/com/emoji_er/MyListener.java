@@ -360,7 +360,7 @@ public class MyListener extends ListenerAdapter {
         }
         try {
             Statement stmt = conn.createStatement();
-            sql = "INSERT INTO guilds(guildid, guildname) VALUES (" + event.getGuild().getIdLong() + ",\"" + event.getGuild().getName() + "\")";
+            sql = "INSERT INTO guilds(guildid, guildname) VALUES (" + event.getGuild().getIdLong() + ",'" + event.getGuild().getName().replaceAll("[\',\"]","") + "')";
             stmt.execute(sql);
             stmt.execute("COMMIT");
             stmt.close();
@@ -490,12 +490,12 @@ public class MyListener extends ListenerAdapter {
             rs = stmt1.executeQuery(sql);
             if (rs.next()) {
                 rs.close();
-                sql = "UPDATE guilds SET guildname=\"" + guild.getName() + "\" WHERE guildid=" + guild.getIdLong();
+                sql = "UPDATE guilds SET guildname='" + guild.getName() + "' WHERE guildid=" + guild.getIdLong();
                 stmt1.execute(sql);
                 stmt1.execute("COMMIT");
             } else {
                 rs.close();
-                sql = "INSERT INTO guilds(guildid, guildname) VALUES (" + guild.getIdLong() + ",\"" + guild.getName() + "\")";
+                sql = "INSERT INTO guilds(guildid, guildname) VALUES (" + guild.getIdLong() + ",'" + guild.getName().replaceAll("[',\"]","") + "')";
                 stmt1.execute(sql);
                 stmt1.execute("COMMIT");
                 botGuild.autoModRole(guild);
@@ -513,7 +513,7 @@ public class MyListener extends ListenerAdapter {
             Logger.logGeneral("SQLException: " + ex.getMessage());
             Logger.logGeneral("SQLState: " + ex.getSQLState());
             Logger.logGeneral("VendorError: " + ex.getErrorCode());
-            Logger.logGeneral(ex.getStackTrace()[0].toString());
+            Logger.logGeneral(ex.getStackTrace()[1].toString());
         }
     }
 
