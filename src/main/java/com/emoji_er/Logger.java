@@ -75,9 +75,7 @@ public class Logger {
 
                 fw.append(log).append("\r\n");
 
-                System.out.println(log+" in guild:"+guild.getName());
-
-                logGeneral(log+" in guild:"+guild.getName());
+                logGeneral(log+": "+guild.getName());
 
                 fw.flush();
                 fw.close();
