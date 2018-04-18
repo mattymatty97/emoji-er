@@ -490,7 +490,7 @@ public class MyListener extends ListenerAdapter {
             rs = stmt1.executeQuery(sql);
             if (rs.next()) {
                 rs.close();
-                sql = "UPDATE guilds SET guildname='" + guild.getName() + "' WHERE guildid=" + guild.getIdLong();
+                sql = "UPDATE guilds SET guildname='" + guild.getName().replaceAll("[',\"]","") + "' WHERE guildid=" + guild.getIdLong();
                 stmt1.execute(sql);
                 stmt1.execute("COMMIT");
             } else {
