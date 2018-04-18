@@ -173,7 +173,7 @@ public class BotGuild {
         StringBuilder ret = new StringBuilder();
         Statement stmt;
         ResultSet rs;
-        if(title.matches("%['\"]%")) {
+        if(title.contains("'") || title.contains("\"")) {
             ret.append(output.getString("error-title-unallowed"));
         }else{
             if (title.contains("emoji")) {
