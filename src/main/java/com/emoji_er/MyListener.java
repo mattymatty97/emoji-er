@@ -122,7 +122,7 @@ public class MyListener extends ListenerAdapter {
                     case "list":
                         Logger.logMessage("list", message);
                         if (args.length >= 2) {
-                            channel.sendMessage(output.getString("emoji-list") + "\n" + botGuild.getEmojiList(args[1].replace(" ", ""), event.getJDA())).queue();
+                            SendMsg(channel,output.getString("emoji-list") + "\n" + botGuild.getEmojiList(args[1].replace(" ", ""), event.getJDA()));
                             Logger.logReponse("emoji list shown", guild, messageId);
                         } else {
                             channel.sendMessage(output.getString("error-emoji-list")).queue();
@@ -133,7 +133,7 @@ public class MyListener extends ListenerAdapter {
                     case "servers":
                         Logger.logMessage("servers", message);
                         String result = botGuild.printServers(guild.getIdLong(), event.getJDA());
-                        channel.sendMessage(output.getString("emoji-server-list") + "\n" + result).queue();
+                        SendMsg(channel,output.getString("emoji-server-list") + "\n" + result);
                         Logger.logReponse("server list shown", guild, messageId);
                         break;
 //------MOD--------------------REGISTER------------------------------------
@@ -204,7 +204,7 @@ public class MyListener extends ListenerAdapter {
                                     case "list":
                                         //list all modroles
                                         Logger.logMessage("modrole list", message);
-                                        channel.sendMessage(botGuild.listModrole(guild, output, messageId)).queue();
+                                        SendMsg(channel,botGuild.listModrole(guild, output, messageId));
                                         break;
                                 }
 
@@ -514,6 +514,27 @@ public class MyListener extends ListenerAdapter {
             Logger.logGeneral("SQLState: " + ex.getSQLState());
             Logger.logGeneral("VendorError: " + ex.getErrorCode());
             Logger.logGeneral(ex.getStackTrace()[1].toString());
+        }
+    }
+
+    private void SendMsg(MessageChannel channel,String text){
+        //TODO: handle messages longer than 200 chars
+        int messages= ((Double)Math.ceil(text.length()/200.0)).intValue();
+        if(messages>1) {
+            int s=0;
+            for (int i = 0; i < messages; i++) {
+                int p = s, a = s;
+                while((a-s)<200 & a!= -1){
+                    p=a;
+                    a=text.indexOf("\n",p);
+                }
+                if(a==-1)
+                    p=text.length();
+                channel.sendMessage(text.substring(s,p)).queue();
+                s=p;
+            }
+        }else{
+            channel.sendMessage(text).queue();
         }
     }
 
