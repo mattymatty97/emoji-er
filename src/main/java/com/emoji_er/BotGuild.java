@@ -173,40 +173,44 @@ public class BotGuild {
         StringBuilder ret = new StringBuilder();
         Statement stmt;
         ResultSet rs;
-        if (title.contains("emoji")) {
-            ret.append(output.getString("error-title-not_usable"));
-        } else
-            try {
-                stmt = conn.createStatement();
-                sql = "SELECT * FROM registered_emoji_server WHERE guildid=" + guild.getId();
-                rs = stmt.executeQuery(sql);
-                if (rs.next()) {
-                    ret.append(output.getString("error-emoji-registered"));
-                    Logger.logReponse("guild found", guild, messageId);
-                    rs.close();
-                } else {
-                    rs.close();
-                    sql = "SELECT * FROM registered_emoji_server WHERE title='" + title + "'";
+        if(title.matches("%['\"]%")) {
+            ret.append(output.getString("error-title-unallowed"));
+        }else{
+            if (title.contains("emoji")) {
+                ret.append(output.getString("error-title-emoji"));
+            } else
+                try {
+                    stmt = conn.createStatement();
+                    sql = "SELECT * FROM registered_emoji_server WHERE guildid=" + guild.getId();
                     rs = stmt.executeQuery(sql);
                     if (rs.next()) {
-                        ret.append(output.getString("error-emoji-title-used"));
-                        Logger.logReponse("title used", guild, messageId);
+                        ret.append(output.getString("error-emoji-registered"));
+                        Logger.logReponse("guild found", guild, messageId);
+                        rs.close();
                     } else {
-                        sql = "INSERT INTO registered_emoji_server(guildid, title) VALUES (" + guild.getId() + ",'" + title + "')";
-                        stmt.execute(sql);
-                        ret.append(output.getString("emoji-guild-registered"));
-                        Logger.logReponse("guild registered", guild, messageId);
+                        rs.close();
+                        sql = "SELECT * FROM registered_emoji_server WHERE title='" + title + "'";
+                        rs = stmt.executeQuery(sql);
+                        if (rs.next()) {
+                            ret.append(output.getString("error-emoji-title-used"));
+                            Logger.logReponse("title used", guild, messageId);
+                        } else {
+                            sql = "INSERT INTO registered_emoji_server(guildid, title) VALUES (" + guild.getId() + ",'" + title + "')";
+                            stmt.execute(sql);
+                            ret.append(output.getString("emoji-guild-registered"));
+                            Logger.logReponse("guild registered", guild, messageId);
+                        }
                     }
+                    stmt.close();
+                } catch (SQLException ex) {
+                    Logger.logGeneral("SQLError in: " + sql);
+                    Logger.logGeneral(ex.getMessage());
+                    Logger.logGeneral("SQLState: " + ex.getSQLState());
+                    Logger.logGeneral("VendorError: " + ex.getErrorCode());
+                    Logger.logGeneral(ex.getStackTrace()[0].toString());
+                    return "";
                 }
-                stmt.close();
-            } catch (SQLException ex) {
-                Logger.logGeneral("SQLError in: " + sql);
-                Logger.logGeneral(ex.getMessage());
-                Logger.logGeneral("SQLState: " + ex.getSQLState());
-                Logger.logGeneral("VendorError: " + ex.getErrorCode());
-                Logger.logGeneral(ex.getStackTrace()[0].toString());
-                return "";
-            }
+        }
         return ret.toString();
     }
 
