@@ -518,15 +518,14 @@ public class MyListener extends ListenerAdapter {
     }
 
     private void SendMsg(MessageChannel channel,String text){
-        //TODO: handle messages longer than 200 chars
-        int messages= ((Double)Math.ceil(text.length()/200.0)).intValue();
+        int messages= ((Double)Math.ceil(text.length()/2000.0)).intValue();
         if(messages>1) {
             int s=0;
             for (int i = 0; i < messages; i++) {
                 int p = s, a = s;
-                while((a-s)<200 & a!= -1){
+                while((a-s)<2000 & a!= -1){
                     p=a;
-                    a=text.indexOf("\n",p);
+                    a=text.indexOf("\n",p+1);
                 }
                 if(a==-1)
                     p=text.length();
