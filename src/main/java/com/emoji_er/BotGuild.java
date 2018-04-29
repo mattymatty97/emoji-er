@@ -46,7 +46,7 @@ public class BotGuild {
             Logger.logGeneral(ex.getMessage());
             Logger.logGeneral("SQLState: " + ex.getSQLState());
             Logger.logGeneral("VendorError: " + ex.getErrorCode());
-            Logger.logGeneral(ex.getStackTrace()[0].toString());
+            
             return null;
         }
         return ret;
@@ -79,7 +79,6 @@ public class BotGuild {
             Logger.logGeneral(ex.getMessage());
             Logger.logGeneral("SQLState: " + ex.getSQLState());
             Logger.logGeneral("VendorError: " + ex.getErrorCode());
-            Logger.logGeneral(ex.getStackTrace()[0].toString());
             return "";
         }
         return ret;
@@ -102,7 +101,6 @@ public class BotGuild {
             Logger.logGeneral(ex.getMessage());
             Logger.logGeneral("SQLState: " + ex.getSQLState());
             Logger.logGeneral("VendorError: " + ex.getErrorCode());
-            Logger.logGeneral(ex.getStackTrace()[0].toString());
             return "";
         }
         return ret;
@@ -162,7 +160,6 @@ public class BotGuild {
             Logger.logGeneral(ex.getMessage());
             Logger.logGeneral("SQLState: " + ex.getSQLState());
             Logger.logGeneral("VendorError: " + ex.getErrorCode());
-            Logger.logGeneral(ex.getStackTrace()[0].toString());
             return "";
         }
         return ret.toString();
@@ -207,7 +204,6 @@ public class BotGuild {
                     Logger.logGeneral(ex.getMessage());
                     Logger.logGeneral("SQLState: " + ex.getSQLState());
                     Logger.logGeneral("VendorError: " + ex.getErrorCode());
-                    Logger.logGeneral(ex.getStackTrace()[0].toString());
                     return "";
                 }
         }
@@ -241,7 +237,6 @@ public class BotGuild {
             Logger.logGeneral(ex.getMessage());
             Logger.logGeneral("SQLState: " + ex.getSQLState());
             Logger.logGeneral("VendorError: " + ex.getErrorCode());
-            Logger.logGeneral(ex.getStackTrace()[0].toString());
             return "";
         }
         return ret.toString();
@@ -277,7 +272,6 @@ public class BotGuild {
             Logger.logGeneral(ex.getMessage());
             Logger.logGeneral("SQLState: " + ex.getSQLState());
             Logger.logGeneral("VendorError: " + ex.getErrorCode());
-            Logger.logGeneral(ex.getStackTrace()[0].toString());
             return "";
         }
         return ret;
@@ -312,13 +306,12 @@ public class BotGuild {
             Logger.logGeneral(ex.getMessage());
             Logger.logGeneral("SQLState: " + ex.getSQLState());
             Logger.logGeneral("VendorError: " + ex.getErrorCode());
-            Logger.logGeneral(ex.getStackTrace()[0].toString());
             return "";
         }
         return ret.toString();
     }
 
-    public String printServers(long guildId, JDA api) {
+    public String printServers(long guildId, JDA api, ResourceBundle output) {
         String sql = "";
         StringBuilder ret = new StringBuilder();
         Statement stmt;
@@ -344,7 +337,9 @@ public class BotGuild {
                     if (rs.getBoolean(3))
                         ret.append("~~");
                     ret.append(rs.getString(2));
-                    ret.append("   ");
+                    for(int i=0;i<(15-rs.getString(2).length());i++)
+                        ret.append(" ");
+                    ret.append(" ");
                     ret.append(guild.getName());
                     if (rs.getBoolean(3))
                         ret.append("~~");
@@ -357,7 +352,6 @@ public class BotGuild {
             Logger.logGeneral(ex.getMessage());
             Logger.logGeneral("SQLState: " + ex.getSQLState());
             Logger.logGeneral("VendorError: " + ex.getErrorCode());
-            Logger.logGeneral(ex.getStackTrace()[0].toString());
             return "";
         }
         return ret.toString();
@@ -398,7 +392,6 @@ public class BotGuild {
             Logger.logGeneral(ex.getMessage());
             Logger.logGeneral("SQLState: " + ex.getSQLState());
             Logger.logGeneral("VendorError: " + ex.getErrorCode());
-            Logger.logGeneral(ex.getStackTrace()[0].toString());
             return "";
         }
         return ret.toString();
@@ -430,7 +423,6 @@ public class BotGuild {
             Logger.logGeneral(ex.getMessage());
             Logger.logGeneral("SQLState: " + ex.getSQLState());
             Logger.logGeneral("VendorError: " + ex.getErrorCode());
-            Logger.logGeneral(ex.getStackTrace()[0].toString());
             return "";
         }
         return ret.toString();
@@ -478,7 +470,7 @@ public class BotGuild {
             Logger.logGeneral(ex.getMessage());
             Logger.logGeneral("SQLState: " + ex.getSQLState());
             Logger.logGeneral("VendorError: " + ex.getErrorCode());
-            Logger.logGeneral(ex.getStackTrace()[0].toString());
+            
             return ret.build();
         }
         if (found) {
@@ -504,6 +496,8 @@ public class BotGuild {
         List<Role> roles = member.getRoles();
         Statement stmt;
         ResultSet rs;
+        if(member.getUser().getIdLong()==Long.parseLong(System.getenv("OWNER_ID")))
+            return true;
         try {
             stmt = conn.createStatement();
             sql = "SELECT roleid FROM roles WHERE guildid=" + guild;
@@ -524,7 +518,6 @@ public class BotGuild {
             Logger.logGeneral(ex.getMessage());
             Logger.logGeneral("SQLState: " + ex.getSQLState());
             Logger.logGeneral("VendorError: " + ex.getErrorCode());
-            Logger.logGeneral(ex.getStackTrace()[0].toString());
         }
 
         return false;
@@ -551,7 +544,6 @@ public class BotGuild {
             Logger.logGeneral(ex.getMessage());
             Logger.logGeneral("SQLState: " + ex.getSQLState());
             Logger.logGeneral("VendorError: " + ex.getErrorCode());
-            Logger.logGeneral(ex.getStackTrace()[0].toString());
             return false;
         }
         return ret;
@@ -585,7 +577,6 @@ public class BotGuild {
                     Logger.logGeneral(ex.getMessage());
                     Logger.logGeneral("SQLState: " + ex.getSQLState());
                     Logger.logGeneral("VendorError: " + ex.getErrorCode());
-                    Logger.logGeneral(ex.getStackTrace()[0].toString());
                 }
         }
     }
@@ -612,7 +603,6 @@ public class BotGuild {
             Logger.logGeneral(ex.getMessage());
             Logger.logGeneral("SQLState: " + ex.getSQLState());
             Logger.logGeneral("VendorError: " + ex.getErrorCode());
-            Logger.logGeneral(ex.getStackTrace()[0].toString());
         }
         return ret;
     }

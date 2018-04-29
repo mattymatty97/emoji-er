@@ -1,5 +1,6 @@
 package com.emoji_er;
 
+import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
@@ -40,7 +41,12 @@ public class Logger {
                 ex.printStackTrace();
             }
         }
-
+        LogLinker act = Global.getGbl().getMapGuild().get(message.getGuild().getIdLong());
+        if(act!=null){
+            EmbedBuilder builder = act.getMessage();
+            builder.setAuthor(message.getAuthor().getName(),null,message.getAuthor().getAvatarUrl());
+            builder.setDescription(message.getRawContent());
+        }
     }
     public static void logReponse(String log,Guild guild,long messageId){
 
@@ -64,6 +70,14 @@ public class Logger {
             }
         }
 
+        LogLinker act = Global.getGbl().getMapGuild().get(guild.getIdLong());
+        if(act!=null)
+        {
+            EmbedBuilder build = act.getMessage();
+            build.addField("Reponse",log,false);
+            act.getChannel().sendMessage(build.build()).queue();
+            build.clearFields();
+        }
     }
     public static void logEvent(String log,Guild guild){
 
@@ -84,7 +98,16 @@ public class Logger {
                 ex.printStackTrace();
             }
         }
-
+        LogLinker act = Global.getGbl().getMapGuild().get(guild.getIdLong());
+        if(act!=null)
+        {
+            EmbedBuilder build = act.getMessage();
+            build.setAuthor(guild.getName(),null,guild.getIconUrl());
+            build.setDescription("");
+            build.addField("EVENT",log+": "+guild.getName(),false);
+            act.getChannel().sendMessage(build.build()).queue();
+            build.clearFields();
+        }
     }
 
     public static void logGeneral(String log)

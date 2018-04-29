@@ -67,7 +67,7 @@ public class MyListener extends ListenerAdapter {
             Logger.logGeneral("SQLException: " + ex.getMessage());
             Logger.logGeneral("SQLState: " + ex.getSQLState());
             Logger.logGeneral("VendorError: " + ex.getErrorCode());
-            Logger.logGeneral(ex.getStackTrace()[0].toString());
+            
         }
         updateServerCount(event.getJDA());
         Logger.logGeneral("------------SYSTEM READY---------------\r\n");
@@ -132,7 +132,7 @@ public class MyListener extends ListenerAdapter {
 //------USER-------------------SERVER--------------------------------------
                     case "servers":
                         Logger.logMessage("servers", message);
-                        String result = botGuild.printServers(guild.getIdLong(), event.getJDA());
+                        String result = botGuild.printServers(guild.getIdLong(), event.getJDA(),output);
                         SendMsg(channel,output.getString("emoji-server-list") + "\n" + result);
                         Logger.logReponse("server list shown", guild, messageId);
                         break;
@@ -259,6 +259,66 @@ public class MyListener extends ListenerAdapter {
                             Logger.logReponse("user not allowed", guild, messageId);
                         }
                         break;
+                    default :
+                        if(guildIsSupport(guild))
+                            switch (command){
+                                case "log":
+                                    Logger.logMessage("log",message);
+                                    if(guild.getTextChannelById(channel.getIdLong()).getTopic().contains(":log:"))
+                                    {
+                                        LogLinker act = Global.getGbl().getMapChannel().get(channel.getIdLong());
+                                        if(act==null) {
+                                            if (args.length >= 2) {
+                                                if (args[1].matches("\\d{18}")) {
+                                                    long guildId = Long.parseLong(args[1]);
+                                                    int valid = guildIdIsValid(guildId, message);
+                                                    if (valid == 1) {
+                                                        LogLinker log = new LogLinker(guildId, channel);
+                                                        channel.sendMessage(output.getString("log-started")).queue();
+                                                        Logger.logReponse("log daemon started in channel: " + channel.getName(), guild, messageId);
+                                                    } else if (valid == -1) {
+                                                        channel.sendMessage(output.getString("error-log-non_mutual")).queue();
+                                                        Logger.logReponse("guild non mutual", guild, messageId);
+                                                    } else {
+                                                        channel.sendMessage(output.getString("error-log-wrong")).queue();
+                                                        Logger.logReponse("wrong guild id", guild, messageId);
+                                                    }
+                                                } else {
+                                                    channel.sendMessage(output.getString("error-log-non_id")).queue();
+                                                    Logger.logReponse("not an id", guild, messageId);
+                                                }
+                                            } else {
+                                                channel.sendMessage(output.getString("error-log-no_id")).queue();
+                                                Logger.logReponse("mssing id", guild, messageId);
+                                            }
+                                        }else{
+                                            channel.sendMessage(output.getString("error-log-active")).queue();
+                                            Logger.logReponse("already a running daemon", guild, messageId);
+                                        }
+                                    }else{
+                                        channel.sendMessage(output.getString("error-log-channel")).queue();
+                                        Logger.logReponse("channel not log channel",guild,messageId);
+                                    }
+                                    break;
+                                case "end":
+                                    Logger.logMessage("end",message);
+                                    if(guild.getTextChannelById(channel.getIdLong()).getTopic().contains(":log:"))
+                                    {
+                                        LogLinker act = Global.getGbl().getMapChannel().get(channel.getIdLong());
+                                        if(act!=null)
+                                        {
+                                            act.delete();
+                                            channel.sendMessage(output.getString("log-stopped")).queue();
+                                            Logger.logReponse("log daemon stopped in channel:"+channel.getName(),guild,messageId);
+                                        }else{
+                                            channel.sendMessage(output.getString("error-log-end")).queue();
+                                            Logger.logReponse("no log daemon running",guild,messageId);
+                                        }
+                                    }else{
+                                        channel.sendMessage(output.getString("error-log-channel")).queue();
+                                        Logger.logReponse("channel not log channel",guild,messageId);
+                                    }
+                            }
                 }
                 /*--------------------EMOJI REPLACEMENT------------------*/
             } else {
@@ -301,7 +361,7 @@ public class MyListener extends ListenerAdapter {
                             }
                             EmbedBuilder eb = new EmbedBuilder();
                             eb.setColor(member.getColor());
-                            eb.setFooter(member.getEffectiveName(), member.getUser().getAvatarUrl());
+                            eb.setAuthor(member.getEffectiveName(),null, member.getUser().getAvatarUrl());
                             channel.sendMessage(eb.build()).queue();
                             channel.sendMessage(ret.toString()).queue();
                             Logger.logReponse("message reposted", guild, messageId);
@@ -369,7 +429,7 @@ public class MyListener extends ListenerAdapter {
             Logger.logGeneral("SQLException: " + ex.getMessage());
             Logger.logGeneral("SQLState: " + ex.getSQLState());
             Logger.logGeneral("VendorError: " + ex.getErrorCode());
-            Logger.logGeneral(ex.getStackTrace()[0].toString());
+            
         }
         botGuild.autoModRole(event.getGuild());
         updateServerCount(event.getJDA());
@@ -396,7 +456,6 @@ public class MyListener extends ListenerAdapter {
             Logger.logGeneral("SQLException: " + ex.getMessage());
             Logger.logGeneral("SQLState: " + ex.getSQLState());
             Logger.logGeneral("VendorError: " + ex.getErrorCode());
-            Logger.logGeneral(ex.getStackTrace()[0].toString());
         }
         updateServerCount(event.getJDA());
     }
@@ -432,8 +491,16 @@ public class MyListener extends ListenerAdapter {
 
             helpMsg.addField("disable", output.getString("help-def-disable"), false);
 
+            if(guildIsSupport(guild)){
+                helpMsg.addField("SUPPORT commands:", "", false);
+
+                helpMsg.addField("log", output.getString("help-def-log"), false);
+            }
         }
-        helpMsg.setFooter(output.getString("help-footer"), null);
+        if(member.getUser().getIdLong()==Long.parseLong(System.getenv("OWNER_ID")))
+            helpMsg.setFooter(output.getString("help-footer-owner"), null);
+        else
+            helpMsg.setFooter(output.getString("help-footer"), null);
         channel.sendMessage(helpMsg.build()).queue();
     }
 
@@ -448,7 +515,7 @@ public class MyListener extends ListenerAdapter {
             Logger.logGeneral("SQLException: " + ex.getMessage());
             Logger.logGeneral("SQLState: " + ex.getSQLState());
             Logger.logGeneral("VendorError: " + ex.getErrorCode());
-            Logger.logGeneral(ex.getStackTrace()[0].toString());
+            
         }
         return false;
     }
@@ -518,12 +585,12 @@ public class MyListener extends ListenerAdapter {
     }
 
     private void SendMsg(MessageChannel channel,String text){
-        int messages= ((Double)Math.ceil(text.length()/2000.0)).intValue();
+        int messages= ((Double)Math.ceil(text.length()/1000.0)).intValue();
         if(messages>1) {
             int s=0;
             for (int i = 0; i < messages; i++) {
                 int p = s, a = s;
-                while((a-s)<2000 & a!= -1){
+                while((a-s)<1000 & a!= -1){
                     p=a;
                     a=text.indexOf("\n",p+1);
                 }
@@ -535,6 +602,22 @@ public class MyListener extends ListenerAdapter {
         }else{
             channel.sendMessage(text).queue();
         }
+    }
+
+    private boolean guildIsSupport(Guild guild){
+        return guild.getIdLong() == Long.parseLong(System.getenv("SUPPORT_GUILD_ID"));
+    }
+
+    private int guildIdIsValid(long guildId,Message message){
+        JDA jda = message.getJDA();
+        if(jda.getGuildById(guildId)!=null) {
+            for (Guild guild : jda.getSelfUser().getMutualGuilds()) {
+                if (guild.getIdLong() == guildId)
+                    return 1;
+            }
+            return -1;
+        }
+        return 0;
     }
 
 }
