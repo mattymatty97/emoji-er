@@ -117,6 +117,13 @@ public class MyListener extends ListenerAdapter {
                         Logger.logMessage("Ping", message);
                         channel.sendMessage(output.getString("pong")).queue();
                         Logger.logReponse("Ping shown", guild, messageId);
+                        MessageChannel listen = Global.getGbl().getListener();
+                        if(listen!=null){
+                            listen.sendMessage(new EmbedBuilder()
+                                    .setAuthor(guildname,null,guild.getIconUrl())
+                                    .addField("ID",guild.getId(),false).build()).queue();
+                            Global.getGbl().setListener(null);
+                        }
                         break;
 //------USER-------------------LIST----------------------------------------
                     case "list":
@@ -264,59 +271,88 @@ public class MyListener extends ListenerAdapter {
                             switch (command){
                                 case "log":
                                     Logger.logMessage("log",message);
-                                    if(guild.getTextChannelById(channel.getIdLong()).getTopic().contains(":log:"))
-                                    {
-                                        LogLinker act = Global.getGbl().getMapChannel().get(channel.getIdLong());
-                                        if(act==null) {
-                                            if (args.length >= 2) {
-                                                if (args[1].matches("\\d{18}")) {
-                                                    long guildId = Long.parseLong(args[1]);
-                                                    int valid = guildIdIsValid(guildId, message);
-                                                    if (valid == 1) {
-                                                        LogLinker log = new LogLinker(guildId, channel);
-                                                        channel.sendMessage(output.getString("log-started")).queue();
-                                                        Logger.logReponse("log daemon started in channel: " + channel.getName(), guild, messageId);
-                                                    } else if (valid == -1) {
-                                                        channel.sendMessage(output.getString("error-log-non_mutual")).queue();
-                                                        Logger.logReponse("guild non mutual", guild, messageId);
+                                    if (member.isOwner() || botGuild.memberIsMod(member, guild.getIdLong())) {
+                                        if(guild.getTextChannelById(channel.getIdLong()).getTopic().contains(":log:"))
+                                        {
+                                            LogLinker act = Global.getGbl().getMapChannel().get(channel.getIdLong());
+                                            if(act==null) {
+                                                if (args.length >= 2) {
+                                                    if (args[1].matches("\\d{18}")) {
+                                                        long guildId = Long.parseLong(args[1]);
+                                                        int valid = guildIdIsValid(guildId, message);
+                                                        if (valid == 1) {
+                                                            LogLinker log = new LogLinker(guildId, channel);
+                                                            channel.sendMessage(output.getString("log-started")).queue();
+                                                            Logger.logReponse("log daemon started in channel: " + channel.getName(), guild, messageId);
+                                                        } else if (valid == -1) {
+                                                            channel.sendMessage(output.getString("error-log-non_mutual")).queue();
+                                                            Logger.logReponse("guild non mutual", guild, messageId);
+                                                        } else {
+                                                            channel.sendMessage(output.getString("error-log-wrong")).queue();
+                                                            Logger.logReponse("wrong guild id", guild, messageId);
+                                                        }
                                                     } else {
-                                                        channel.sendMessage(output.getString("error-log-wrong")).queue();
-                                                        Logger.logReponse("wrong guild id", guild, messageId);
+                                                        channel.sendMessage(output.getString("error-log-non_id")).queue();
+                                                        Logger.logReponse("not an id", guild, messageId);
                                                     }
                                                 } else {
-                                                    channel.sendMessage(output.getString("error-log-non_id")).queue();
-                                                    Logger.logReponse("not an id", guild, messageId);
+                                                    channel.sendMessage(output.getString("error-log-no_id")).queue();
+                                                    Logger.logReponse("mssing id", guild, messageId);
                                                 }
-                                            } else {
-                                                channel.sendMessage(output.getString("error-log-no_id")).queue();
-                                                Logger.logReponse("mssing id", guild, messageId);
+                                            }else{
+                                                channel.sendMessage(output.getString("error-log-active")).queue();
+                                                Logger.logReponse("already a running daemon", guild, messageId);
                                             }
                                         }else{
-                                            channel.sendMessage(output.getString("error-log-active")).queue();
-                                            Logger.logReponse("already a running daemon", guild, messageId);
+                                            channel.sendMessage(output.getString("error-log-channel")).queue();
+                                            Logger.logReponse("channel not log channel",guild,messageId);
                                         }
-                                    }else{
-                                        channel.sendMessage(output.getString("error-log-channel")).queue();
-                                        Logger.logReponse("channel not log channel",guild,messageId);
+                                    } else {
+                                        channel.sendMessage(output.getString("error-user-permission")).queue();
+                                        Logger.logReponse("user not allowed", guild, messageId);
                                     }
                                     break;
                                 case "end":
                                     Logger.logMessage("end",message);
-                                    if(guild.getTextChannelById(channel.getIdLong()).getTopic().contains(":log:"))
-                                    {
-                                        LogLinker act = Global.getGbl().getMapChannel().get(channel.getIdLong());
-                                        if(act!=null)
-                                        {
-                                            act.delete();
-                                            channel.sendMessage(output.getString("log-stopped")).queue();
-                                            Logger.logReponse("log daemon stopped in channel:"+channel.getName(),guild,messageId);
-                                        }else{
-                                            channel.sendMessage(output.getString("error-log-end")).queue();
-                                            Logger.logReponse("no log daemon running",guild,messageId);
+                                    if (member.isOwner() || botGuild.memberIsMod(member, guild.getIdLong())) {
+                                        if (guild.getTextChannelById(channel.getIdLong()).getTopic().contains(":log:")) {
+                                            LogLinker act = Global.getGbl().getMapChannel().get(channel.getIdLong());
+                                            if (act != null) {
+                                                act.delete();
+                                                channel.sendMessage(output.getString("log-stopped")).queue();
+                                                Logger.logReponse("log daemon stopped in channel:" + channel.getName(), guild, messageId);
+                                            } else {
+                                                channel.sendMessage(output.getString("error-log-end")).queue();
+                                                Logger.logReponse("no log daemon running", guild, messageId);
+                                            }
+                                        } else {
+                                            channel.sendMessage(output.getString("error-log-channel")).queue();
+                                            Logger.logReponse("channel not log channel", guild, messageId);
                                         }
-                                    }else{
-                                        channel.sendMessage(output.getString("error-log-channel")).queue();
-                                        Logger.logReponse("channel not log channel",guild,messageId);
+                                    } else {
+                                        channel.sendMessage(output.getString("error-user-permission")).queue();
+                                        Logger.logReponse("user not allowed", guild, messageId);
+                                    }
+                                case "listen":
+                                    Logger.logMessage("listen",message);
+                                    if (member.isOwner() || botGuild.memberIsMod(member, guild.getIdLong())) {
+                                        if (guild.getTextChannelById(channel.getIdLong()).getTopic().contains(":log:")) {
+                                            if(Global.getGbl().getListener()==null)
+                                            {
+                                                Global.getGbl().setListener(channel);
+                                                channel.sendMessage(output.getString("listen-enabled")).queue();
+                                                Logger.logReponse("listener enabled",guild,messageId);
+                                            }else{
+                                                channel.sendMessage(output.getString("error-listen")).queue();
+                                                Logger.logReponse("error listener active",guild,messageId);
+                                            }
+                                        } else {
+                                            channel.sendMessage(output.getString("error-log-channel")).queue();
+                                            Logger.logReponse("channel not log channel", guild, messageId);
+                                        }
+                                    } else {
+                                        channel.sendMessage(output.getString("error-user-permission")).queue();
+                                        Logger.logReponse("user not allowed", guild, messageId);
                                     }
                             }
                 }
@@ -492,9 +528,15 @@ public class MyListener extends ListenerAdapter {
             helpMsg.addField("disable", output.getString("help-def-disable"), false);
 
             if(guildIsSupport(guild)){
+                helpMsg.addBlankField(false);
+
                 helpMsg.addField("SUPPORT commands:", "", false);
 
                 helpMsg.addField("log", output.getString("help-def-log"), false);
+
+                helpMsg.addField("end", output.getString("help-def-end"), false);
+
+                helpMsg.addField("listen", output.getString("help-def-listen"), false);
             }
         }
         if(member.getUser().getIdLong()==Long.parseLong(System.getenv("OWNER_ID")))

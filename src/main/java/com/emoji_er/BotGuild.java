@@ -2,9 +2,7 @@ package com.emoji_er;
 
 import java.awt.*;
 import java.sql.*;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.ResourceBundle;
 
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -170,7 +168,7 @@ public class BotGuild {
         StringBuilder ret = new StringBuilder();
         Statement stmt;
         ResultSet rs;
-        if(title.contains("'") || title.contains("\"")) {
+        if(!title.matches("[\\w\\d]+")) {
             ret.append(output.getString("error-title-unallowed"));
         }else{
             if (title.contains("emoji")) {
