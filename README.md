@@ -30,7 +30,7 @@ servers emojis to be used with the bot in other peoples servers.
 
 The command syntax for the bot is similar to that of the discord emoji syntax (:emojiname:) wher as the bot works as :emoji.command:
 
-For sending emojies, instead, you'll need to do :[server prefix].[emoji name]:,
+For sending emojies, instead, you'll need to do :[server].[emoticon]:,
 you can use them exactly like normal emoticons
 </p>
 
