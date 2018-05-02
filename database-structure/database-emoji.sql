@@ -3,7 +3,7 @@ create table guilds
 (
   guildid   bigint                not null,
   guildname varchar(1000),
-  enabled   boolean default false not null,
+  enabled   boolean default true not null,
   constraint guilds_pkey
   primary key (guildid)
 );

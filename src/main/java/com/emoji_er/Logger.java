@@ -131,6 +131,82 @@ public class Logger {
         }
     }
 
+
+    public static void logRemoteMsg(String log, Message message, Guild guild){
+
+        String time = stf.format(new Date());
+        FileWriter fw;
+        StringBuilder sb = new StringBuilder();
+        Member sender = message.getMember();
+        logGeneral("event in guild "+message.getGuild().getName()+" ["+message.getGuild().getId()+"]");
+        if((fw=openFile(message.getGuild()))!=null){
+            try{
+                fw.append("[").append(time).append("]\t");
+
+                sb.append("messageId [").append(message.getId()).append("]\t| ");
+                sb.append("User \"").append(sender.getEffectiveName()).append("\"(").append(sender.getUser().getId()).append(")");
+                sb.append(" triggered ").append(log).append(" on guild ").append(guild.getName());
+                sb.append("[").append(guild.getId()).append("]");
+
+                fw.append(sb.toString()).append("\r\n");
+                System.out.println(sb.toString());
+
+                fw.flush();
+                fw.close();
+            }catch (IOException ex)
+            {
+                ex.printStackTrace();
+            }
+        }
+        if((fw=openFile(guild))!=null){
+            try{
+                sb.replace(0,sb.length(),"");
+                fw.append("[").append(time).append("]\t");
+
+                sb.append("messageId [").append(message.getId()).append("]\t| ");
+                sb.append("User \"").append(sender.getEffectiveName()).append("\"(").append(sender.getUser().getId()).append(")");
+                sb.append(" triggered ").append(log).append(" remotely");
+
+                fw.append(sb.toString()).append("\r\n");
+                //System.out.println(sb.toString());
+
+                fw.flush();
+                fw.close();
+            }catch (IOException ex)
+            {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    public static void logRemoteRep(String log,Guild guild,long messageId,Guild remote){
+
+        String time = stf.format(new Date());
+        StringBuilder sb = new StringBuilder();
+        FileWriter fw1,fw2;
+        if((fw1=openFile(guild))!=null && (fw2=openFile(remote))!=null){
+            try{
+                fw1.append("[").append(time).append("]\t");
+                fw2.append("[").append(time).append("]\t");
+
+
+                sb.append("messageId [").append(messageId).append("]\t| ").append(log);
+
+                fw1.append(sb.toString()).append("\r\n");
+                fw2.append(sb.toString()).append("\r\n");
+                System.out.println(sb.toString());
+
+                fw1.flush();
+                fw2.flush();
+                fw1.close();
+                fw2.close();
+            }catch (IOException ex)
+            {
+                ex.printStackTrace();
+            }
+        }
+    }
+
     public static void logInit()
     {
         String date = sdf.format(new Date());
@@ -174,5 +250,6 @@ public class Logger {
         }
         return null;
     }
+
 
 }

@@ -42,14 +42,14 @@ public class Reconnector {
                 Logger.logGeneral("SQL INITIALIZZATED");
                 connected = true;
             } catch (SQLException ex) {
-                Logger.logGeneral("NOT CONNECTED RETRY IN 5 SEC");
+                Logger.logGeneral("NOT CONNECTED RETRY");
                 connected = false;
             }
         }
         try {
             JDA api = new JDABuilder(AccountType.BOT).setToken(System.getenv("BOT_TOKEN")).buildAsync();
             api.addEventListener(new MyListener(conn));
-            api.getPresence().setGame(Game.playing("v1.5.9 - em prj"));
+            api.getPresence().setGame(Game.playing("v1.6.0 - em prj"));
         }catch (Exception e) {
             e.printStackTrace();
         }
