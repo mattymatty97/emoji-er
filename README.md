@@ -30,7 +30,7 @@ servers emojis to be used with the bot in other peoples servers.
 
 The command syntax for the bot is similar to that of the discord emoji syntax (:emojiname:) wher as the bot works as :emoji.command:
 
-For sending emojies, instead, you'll need to do :[server prefix].[emoji name]:,
+For sending emojies, instead, you'll need to do :[server].[emoticon]:,
 you can use them exactly like normal emoticons
 </p>
 
@@ -60,8 +60,8 @@ you can use them exactly like normal emoticons
   </tr>
   <tr>
     <td>list</td>
-    <td>:emoji.list: &lt;prefix&gt; </td>
-    <td>The bot will respond with a list of usable emojis from the server with the given prefix </td>
+    <td>:emoji.list: &lt;server&gt; </td>
+    <td>The bot will respond with a list of usable emojis from the server</td>
 	<td>
 	<p>:emoji.list: fruit</p>
 	<p>:emoji.list: ca</p>
@@ -116,8 +116,8 @@ you can use them exactly like normal emoticons
   </tr>
   <tr>
     <td>register</td>
-    <td>:emoji.register: &lt;prefix&gt;</td>
-    <td>registers your server to the list of servers that allow its emojis to be used in other servers</td>
+    <td>:emoji.register: &lt;name&gt;</td>
+    <td>registers your server to the list of servers that allow its emojis to be used in other servers.<br>The name must be a single word of less than 10 characters</td>
 	<td>:emoji.register: fruit</td>
 	<td><a href="https://imgur.com/nLrYZHV"><img src="https://i.imgur.com/nLrYZHV.png" title="source: imgur.com" /></a></td>
   </tr>
@@ -140,7 +140,7 @@ you can use them exactly like normal emoticons
   </tr>
   <tr>
     <td>enable</td>
-    <td>:emoji.enable: &lt;prefix&gt;</td>
+    <td>:emoji.enable: &lt;server&gt;</td>
     <td>allows a specific servers emojis to be used in your server (theyre all on by default)</td>
 	<td>
 	<p>:emoji.enable: fruit</p>
