@@ -24,7 +24,7 @@ import java.sql.*;
 import java.util.*;
 import java.util.List;
 
-public class MyListener extends ListenerAdapter {
+public class MyListener extends ListenerAdapter{
     private Connection conn;
     private BotGuild botGuild;
     public static boolean deleted = false;
@@ -104,6 +104,7 @@ public class MyListener extends ListenerAdapter {
                 onConsoleMessageReceived(event);
             else {
                 if (message.getContent().matches(System.getenv("DEFAULT_EMOJI_PREFIX") + "emoji\\.\\w+" + System.getenv("DEFAULT_EMOJI_PREFIX")) || message.getContent().matches(System.getenv("DEFAULT_EMOJI_PREFIX") + "emoji\\.\\w+" + System.getenv("DEFAULT_EMOJI_PREFIX") + " .+")) {
+                    channel.sendTyping().queue();
                     String args[] = message.getContent().split(" +");
                     String command = args[0].split(System.getenv("DEFAULT_EMOJI_PREFIX"))[1].split("\\.")[1];
                     switch (command) {
@@ -241,6 +242,7 @@ public class MyListener extends ListenerAdapter {
                         case "status":
                             Logger.logMessage("status", message);
                             channel.sendMessage(botGuild.printStatus(guild, output, messageId)).queue();
+                            Logger.logReponse("status shown",guild,messageId);
                             break;
 //------MOD------------------ENABLE---------------------------------------
                         case "enable":
@@ -537,10 +539,6 @@ public class MyListener extends ListenerAdapter {
         return false;
     }
 
-    public MyListener(Connection conn) {
-        this.conn = conn;
-        this.botGuild = new BotGuild(conn);
-    }
 
     private void updateServerCount(JDA api) {
         String url = "https://discordbots.org/api/bots/" + api.getSelfUser().getId() + "/stats";
@@ -759,4 +757,18 @@ public class MyListener extends ListenerAdapter {
 
     }
 
+    public MyListener(Connection conn) {
+        this.conn = conn;
+        this.botGuild = new BotGuild(conn);
+    }
+
+    public void close(){
+        botGuild.close();
+        System.err.println("Statements closed");
+        try {
+            conn.close();
+            System.err.println("Connection closed");
+        } catch (SQLException ignored) {
+        }
+    }
 }

@@ -10,11 +10,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Date;
 
 public class Logger {
     private static final DateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
     private static final DateFormat stf = new SimpleDateFormat("HH:mm:ss");
+    private static String lastDate="0/0/0";
 
     public static void logMessage(String log,Message message){
 
@@ -35,7 +37,6 @@ public class Logger {
                 System.out.println(sb.toString());
 
                 fw.flush();
-                fw.close();
             }catch (IOException ex)
             {
                 ex.printStackTrace();
@@ -48,6 +49,7 @@ public class Logger {
             builder.setDescription(message.getRawContent());
         }
     }
+
     public static void logReponse(String log,Guild guild,long messageId){
 
         String time = stf.format(new Date());
@@ -63,7 +65,6 @@ public class Logger {
                 System.out.println(sb.toString());
 
                 fw.flush();
-                fw.close();
             }catch (IOException ex)
             {
                 ex.printStackTrace();
@@ -79,6 +80,7 @@ public class Logger {
             build.clearFields();
         }
     }
+
     public static void logEvent(String log,Guild guild){
 
         String time = stf.format(new Date());
@@ -92,7 +94,6 @@ public class Logger {
                 logGeneral(log+": "+guild.getName());
 
                 fw.flush();
-                fw.close();
             }catch (IOException ex)
             {
                 ex.printStackTrace();
@@ -115,19 +116,30 @@ public class Logger {
         String date = sdf.format(new Date());
         String time = stf.format(new Date());
         File file = new File("./logs/"+date+"/BOT.log");
+        if (!date.equals(lastDate)) {
+            closeFiles();
+            lastDate=date;
+        }
+
+        FileWriter fw = Global.getGbl().getFwGlobal();
+
         if(file.getParentFile().exists() || file.getParentFile().mkdirs())
         {
             try {
-                FileWriter fw;
                 fw = new FileWriter(file, true);
-                fw.append("[").append(time).append("]\t");
-                fw.append(log).append("\r\n");
-                System.out.println(log);
-                fw.close();
-            }catch (IOException ex)
-            {
-                ex.printStackTrace();
+                Global.getGbl().setFwGlobal(fw);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
+        }
+        try{
+            fw.append("[").append(time).append("]\t");
+            fw.append(log).append("\r\n");
+            System.out.println(log);
+            fw.flush();
+        }catch (IOException ex)
+        {
+            ex.printStackTrace();
         }
     }
 
@@ -152,7 +164,6 @@ public class Logger {
                 System.out.println(sb.toString());
 
                 fw.flush();
-                fw.close();
             }catch (IOException ex)
             {
                 ex.printStackTrace();
@@ -171,7 +182,6 @@ public class Logger {
                 //System.out.println(sb.toString());
 
                 fw.flush();
-                fw.close();
             }catch (IOException ex)
             {
                 ex.printStackTrace();
@@ -198,8 +208,6 @@ public class Logger {
 
                 fw1.flush();
                 fw2.flush();
-                fw1.close();
-                fw2.close();
             }catch (IOException ex)
             {
                 ex.printStackTrace();
@@ -218,7 +226,9 @@ public class Logger {
                 fw = new FileWriter(file, true);
                 fw.append("\r\n\r\n");
                 System.out.println("\r\n\r\n");
-                fw.close();
+                fw.flush();
+                Global.getGbl().setFwGlobal(fw);
+                lastDate=date;
             }catch (IOException ex)
             {
                 ex.printStackTrace();
@@ -226,22 +236,33 @@ public class Logger {
         }
     }
 
-
     private static FileWriter openFile(Guild guild)
     {
         String date = sdf.format(new Date());
         File file = new File("./logs/"+date+"/"+guild.getIdLong()+".log");
+        if (!date.equals(lastDate)) {
+            closeFiles();
+            lastDate=date;
+        }
+
+        FileWriter fw = Global.getGbl().getFwServers().get(guild.getIdLong());
+
+        if(fw!=null){
+            return fw;
+        }
+
         if(file.getParentFile().exists() || file.getParentFile().mkdirs())
         {
             try {
-                FileWriter fw;
                 boolean existing=false;
-                if(file.exists())
+                if(file.exists()){
                     existing=true;
+                }
                 fw = new FileWriter(file, true);
                 if(!existing){
                     fw.append("FILE CREATED FOR GUILD:\r\n").append(guild.getName()).append("\r\n");
                 }
+                Global.getGbl().getFwServers().put(guild.getIdLong(),fw);
                 return fw;
             }catch (IOException ex)
             {
@@ -251,5 +272,23 @@ public class Logger {
         return null;
     }
 
+    public static void closeFiles(){
+        Collection<FileWriter> fileWriters = Global.getGbl().getFwServers().values();
+        for (FileWriter fw: fileWriters) {
+            try {
+                fw.flush();
+                fw.close();
+            }catch (IOException ignored){
+            }
+        }
+        Global.getGbl().getFwServers().clear();
+        FileWriter g = Global.getGbl().getFwGlobal();
+        try {
+            g.flush();
+            g.close();
+        } catch (IOException ignored) {
+        }
+        Global.getGbl().setFwGlobal(null);
+    }
 
 }

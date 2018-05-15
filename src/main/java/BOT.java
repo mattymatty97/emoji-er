@@ -8,11 +8,23 @@ import java.sql.*;
 import java.net.URI;
 
 import net.dv8tion.jda.core.entities.Game;
+import sun.misc.Signal;
+import sun.misc.SignalHandler;
+
 public class BOT
 {
     public static void main(String[] arguments) throws Exception
     {
         Connection conn=null;
+
+        Signal.handle(new Signal("INT"), sig -> {
+            Logger.closeFiles();
+            System.err.println("Received SIGINT");
+            Global.getGbl().getEventlistener().close();
+            System.exit(sig.getNumber());
+        });
+
+
         Logger.logInit();
         Logger.logGeneral("-----------SYSTEM STARTED------------");
         try {
@@ -38,8 +50,10 @@ public class BOT
 
         JDA api = new JDABuilder(AccountType.BOT).setToken(System.getenv("BOT_TOKEN")).buildAsync();
 
-        api.addEventListener(new MyListener(conn));
-        api.getPresence().setGame(Game.playing("v1.6.0 - em prj"));
+        MyListener listener = new MyListener(conn);
+        Global.getGbl().setEventlistener(listener);
+        api.addEventListener(listener);
+        api.getPresence().setGame(Game.playing("v1.7.0 - em prj"));
 
     }
 

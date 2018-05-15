@@ -2,6 +2,7 @@ package com.emoji_er;
 
 import java.awt.*;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -16,21 +17,47 @@ import net.dv8tion.jda.core.entities.*;
  */
 public class BotGuild {
     private Connection conn;
+        private PreparedStatement[] rmModStmt = new PreparedStatement[2];
+        private PreparedStatement[] adModStmt = new PreparedStatement[2];
+        private PreparedStatement clModStmt;
+        private PreparedStatement lsModStmt;
+        private PreparedStatement[] tgStmt = new PreparedStatement[2];
+        private PreparedStatement[] rgStmt = new PreparedStatement[3];
+        private PreparedStatement[] unRgStmt = new PreparedStatement[3];
+        private PreparedStatement emStmt;
+        private PreparedStatement emLsStmt;
+        private PreparedStatement pSerStmt;
+        private PreparedStatement[] disStmt = new PreparedStatement[3];
+        private PreparedStatement[] enStmt = new PreparedStatement[2];
+        private PreparedStatement pStaStmt;
+        private PreparedStatement isModStmt;
+        private PreparedStatement eEnStmt;
+        private PreparedStatement[] delRolStmt = new PreparedStatement[2];
+        private PreparedStatement[] aModStmt = new PreparedStatement[2];
+
+        private List<PreparedStatement> stmts = new ArrayList<>(29);
+
+
 
     public String removeModRole(Role role, Guild guild, ResourceBundle output, long messageId) {
         String sql = "";
         String ret;
-        Statement stmt;
+        PreparedStatement stmt;
         ResultSet rs;
         try {
-            stmt = conn.createStatement();
+            stmt = rmModStmt[0];
             sql = "SELECT * FROM roles WHERE guildid=" + guild.getId() + " AND roleid=" + role.getIdLong();
-            rs = stmt.executeQuery(sql);
+            stmt.setLong(1,guild.getIdLong());
+            stmt.setLong(2,role.getIdLong());
+            rs = stmt.executeQuery();
             if (rs.next()) {
                 rs.close();
+                stmt=rmModStmt[1];
                 sql = "DELETE FROM roles WHERE guildid=" + guild.getId() + " AND roleid=" + role.getIdLong();
-                stmt.execute(sql);
-                stmt.execute("COMMIT");
+                stmt.setLong(1,guild.getIdLong());
+                stmt.setLong(2,role.getIdLong());
+                stmt.executeUpdate();
+                stmt.executeUpdate("COMMIT");
                 ret = output.getString("modrole-remove");
                 Logger.logReponse("removed role " + role.getName(), guild, messageId);
             } else {
@@ -38,13 +65,11 @@ public class BotGuild {
                 ret = output.getString("error-modrole-missing");
                 Logger.logReponse("role not modrole", guild, messageId);
             }
-            stmt.close();
         } catch (SQLException ex) {
-            Logger.logGeneral("SQLError in : " + sql);
+            Logger.logGeneral("SQLError in : "+ sql);
             Logger.logGeneral(ex.getMessage());
             Logger.logGeneral("SQLState: " + ex.getSQLState());
             Logger.logGeneral("VendorError: " + ex.getErrorCode());
-            
             return null;
         }
         return ret;
@@ -53,16 +78,22 @@ public class BotGuild {
     public String addModRole(Role role, Guild guild, ResourceBundle output, long messageId) {
         String sql = "";
         String ret;
-        Statement stmt;
+        PreparedStatement stmt;
         ResultSet rs;
         try {
-            stmt = conn.createStatement();
+            stmt = adModStmt[0];
             sql = "SELECT * FROM roles WHERE guildid=" + guild.getId() + " AND roleid=" + role.getIdLong();
-            rs = stmt.executeQuery(sql);
+            stmt.setLong(1,guild.getIdLong());
+            stmt.setLong(2,role.getIdLong());
+            rs = stmt.executeQuery();
             if (!rs.next()) {
                 rs.close();
+                stmt = adModStmt[1];
                 sql = "INSERT INTO roles (guildid,roleid,rolename) VALUES (" + guild.getId() + "," + role.getIdLong() + ",'" + role.getName().replaceAll("[\',\"]","") + "')";
-                stmt.execute(sql);
+                stmt.setLong(1,guild.getIdLong());
+                stmt.setLong(2,role.getIdLong());
+                stmt.setString(3,role.getName().replaceAll("[\',\"]",""));
+                stmt.executeUpdate();
                 stmt.execute("COMMIT");
                 ret = output.getString("modrole-add");
                 Logger.logReponse("added role " + role.getName(), guild, messageId);
@@ -71,7 +102,6 @@ public class BotGuild {
                 ret = output.getString("error-modrole-exists");
                 Logger.logReponse("role is modrole", guild, messageId);
             }
-            stmt.close();
         } catch (SQLException ex) {
             Logger.logGeneral("SQLError in: " + sql);
             Logger.logGeneral(ex.getMessage());
@@ -85,15 +115,15 @@ public class BotGuild {
     public String clearModrole(Guild guild, ResourceBundle output, long messageId) {
         String sql = "";
         String ret;
-        Statement stmt;
+        PreparedStatement stmt;
         try {
-            stmt = conn.createStatement();
+            stmt = clModStmt;
             sql = "DELETE FROM roles WHERE guildid=" + guild.getId();
-            stmt.execute(sql);
+            stmt.setLong(1,guild.getIdLong());
+            stmt.executeUpdate();
             stmt.execute("COMMIT ");
             ret = output.getString("modrole-clear");
             Logger.logReponse("cleared modroles", guild, messageId);
-            stmt.close();
         } catch (SQLException ex) {
             Logger.logGeneral("SQLError in: " + sql);
             Logger.logGeneral(ex.getMessage());
@@ -107,12 +137,13 @@ public class BotGuild {
     public String listModrole(Guild guild, ResourceBundle output, long messageId) {
         String sql = "";
         StringBuilder ret = new StringBuilder(output.getString("modrole-list"));
-        Statement stmt;
+        PreparedStatement stmt;
         ResultSet rs;
         try {
-            stmt = conn.createStatement();
+            stmt = lsModStmt;
             sql = "SELECT roleid FROM roles WHERE guildid=" + guild.getIdLong();
-            rs = stmt.executeQuery(sql);
+            stmt.setLong(1,guild.getIdLong());
+            rs = stmt.executeQuery();
             while (rs.next()) {
                 Role role = guild.getRoleById(rs.getLong(1));
                 if (role != null) {
@@ -121,7 +152,6 @@ public class BotGuild {
                 }
             }
             rs.close();
-            stmt.close();
         } catch (SQLException ex) {
             Logger.logGeneral("SQLError in: " + sql);
             Logger.logGeneral(ex.getMessage());
@@ -137,17 +167,23 @@ public class BotGuild {
     public String toggleEmoji(Guild guild, ResourceBundle output, long messageId) {
         String sql = "";
         StringBuilder ret = new StringBuilder(output.getString("toggle-head")).append(" ");
+        boolean enabled;
         try {
-            Statement stmt;
+            PreparedStatement stmt;
             ResultSet rs;
-            stmt = conn.createStatement();
+            stmt = tgStmt[0];
             sql = "SELECT enabled FROM guilds WHERE guildid=" + guild.getIdLong();
-            rs = stmt.executeQuery(sql);
+            stmt.setLong(1,guild.getIdLong());
+            rs = stmt.executeQuery();
             if (rs.next()) {
-                boolean enabled = rs.getBoolean(1);
+                enabled = rs.getBoolean(1);
                 rs.close();
                 sql = "UPDATE guilds SET enabled=" + !enabled + " WHERE guildid=" + guild.getIdLong();
-                stmt.execute(sql);
+                stmt = tgStmt[1];
+                stmt.setBoolean(1,!enabled);
+                stmt.setLong(2,guild.getIdLong());
+                stmt.executeUpdate();
+                stmt.execute("COMMIT");
                 ret.append(output.getString(enabled ? "disabled" : "enabled"));
                 Logger.logReponse("Emoji" + (!enabled ? "ENABLED" : "DISABLED)"), guild, messageId);
             } else
@@ -166,7 +202,7 @@ public class BotGuild {
     public String registerGuild(Guild guild, String title, ResourceBundle output, long messageId) {
         String sql = "";
         StringBuilder ret = new StringBuilder();
-        Statement stmt;
+        PreparedStatement stmt;
         ResultSet rs;
         if(!title.matches("[\\w\\d]+")) {
             ret.append(output.getString("error-title-unallowed"));
@@ -176,28 +212,34 @@ public class BotGuild {
                 ret.append(output.getString("error-title-emoji"));
             } else
                 try {
-                    stmt = conn.createStatement();
+                    stmt = rgStmt[0];
                     sql = "SELECT * FROM registered_emoji_server WHERE guildid=" + guild.getId();
-                    rs = stmt.executeQuery(sql);
+                    stmt.setLong(1,guild.getIdLong());
+                    rs = stmt.executeQuery();
                     if (rs.next()) {
                         ret.append(output.getString("error-emoji-registered"));
                         Logger.logReponse("guild found", guild, messageId);
                         rs.close();
                     } else {
                         rs.close();
+                        stmt = rgStmt[1];
                         sql = "SELECT * FROM registered_emoji_server WHERE title='" + title + "'";
-                        rs = stmt.executeQuery(sql);
+                        stmt.setString(1,title);
+                        rs = stmt.executeQuery();
                         if (rs.next()) {
                             ret.append(output.getString("error-emoji-title-used"));
                             Logger.logReponse("title used", guild, messageId);
                         } else {
+                            stmt = rgStmt[2];
                             sql = "INSERT INTO registered_emoji_server(guildid, title) VALUES (" + guild.getId() + ",'" + title + "')";
-                            stmt.execute(sql);
+                            stmt.setLong(1,guild.getIdLong());
+                            stmt.setString(2,title);
+                            stmt.executeUpdate();
+                            stmt.execute("COMMIT");
                             ret.append(output.getString("emoji-guild-registered"));
                             Logger.logReponse("guild registered", guild, messageId);
                         }
                     }
-                    stmt.close();
                 } catch (SQLException ex) {
                     Logger.logGeneral("SQLError in: " + sql);
                     Logger.logGeneral(ex.getMessage());
@@ -212,18 +254,24 @@ public class BotGuild {
     public String unRegisterGuild(Guild guild, ResourceBundle output, long messageId) {
         String sql = "";
         StringBuilder ret = new StringBuilder();
-        Statement stmt;
+        PreparedStatement stmt;
         ResultSet rs;
         try {
-            stmt = conn.createStatement();
+            stmt = unRgStmt[0];
             sql = "SELECT * FROM registered_emoji_server WHERE guildid=" + guild.getId();
-            rs = stmt.executeQuery(sql);
+            stmt.setLong(1,guild.getIdLong());
+            rs = stmt.executeQuery();
             if (rs.next()) {
                 rs.close();
+                stmt = unRgStmt[1];
                 sql = "DELETE FROM disabled_emoji_servers WHERE emoji_guildID=" + guild.getId();
-                stmt.execute(sql);
+                stmt.setLong(1,guild.getIdLong());
+                stmt.executeUpdate();
+                stmt = unRgStmt[2];
+                stmt.setLong(1,guild.getIdLong());
                 sql = "DELETE FROM registered_emoji_server WHERE guildid=" + guild.getId();
-                stmt.execute(sql);
+                stmt.executeUpdate();
+                stmt.execute("COMMIT");
                 Logger.logReponse("guild unregistered", guild, messageId);
                 ret.append(output.getString("emoji-guild-unregistered"));
             } else {
@@ -244,11 +292,11 @@ public class BotGuild {
     public String getEmoji(String arg, long guildId, JDA api) {
         String sql = "";
         String ret = null;
-        Statement stmt;
+        PreparedStatement stmt;
         ResultSet rs;
         String args[] = arg.split("\\.");
         try {
-            stmt = conn.createStatement();
+            stmt = emStmt;
             sql = "SELECT R.guildid " +
                     "FROM registered_emoji_server R " +
                     "WHERE title='" + args[0] + "' " +
@@ -256,7 +304,9 @@ public class BotGuild {
                     "SELECT emoji_guildid " +
                     "FROM disabled_emoji_servers D " +
                     "WHERE D.guildid=" + guildId + ")";
-            rs = stmt.executeQuery(sql);
+            stmt.setString(1,args[0]);
+            stmt.setLong(2,guildId);
+            rs = stmt.executeQuery();
             if (rs.next()) {
                 Guild guild = api.getGuildById(rs.getLong(1));
                 List<Emote> emoji = guild.getEmotesByName(args[1], false);
@@ -265,7 +315,6 @@ public class BotGuild {
                 }
             }
             rs.close();
-            stmt.close();
         } catch (SQLException ex) {
             Logger.logGeneral("SQLError in: " + sql);
             Logger.logGeneral(ex.getMessage());
@@ -279,12 +328,13 @@ public class BotGuild {
     public String getEmojiList(String title, JDA api) {
         String sql = "";
         StringBuilder ret = new StringBuilder();
-        Statement stmt;
+        PreparedStatement stmt;
         ResultSet rs;
         try {
-            stmt = conn.createStatement();
+            stmt = emLsStmt;
             sql = "SELECT guildid FROM registered_emoji_server WHERE title='" + title + "'";
-            rs = stmt.executeQuery(sql);
+            stmt.setString(1,title);
+            rs = stmt.executeQuery();
             if (rs.next()) {
                 Guild guild = api.getGuildById(rs.getLong(1));
                 if (guild != null) {
@@ -299,7 +349,6 @@ public class BotGuild {
                 }
             }
             rs.close();
-            stmt.close();
         } catch (SQLException ex) {
             Logger.logGeneral("SQLError in: " + sql);
             Logger.logGeneral(ex.getMessage());
@@ -313,10 +362,10 @@ public class BotGuild {
     public String printServers(long guildId, JDA api, ResourceBundle output) {
         String sql = "";
         StringBuilder ret = new StringBuilder();
-        Statement stmt;
+        PreparedStatement stmt;
         ResultSet rs;
         try {
-            stmt = conn.createStatement();
+            stmt = pSerStmt;
             sql = "SELECT R.guildid ,R.title," +
                     "(CASE " +
                     "WHEN guildid IN (" +
@@ -328,7 +377,8 @@ public class BotGuild {
                     "END) as disabled " +
                     "FROM registered_emoji_server R " +
                     "ORDER BY disabled";
-            rs = stmt.executeQuery(sql);
+            stmt.setLong(1,guildId);
+            rs = stmt.executeQuery();
             while (rs.next()) {
                 Guild guild = api.getGuildById(rs.getLong(1));
                 if (guild != null) {
@@ -345,7 +395,6 @@ public class BotGuild {
                 }
             }
             rs.close();
-            stmt.close();
         } catch (SQLException ex) {
             Logger.logGeneral("SQLError in: " + sql);
             Logger.logGeneral(ex.getMessage());
@@ -359,25 +408,32 @@ public class BotGuild {
     public String disableGuild(Guild guild, String title, ResourceBundle output, long messageId) {
         String sql = "";
         StringBuilder ret = new StringBuilder();
-        Statement stmt;
+        PreparedStatement stmt;
         ResultSet rs;
         try {
-            stmt = conn.createStatement();
+            stmt = disStmt[0];
             sql = "SELECT guildid FROM registered_emoji_server WHERE title='" + title + "'";
-            rs = stmt.executeQuery(sql);
+            stmt.setString(1,title);
+            rs = stmt.executeQuery();
             if (rs.next()) {
                 long id = rs.getLong(1);
                 rs.close();
+                stmt = disStmt[1];
                 sql = "SELECT * FROM disabled_emoji_servers WHERE guildid=" + guild.getId() + " AND " + "emoji_guildid=" + id;
-                rs = stmt.executeQuery(sql);
+                stmt.setLong(1,guild.getIdLong());
+                stmt.setLong(2,id);
+                rs = stmt.executeQuery();
                 if (rs.next()) {
                     ret.append(output.getString("error-disabled"));
                     Logger.logReponse("guild is disabled", guild, messageId);
                     rs.close();
                 } else {
                     rs.close();
+                    stmt = disStmt[2];
                     sql = "INSERT INTO disabled_emoji_servers(guildid, emoji_guildid) VALUES (" + guild.getId() + "," + id + ")";
-                    stmt.execute(sql);
+                    stmt.setLong(1,guild.getIdLong());
+                    stmt.setLong(2,id);
+                    stmt.execute();
                     ret.append(output.getString("disable-success"));
                     Logger.logReponse(title + " server disabled", guild, messageId);
                 }
@@ -397,19 +453,23 @@ public class BotGuild {
     }
 
     public String enableGuild(Guild guild, String title, ResourceBundle output, long messageId) {
-        String sql = "";
+        String sql="";
         StringBuilder ret = new StringBuilder();
-        Statement stmt;
+        PreparedStatement stmt;
         ResultSet rs;
         try {
-            stmt = conn.createStatement();
+            stmt = enStmt[0];
             sql = "SELECT guildid FROM registered_emoji_server WHERE title='" + title + "'";
-            rs = stmt.executeQuery(sql);
+            stmt.setString(1,title);
+            rs = stmt.executeQuery();
             if (rs.next()) {
                 long id = rs.getLong(1);
                 rs.close();
+                stmt = enStmt[1];
                 sql = "DELETE FROM disabled_emoji_servers WHERE guildid=" + guild.getId() + " AND emoji_guildid=" + id;
-                stmt.execute(sql);
+                stmt.setLong(1,guild.getIdLong());
+                stmt.setLong(2,id);
+                stmt.execute();
                 ret.append(output.getString("enable-success"));
                 Logger.logReponse(title + " server enabled", guild, messageId);
             } else {
@@ -436,10 +496,10 @@ public class BotGuild {
         boolean found = false;
         EmbedBuilder ret = new EmbedBuilder();
         ret.setColor(Color.GREEN);
-        Statement stmt;
+        PreparedStatement stmt;
         ResultSet rs;
         try {
-            stmt = conn.createStatement();
+            stmt = pStaStmt;
             sql = "SELECT G.enabled,R.title,RO.count,DS.count " +
                     "FROM guilds G " +
                     "FULL OUTER JOIN registered_emoji_server R ON G.guildid = R.guildid " +
@@ -454,7 +514,8 @@ public class BotGuild {
                     "GROUP BY guildid " +
                     ")as DS ON G.guildid = DS.guildid " +
                     "WHERE G.guildid=" + guild.getIdLong();
-            rs = stmt.executeQuery(sql);
+            stmt.setLong(1,guild.getIdLong());
+            rs = stmt.executeQuery();
             if (rs.next()) {
                 status = rs.getBoolean(1);
                 title = rs.getString(2);
@@ -463,7 +524,6 @@ public class BotGuild {
                 found = true;
             }
             rs.close();
-            stmt.close();
         } catch (SQLException ex) {
             Logger.logGeneral("SQLError in: " + sql);
             Logger.logGeneral(ex.getMessage());
@@ -486,21 +546,19 @@ public class BotGuild {
     }
 
 
-    BotGuild(Connection actconn) {
-        this.conn = actconn;
-    }
 
     public boolean memberIsMod(Member member, long guild) {
         String sql = "";
         List<Role> roles = member.getRoles();
-        Statement stmt;
+        PreparedStatement stmt;
         ResultSet rs;
         if(member.getUser().getIdLong()==Long.parseLong(System.getenv("OWNER_ID")))
             return true;
         try {
-            stmt = conn.createStatement();
+            stmt = isModStmt;
             sql = "SELECT roleid FROM roles WHERE guildid=" + guild;
-            rs = stmt.executeQuery(sql);
+            stmt.setLong(1,guild);
+            rs = stmt.executeQuery();
             while (rs.next()) {
                 for (Role role : roles) {
                     if (role.getIdLong() == rs.getLong(1)) {
@@ -511,7 +569,6 @@ public class BotGuild {
                 }
             }
             rs.close();
-            stmt.close();
         } catch (SQLException ex) {
             Logger.logGeneral("SQLError in: " + sql);
             Logger.logGeneral(ex.getMessage());
@@ -526,20 +583,20 @@ public class BotGuild {
         String sql = "";
         boolean ret = false;
         try {
-            Statement stmt;
+            PreparedStatement stmt;
             ResultSet rs;
-            stmt = conn.createStatement();
+            stmt = eEnStmt;
             sql = "SELECT enabled FROM guilds WHERE guildid=" + guild.getIdLong();
-            rs = stmt.executeQuery(sql);
+            stmt.setLong(1,guild.getIdLong());
+            rs = stmt.executeQuery();
             if (rs.next()) {
                 boolean enabled = rs.getBoolean(1);
                 rs.close();
                 ret = enabled;
             } else
                 rs.close();
-            stmt.close();
         } catch (SQLException ex) {
-            Logger.logGeneral("AQLError in: " + sql);
+            Logger.logGeneral("SQLError in: " + sql);
             Logger.logGeneral(ex.getMessage());
             Logger.logGeneral("SQLState: " + ex.getSQLState());
             Logger.logGeneral("VendorError: " + ex.getErrorCode());
@@ -550,7 +607,7 @@ public class BotGuild {
 
     public void autoModRole(Guild guild) {
         String sql = "";
-        Statement stmt;
+        PreparedStatement stmt;
         ResultSet rs;
         long guildId = guild.getIdLong();
         for (Role role : guild.getRoles()) {
@@ -560,17 +617,22 @@ public class BotGuild {
                     role.hasPermission(Permission.MANAGE_SERVER) ||
                     role.hasPermission(Permission.MANAGE_ROLES))
                 try {
-                    stmt = conn.createStatement();
+                    stmt = aModStmt[0];
                     sql = "SELECT * FROM roles WHERE guildid=" + guildId + " AND roleid=" + role.getIdLong();
-                    rs = stmt.executeQuery(sql);
+                    stmt.setLong(1,guildId);
+                    stmt.setLong(2,role.getIdLong());
+                    rs = stmt.executeQuery();
                     if (!rs.next()) {
                         rs.close();
+                        stmt = aModStmt[1];
                         sql = "INSERT INTO roles (guildid,roleid,rolename) VALUES (" + guildId + "," + role.getIdLong() + ",'" + role.getName().replaceAll("[\',\"]","") + "')";
-                        stmt.execute(sql);
+                        stmt.setLong(1,guildId);
+                        stmt.setLong(2,role.getIdLong());
+                        stmt.setString(3,role.getName().replaceAll("[\',\"]",""));
+                        stmt.executeUpdate();
                         stmt.execute("COMMIT");
                     }
                     rs.close();
-                    stmt.close();
                 } catch (SQLException ex) {
                     Logger.logGeneral("SQLError in: " + sql);
                     Logger.logGeneral(ex.getMessage());
@@ -583,20 +645,24 @@ public class BotGuild {
     public boolean onRoleDeleted(Role role) {
         String sql = "";
         boolean ret = false;
-        Statement stmt;
+        PreparedStatement stmt;
         ResultSet rs;
         try {
-            stmt = conn.createStatement();
+            stmt = delRolStmt[0];
             sql = "SELECT * FROM roles WHERE guildid=" + role.getGuild().getIdLong() + " AND roleid=" + role.getIdLong();
-            rs = stmt.executeQuery(sql);
+            stmt.setLong(1,role.getGuild().getIdLong());
+            stmt.setLong(2,role.getIdLong());
+            rs = stmt.executeQuery();
             if (rs.next()) {
                 rs.close();
+                stmt=delRolStmt[1];
                 sql = "DELETE FROM roles WHERE guildid=" + role.getGuild().getIdLong() + " AND roleid=" + role.getIdLong();
-                stmt.execute(sql);
+                stmt.setLong(1,role.getGuild().getIdLong());
+                stmt.setLong(2,role.getIdLong());
+                stmt.executeUpdate();
                 stmt.execute("COMMIT");
                 ret = true;
             }
-            stmt.close();
         } catch (SQLException ex) {
             Logger.logGeneral("SQLError in: " + sql);
             Logger.logGeneral(ex.getMessage());
@@ -613,25 +679,32 @@ public class BotGuild {
     public String disableRemoteGuild(Guild guild, String title, ResourceBundle output, long messageId,Guild remote) {
         String sql = "";
         StringBuilder ret = new StringBuilder();
-        Statement stmt;
+        PreparedStatement stmt;
         ResultSet rs;
         try {
-            stmt = conn.createStatement();
+            stmt = disStmt[0];
             sql = "SELECT guildid FROM registered_emoji_server WHERE title='" + title + "'";
-            rs = stmt.executeQuery(sql);
+            stmt.setString(1,title);
+            rs = stmt.executeQuery();
             if (rs.next()) {
                 long id = rs.getLong(1);
                 rs.close();
+                stmt = disStmt[1];
                 sql = "SELECT * FROM disabled_emoji_servers WHERE guildid=" + guild.getId() + " AND " + "emoji_guildid=" + id;
-                rs = stmt.executeQuery(sql);
+                stmt.setLong(1,guild.getIdLong());
+                stmt.setLong(2,id);
+                rs = stmt.executeQuery();
                 if (rs.next()) {
                     ret.append(output.getString("error-disabled"));
                     Logger.logRemoteRep("guild is disabled", guild, messageId,remote);
                     rs.close();
                 } else {
                     rs.close();
+                    stmt = disStmt[2];
                     sql = "INSERT INTO disabled_emoji_servers(guildid, emoji_guildid) VALUES (" + guild.getId() + "," + id + ")";
-                    stmt.execute(sql);
+                    stmt.setLong(1,guild.getIdLong());
+                    stmt.setLong(2,id);
+                    stmt.executeUpdate();
                     ret.append(output.getString("disable-success"));
                     Logger.logRemoteRep(title + " server disabled", guild, messageId,remote);
                 }
@@ -639,7 +712,6 @@ public class BotGuild {
                 ret.append(output.getString("error-disabled-404"));
                 Logger.logReponse("guild not registered", guild, messageId);
             }
-            stmt.close();
         } catch (SQLException ex) {
             Logger.logGeneral("SQLError in: " + sql);
             Logger.logGeneral(ex.getMessage());
@@ -653,24 +725,27 @@ public class BotGuild {
     public String enableRemoteGuild(Guild guild, String title, ResourceBundle output, long messageId,Guild remote) {
         String sql = "";
         StringBuilder ret = new StringBuilder();
-        Statement stmt;
+        PreparedStatement stmt;
         ResultSet rs;
         try {
-            stmt = conn.createStatement();
+            stmt = enStmt[0];
             sql = "SELECT guildid FROM registered_emoji_server WHERE title='" + title + "'";
-            rs = stmt.executeQuery(sql);
+            stmt.setString(1,title);
+            rs = stmt.executeQuery();
             if (rs.next()) {
                 long id = rs.getLong(1);
                 rs.close();
+                stmt = enStmt[1];
                 sql = "DELETE FROM disabled_emoji_servers WHERE guildid=" + guild.getId() + " AND emoji_guildid=" + id;
-                stmt.execute(sql);
+                stmt.setLong(1,guild.getIdLong());
+                stmt.setLong(2,id);
+                stmt.executeUpdate();
                 ret.append(output.getString("enable-success"));
                 Logger.logRemoteRep(title + " server enabled", guild, messageId,remote);
             } else {
                 ret.append(output.getString("error-enable-404"));
                 Logger.logRemoteRep("guild not registered", guild, messageId,remote);
             }
-            stmt.close();
         } catch (SQLException ex) {
             Logger.logGeneral("SQLError in: " + sql);
             Logger.logGeneral(ex.getMessage());
@@ -684,7 +759,7 @@ public class BotGuild {
     public String registerRemoteGuild(Guild guild, String title, ResourceBundle output, long messageId,Guild remote) {
         String sql = "";
         StringBuilder ret = new StringBuilder();
-        Statement stmt;
+        PreparedStatement stmt;
         ResultSet rs;
         if(!title.matches("[\\w\\d]+")) {
             ret.append(output.getString("error-title-unallowed"));
@@ -694,28 +769,33 @@ public class BotGuild {
                 ret.append(output.getString("error-title-emoji"));
             } else
                 try {
-                    stmt = conn.createStatement();
+                    stmt = rgStmt[0];
                     sql = "SELECT * FROM registered_emoji_server WHERE guildid=" + guild.getId();
-                    rs = stmt.executeQuery(sql);
+                    stmt.setLong(1,guild.getIdLong());
+                    rs = stmt.executeQuery();
                     if (rs.next()) {
                         ret.append(output.getString("error-emoji-registered"));
                         Logger.logRemoteRep("guild found", guild, messageId,remote);
                         rs.close();
                     } else {
                         rs.close();
+                        stmt = rgStmt[1];
                         sql = "SELECT * FROM registered_emoji_server WHERE title='" + title + "'";
-                        rs = stmt.executeQuery(sql);
+                        stmt.setString(1,title);
+                        rs = stmt.executeQuery();
                         if (rs.next()) {
                             ret.append(output.getString("error-emoji-title-used"));
                             Logger.logRemoteRep("title used", guild, messageId,remote);
                         } else {
+                            stmt=rgStmt[2];
                             sql = "INSERT INTO registered_emoji_server(guildid, title) VALUES (" + guild.getId() + ",'" + title + "')";
-                            stmt.execute(sql);
+                            stmt.setLong(1,guild.getIdLong());
+                            stmt.setString(2,title);
+                            stmt.executeUpdate();
                             ret.append(output.getString("emoji-guild-registered"));
                             Logger.logRemoteRep("guild registered", guild, messageId,remote);
                         }
                     }
-                    stmt.close();
                 } catch (SQLException ex) {
                     Logger.logGeneral("SQLError in: " + sql);
                     Logger.logGeneral(ex.getMessage());
@@ -730,25 +810,30 @@ public class BotGuild {
     public String unRegisterRemoteGuild(Guild guild, ResourceBundle output, long messageId,Guild remote) {
         String sql = "";
         StringBuilder ret = new StringBuilder();
-        Statement stmt;
+        PreparedStatement stmt;
         ResultSet rs;
         try {
-            stmt = conn.createStatement();
+            stmt = unRgStmt[0];
             sql = "SELECT * FROM registered_emoji_server WHERE guildid=" + guild.getId();
-            rs = stmt.executeQuery(sql);
+            stmt.setLong(1,guild.getIdLong());
+            rs = stmt.executeQuery();
             if (rs.next()) {
                 rs.close();
+                stmt = unRgStmt[1];
                 sql = "DELETE FROM disabled_emoji_servers WHERE emoji_guildID=" + guild.getId();
-                stmt.execute(sql);
+                stmt.setLong(1,guild.getIdLong());
+                stmt.executeUpdate();
+                stmt = unRgStmt[2];
                 sql = "DELETE FROM registered_emoji_server WHERE guildid=" + guild.getId();
-                stmt.execute(sql);
+                stmt.setLong(1,guild.getIdLong());
+                stmt.executeUpdate();
+                stmt.execute("COMMIT");
                 Logger.logRemoteRep("guild unregistered", guild, messageId,remote);
                 ret.append(output.getString("emoji-guild-unregistered"));
             } else {
                 Logger.logRemoteRep("guild was not registered", guild, messageId,remote);
                 ret.append(output.getString("error-emoji-unregistered"));
             }
-            stmt.close();
         } catch (SQLException ex) {
             Logger.logGeneral("SQLError in: " + sql);
             Logger.logGeneral(ex.getMessage());
@@ -762,16 +847,21 @@ public class BotGuild {
     public String removeRemoteModRole(Role role, Guild guild, ResourceBundle output, long messageId,Guild remote) {
         String sql = "";
         String ret;
-        Statement stmt;
+        PreparedStatement stmt;
         ResultSet rs;
         try {
-            stmt = conn.createStatement();
+            stmt = rmModStmt[0];
             sql = "SELECT * FROM roles WHERE guildid=" + guild.getId() + " AND roleid=" + role.getIdLong();
-            rs = stmt.executeQuery(sql);
+            stmt.setLong(1,guild.getIdLong());
+            stmt.setLong(2,role.getIdLong());
+            rs = stmt.executeQuery();
             if (rs.next()) {
                 rs.close();
+                stmt=rmModStmt[1];
                 sql = "DELETE FROM roles WHERE guildid=" + guild.getId() + " AND roleid=" + role.getIdLong();
-                stmt.execute(sql);
+                stmt.setLong(1,guild.getIdLong());
+                stmt.setLong(2,role.getIdLong());
+                stmt.executeUpdate();
                 stmt.execute("COMMIT");
                 ret = output.getString("modrole-remove");
                 Logger.logRemoteRep("removed role " + role.getName(), guild, messageId,remote);
@@ -780,7 +870,6 @@ public class BotGuild {
                 ret = output.getString("error-modrole-missing");
                 Logger.logRemoteRep("role not modrole", guild, messageId,remote);
             }
-            stmt.close();
         } catch (SQLException ex) {
             Logger.logGeneral("SQLError in : " + sql);
             Logger.logGeneral(ex.getMessage());
@@ -795,16 +884,22 @@ public class BotGuild {
     public String addRemoteModRole(Role role, Guild guild, ResourceBundle output, long messageId,Guild remote) {
         String sql = "";
         String ret;
-        Statement stmt;
+        PreparedStatement stmt;
         ResultSet rs;
         try {
-            stmt = conn.createStatement();
+            stmt = adModStmt[0];
             sql = "SELECT * FROM roles WHERE guildid=" + guild.getId() + " AND roleid=" + role.getIdLong();
-            rs = stmt.executeQuery(sql);
+            stmt.setLong(1,guild.getIdLong());
+            stmt.setLong(2,role.getIdLong());
+            rs = stmt.executeQuery();
             if (!rs.next()) {
                 rs.close();
+                stmt = adModStmt[1];
                 sql = "INSERT INTO roles (guildid,roleid,rolename) VALUES (" + guild.getId() + "," + role.getIdLong() + ",'" + role.getName().replaceAll("[\',\"]","") + "')";
-                stmt.execute(sql);
+                stmt.setLong(1,guild.getIdLong());
+                stmt.setLong(2,role.getIdLong());
+                stmt.setString(3,role.getName().replaceAll("[\',\"]",""));
+                stmt.executeUpdate();
                 stmt.execute("COMMIT");
                 ret = output.getString("modrole-add");
                 Logger.logRemoteRep("added role " + role.getName(), guild, messageId,remote);
@@ -813,7 +908,6 @@ public class BotGuild {
                 ret = output.getString("error-modrole-exists");
                 Logger.logRemoteRep("role is modrole", guild, messageId,remote);
             }
-            stmt.close();
         } catch (SQLException ex) {
             Logger.logGeneral("SQLError in: " + sql);
             Logger.logGeneral(ex.getMessage());
@@ -827,15 +921,15 @@ public class BotGuild {
     public String clearRemoteModrole(Guild guild, ResourceBundle output, long messageId,Guild remote) {
         String sql = "";
         String ret;
-        Statement stmt;
+        PreparedStatement stmt;
         try {
-            stmt = conn.createStatement();
+            stmt = clModStmt;
             sql = "DELETE FROM roles WHERE guildid=" + guild.getId();
-            stmt.execute(sql);
+            stmt.setLong(1,guild.getIdLong());
+            stmt.executeUpdate();
             stmt.execute("COMMIT ");
             ret = output.getString("modrole-clear");
             Logger.logRemoteRep("cleared modroles", guild, messageId,remote);
-            stmt.close();
         } catch (SQLException ex) {
             Logger.logGeneral("SQLError in: " + sql);
             Logger.logGeneral(ex.getMessage());
@@ -849,12 +943,13 @@ public class BotGuild {
     public String listRemoteModrole(Guild guild, ResourceBundle output, long messageId,Guild remote) {
         String sql = "";
         StringBuilder ret = new StringBuilder(output.getString("modrole-list"));
-        Statement stmt;
+        PreparedStatement stmt;
         ResultSet rs;
         try {
-            stmt = conn.createStatement();
+            stmt = lsModStmt;
             sql = "SELECT roleid FROM roles WHERE guildid=" + guild.getIdLong();
-            rs = stmt.executeQuery(sql);
+            stmt.setLong(1,guild.getIdLong());
+            rs = stmt.executeQuery();
             while (rs.next()) {
                 Role role = guild.getRoleById(rs.getLong(1));
                 if (role != null) {
@@ -880,21 +975,24 @@ public class BotGuild {
         String sql = "";
         StringBuilder ret = new StringBuilder(output.getString("toggle-head")).append(" ");
         try {
-            Statement stmt;
+            PreparedStatement stmt;
             ResultSet rs;
-            stmt = conn.createStatement();
+            stmt = tgStmt[0];
             sql = "SELECT enabled FROM guilds WHERE guildid=" + guild.getIdLong();
-            rs = stmt.executeQuery(sql);
+            stmt.setLong(1,guild.getIdLong());
+            rs = stmt.executeQuery();
             if (rs.next()) {
                 boolean enabled = rs.getBoolean(1);
                 rs.close();
+                stmt = tgStmt[1];
                 sql = "UPDATE guilds SET enabled=" + !enabled + " WHERE guildid=" + guild.getIdLong();
-                stmt.execute(sql);
+                stmt.setBoolean(1,!enabled);
+                stmt.setLong(2,guild.getIdLong());
+                stmt.executeUpdate();
                 ret.append(output.getString(enabled ? "disabled" : "enabled"));
                 Logger.logRemoteRep("Emoji" + (!enabled ? "ENABLED" : "DISABLED)"), guild, messageId,remote);
             } else
                 rs.close();
-            stmt.close();
         } catch (SQLException ex) {
             Logger.logGeneral("SQLError in: " + sql);
             Logger.logGeneral(ex.getMessage());
@@ -904,5 +1002,83 @@ public class BotGuild {
         }
         return ret.toString();
     }
+
+
+
+
+    BotGuild(Connection actconn) {
+        this.conn = actconn;
+        try {
+            stmts.add(this.rmModStmt[0] = conn.prepareStatement("SELECT * FROM roles WHERE guildid=? AND roleid=?"));
+            stmts.add(this.rmModStmt[1] = conn.prepareStatement("DELETE FROM roles WHERE guildid=? AND roleid=?"));
+            stmts.add(this.adModStmt[0] = rmModStmt[0]);
+            stmts.add(this.adModStmt[0] = conn.prepareStatement("INSERT INTO roles (guildid,roleid,rolename) VALUES (?,?,?)"));
+            stmts.add(this.clModStmt    = conn.prepareStatement("DELETE FROM roles WHERE guildid=?"));
+            stmts.add(this.lsModStmt    = conn.prepareStatement("SELECT roleid FROM roles WHERE guildid=?"));
+            stmts.add(this.tgStmt[0]    = conn.prepareStatement("SELECT enabled FROM guilds WHERE guildid=?"));
+            stmts.add(this.tgStmt[1]    = conn.prepareStatement("UPDATE guilds SET enabled=? WHERE guildid=?"));
+            stmts.add(this.rgStmt[0]    = conn.prepareStatement("SELECT * FROM registered_emoji_server WHERE guildid=?"));
+            stmts.add(this.rgStmt[1]    = conn.prepareStatement("SELECT * FROM registered_emoji_server WHERE title=?"));
+            stmts.add(this.rgStmt[2]    = conn.prepareStatement("INSERT INTO registered_emoji_server(guildid, title) VALUES (?,?)"));
+            stmts.add(this.unRgStmt[0]  = conn.prepareStatement("SELECT * FROM registered_emoji_server WHERE guildid=?"));
+            stmts.add(this.unRgStmt[1]  = conn.prepareStatement("DELETE FROM disabled_emoji_servers WHERE emoji_guildID=?"));
+            stmts.add(this.unRgStmt[2]  = conn.prepareStatement("DELETE FROM registered_emoji_server WHERE guildid=?"));
+            stmts.add(this.emStmt       = conn.prepareStatement("SELECT R.guildid FROM registered_emoji_server R WHERE title=? AND R.guildid NOT IN (" +
+                    "SELECT emoji_guildid FROM disabled_emoji_servers D WHERE D.guildid=?)"));
+            stmts.add(this.emLsStmt     = conn.prepareStatement("SELECT guildid FROM registered_emoji_server WHERE title=?"));
+            stmts.add(this.pSerStmt     = conn.prepareStatement("SELECT R.guildid ,R.title," +
+                    "(CASE WHEN guildid IN (" +
+                    "SELECT emoji_guildid " +
+                    "FROM disabled_emoji_servers D " +
+                    "WHERE D.guildid=? )" +
+                    "THEN TRUE " +
+                    "ELSE FALSE " +
+                    "END) as disabled " +
+                    "FROM registered_emoji_server R " +
+                    "ORDER BY disabled"));
+            stmts.add(this.disStmt[0]   = rgStmt[1]);
+            stmts.add(this.disStmt[1]   = conn.prepareStatement("SELECT * FROM disabled_emoji_servers WHERE guildid=? AND emoji_guildid=?"));
+            stmts.add(this.disStmt[2]   = conn.prepareStatement("INSERT INTO disabled_emoji_servers(guildid, emoji_guildid) VALUES (?,?)"));
+            stmts.add(this.enStmt[0]    = disStmt[0]);
+            stmts.add(this.enStmt[1]    = conn.prepareStatement("DELETE FROM disabled_emoji_servers WHERE guildid=? AND emoji_guildid=?"));
+            stmts.add(this.pStaStmt     = conn.prepareStatement("SELECT G.enabled,R.title,RO.count,DS.count " +
+                    "FROM guilds G " +
+                    "FULL OUTER JOIN registered_emoji_server R ON G.guildid = R.guildid " +
+                    "FULL OUTER JOIN (" +
+                    "SELECT guildid,COUNT(*) as count " +
+                    "FROM roles RL " +
+                    "GROUP BY guildid " +
+                    ") as RO ON G.guildid = RO.guildid " +
+                    "FULL OUTER JOIN (" +
+                    "SELECT guildid,COUNT(*) as count " +
+                    "FROM disabled_emoji_servers DSA " +
+                    "GROUP BY guildid " +
+                    ")as DS ON G.guildid = DS.guildid " +
+                    "WHERE G.guildid=?"));
+            stmts.add(this.isModStmt    = conn.prepareStatement("SELECT roleid FROM roles WHERE guildid=?"));
+            stmts.add(this.eEnStmt      = conn.prepareStatement("SELECT enabled FROM guilds WHERE guildid=?"));
+            stmts.add(this.aModStmt[0]  = conn.prepareStatement("SELECT * FROM roles WHERE guildid=? AND roleid=?"));
+            stmts.add(this.aModStmt[1]  = conn.prepareStatement("INSERT INTO roles (guildid,roleid,rolename) VALUES (?,?,?)"));
+            stmts.add(this.delRolStmt[0]= aModStmt[0]);
+            stmts.add(this.delRolStmt[1]= conn.prepareStatement("DELETE FROM roles WHERE guildid=? AND roleid=?"));
+
+        }catch (SQLException ex) {
+            Logger.logGeneral("SQLError in SQL preparation");
+            Logger.logGeneral(ex.getMessage());
+            Logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            System.exit(-1);
+        }
+    }
+
+    public void close (){
+        for (PreparedStatement stmt : stmts){
+            try {
+                stmt.close();
+            } catch (SQLException ignored) {
+            }
+        }
+    }
+
 
 }
