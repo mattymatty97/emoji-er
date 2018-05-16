@@ -15,6 +15,9 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import static org.fusesource.jansi.Ansi.ansi;
+import static org.fusesource.jansi.Ansi.Color.*;
+
 public class Logger implements Runnable{
     private static final DateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
     private static final DateFormat stf = new SimpleDateFormat("HH:mm:ss");
@@ -36,7 +39,7 @@ public class Logger implements Runnable{
         sb.append("messageId [").append(message.getId()).append("]\t| ");
         sb.append("User \"").append(sender.getEffectiveName()).append("\"(").append(sender.getUser().getId()).append(")");
         sb.append(" triggered ").append(log);
-        System.out.println(sb.toString());
+        System.out.println(ansi().fgBrightYellow().a(sb.toString()).reset());
 
         queue.add(new Datas(sb.toString(),message.getGuild()));
         synchronized (this){notify();}
@@ -105,7 +108,8 @@ public class Logger implements Runnable{
         StringBuilder sb = new StringBuilder();
         sb.append("[").append(time).append("]\t");
         sb.append(log);
-        System.out.println(sb.toString());
+
+        System.out.println(ansi().fg(YELLOW).a(sb.toString()).reset());
 
         queue.add(new Datas(sb.toString()));
         synchronized (this){notify();}
@@ -124,7 +128,7 @@ public class Logger implements Runnable{
                 sb.append(" triggered ").append(log);
                 sb.append("[").append(guild.getId()).append("]");
 
-                System.out.println(sb.toString());
+                System.out.println(ansi().fgBrightYellow().a(sb.toString()).reset());
 
                 queue.add(new Datas(sb.toString(),message.getGuild(),guild,false));
 
@@ -306,11 +310,12 @@ public class Logger implements Runnable{
                                 }
                             }
                         }
+                        Thread.yield();
                     }
                     wait();
                 }
             } catch (InterruptedException ex) {
-                System.err.println("Exiting logger daemon");
+                System.err.println(ansi().fgRed().a("Exiting logger daemon").reset());
             }
         }
     }

@@ -93,7 +93,7 @@ public class BotGuild {
                 stmt.setLong(1,guild.getIdLong());
                 stmt.setLong(2,role.getIdLong());
                 stmt.setString(3,role.getName().replaceAll("[\',\"]",""));
-                stmt.executeUpdate();
+                stmt.execute();
                 stmt.execute("COMMIT");
                 ret = output.getString("modrole-add");
                 Logger.logger.logReponse("added role " + role.getName(), guild, messageId);
@@ -629,7 +629,7 @@ public class BotGuild {
                         stmt.setLong(1,guildId);
                         stmt.setLong(2,role.getIdLong());
                         stmt.setString(3,role.getName().replaceAll("[\',\"]",""));
-                        stmt.executeUpdate();
+                        stmt.execute();
                         stmt.execute("COMMIT");
                     }
                     rs.close();
@@ -898,7 +898,7 @@ public class BotGuild {
                 stmt.setLong(1,guild.getIdLong());
                 stmt.setLong(2,role.getIdLong());
                 stmt.setString(3,role.getName().replaceAll("[\',\"]",""));
-                stmt.executeUpdate();
+                stmt.execute();
                 stmt.execute("COMMIT");
                 ret = output.getString("modrole-add");
                 Logger.logger.logRemoteRep("added role " + role.getName(), guild, messageId,remote);

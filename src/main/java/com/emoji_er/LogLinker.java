@@ -11,38 +11,40 @@ public class LogLinker {
     private MessageChannel channel;
     private EmbedBuilder message;
 
-    public long getGuildId() {
+    public synchronized long getGuildId() {
         return guildId;
     }
 
-    public long getChannelId() {
+    public synchronized long getChannelId() {
         return channelId;
     }
 
-    public MessageChannel getChannel() {
+    public synchronized MessageChannel getChannel() {
         return channel;
     }
 
-    public EmbedBuilder getMessage() {
+    public synchronized EmbedBuilder getMessage() {
         return message;
     }
 
     public LogLinker(long guildId,MessageChannel channel){
-        this.channel=channel;
-        this.channelId=channel.getIdLong();
-        this.guildId=guildId;
-        message = new EmbedBuilder();
+        synchronized (this) {
+            this.channel = channel;
+            this.channelId = channel.getIdLong();
+            this.guildId = guildId;
+            message = new EmbedBuilder();
 
-        Map<Long,LogLinker> map1 = Global.getGbl().getMapGuild();
+            Map<Long, LogLinker> map1 = Global.getGbl().getMapGuild();
 
-        Map<Long,LogLinker> map2 = Global.getGbl().getMapChannel();
+            Map<Long, LogLinker> map2 = Global.getGbl().getMapChannel();
 
-        map1.put(guildId,this);
+            map1.put(guildId, this);
 
-        map2.put(channelId,this);
+            map2.put(channelId, this);
+        }
     }
 
-    public void delete(){
+    public synchronized void delete(){
         Map<Long,LogLinker> map1 = Global.getGbl().getMapGuild();
 
         Map<Long,LogLinker> map2 = Global.getGbl().getMapChannel();

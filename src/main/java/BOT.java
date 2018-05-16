@@ -10,12 +10,15 @@ import java.net.URI;
 import net.dv8tion.jda.core.entities.Game;
 import sun.misc.Signal;
 import sun.misc.SignalHandler;
+import org.fusesource.jansi.AnsiConsole;
 
+import static org.fusesource.jansi.Ansi.ansi;
 public class BOT
 {
     public static void main(String[] arguments) throws Exception
     {
         Connection conn=null;
+        AnsiConsole.systemInstall();
 
         Logger.tlogger.start();
 
@@ -48,14 +51,14 @@ public class BOT
 
         Signal.handle(new Signal("INT"), sig -> {
             Logger.logger.closeFiles();
-            System.err.println("Received SIGINT");
+            System.err.println(ansi().fgRed().a("Received SIGINT").reset());
             listener.close();
             Logger.tlogger.interrupt();
             System.exit(sig.getNumber());
         });
 
         api.addEventListener(listener);
-        api.getPresence().setGame(Game.playing("v1.7.5 - em prj"));
+        api.getPresence().setGame(Game.playing("v1.7.6 - em prj"));
 
     }
 

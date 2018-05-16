@@ -4,13 +4,14 @@ import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.*;
+import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.ReadyEvent;
 import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.core.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.role.RoleDeleteEvent;
 import net.dv8tion.jda.core.exceptions.InsufficientPermissionException;
-import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import net.dv8tion.jda.core.hooks.EventListener;
 import net.dv8tion.jda.core.utils.PermissionUtil;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -23,13 +24,35 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
-public class MyListener extends ListenerAdapter{
+
+import static org.fusesource.jansi.Ansi.ansi;
+import static org.fusesource.jansi.Ansi.Color.*;
+
+public class MyListener implements EventListener {
     private Connection conn;
     private BotGuild botGuild;
     public static boolean deleted = false;
+    private ExecutorService threads= Executors.newCachedThreadPool(a->{Thread b = new Thread(a);b.setPriority(b.getPriority()+1);return b;});
 
     @Override
+    public void onEvent(Event event)
+    {
+        if (event instanceof ReadyEvent)
+            threads.submit(()->onReady((ReadyEvent) event));
+        else if (event instanceof MessageReceivedEvent)
+            threads.submit(()->onMessageReceived((MessageReceivedEvent) event));
+        else if (event instanceof RoleDeleteEvent)
+            threads.submit(()->onRoleDelete((RoleDeleteEvent) event));
+        else if (event instanceof GuildJoinEvent)
+            threads.submit(()->onGuildJoin((GuildJoinEvent) event));
+        else if (event instanceof GuildLeaveEvent)
+            threads.submit(()->onGuildLeave((GuildLeaveEvent) event));
+    }
+
     public void onReady(ReadyEvent event) {
         String sql = "";
         List<Guild> guilds = event.getJDA().getSelfUser().getMutualGuilds();
@@ -73,7 +96,7 @@ public class MyListener extends ListenerAdapter{
         Logger.logger.logGeneral("------------SYSTEM READY---------------\r\n");
     }
 
-    @Override
+
     public void onMessageReceived(MessageReceivedEvent event) {
         //locales generation (dynamic strings from file selectionable by language)
         ResourceBundle output = ResourceBundle.getBundle("messages");
@@ -290,7 +313,7 @@ public class MyListener extends ListenerAdapter{
                                                             long guildId = Long.parseLong(args[1]);
 
                                                             if (guildIdIsValid(guildId, message)) {
-                                                                LogLinker log = new LogLinker(guildId, channel);
+                                                                new LogLinker(guildId, channel);
                                                                 channel.sendMessage(output.getString("console-started")).queue();
                                                                 Logger.logger.logReponse("log daemon started in channel: " + channel.getName(), guild, messageId);
                                                             } else {
@@ -354,7 +377,6 @@ public class MyListener extends ListenerAdapter{
                                     String arg = args[i];
                                     if (!last) {
                                         if (arg.matches("\\w+\\.\\w+")) {
-                                            String[] param = arg.split("\\.");
                                             String emoji;
                                             emoji = botGuild.getEmoji(arg, guild.getIdLong(), event.getJDA());
                                             if (emoji != null) {
@@ -396,11 +418,10 @@ public class MyListener extends ListenerAdapter{
         }
     }
 
-    @Override
+
     public void onRoleDelete(RoleDeleteEvent event) {
         ResourceBundle output;
         if (checkConnection()) {
-            String guildname = event.getGuild().getName();
             output = ResourceBundle.getBundle("messages");
 
             if (botGuild.onRoleDeleted(event.getRole())) {
@@ -425,7 +446,7 @@ public class MyListener extends ListenerAdapter{
         }
     }
 
-    @Override
+
     public void onGuildJoin(GuildJoinEvent event) {
         ResourceBundle output = ResourceBundle.getBundle("messages");
         String sql = "";
@@ -454,7 +475,7 @@ public class MyListener extends ListenerAdapter{
         updateServerCount(event.getJDA());
     }
 
-    @Override
+
     public void onGuildLeave(GuildLeaveEvent event) {
         String sql = "";
         try {
@@ -767,11 +788,18 @@ public class MyListener extends ListenerAdapter{
     }
 
     public void close(){
+        System.err.println(ansi().fg(RED).a("Closing Statements").reset());
         botGuild.close();
-        System.err.println("Statements closed");
+        System.err.println(ansi().fg(GREEN).a("Statements closed").reset());
+        System.err.println();
+        System.err.println(ansi().fg(RED).a("Closing threads").reset());
+        threads.shutdown();
+        System.err.println(ansi().fg(GREEN).a("Threads closed").reset());
+        System.err.println();
         try {
+            System.err.println(ansi().fg(RED).a("Closing connection").reset());
             conn.close();
-            System.err.println("Connection closed");
+            System.err.println(ansi().fg(GREEN).a("Connection closed").reset());
         } catch (SQLException ignored) {
         }
     }
