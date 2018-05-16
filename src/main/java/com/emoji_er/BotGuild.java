@@ -59,17 +59,17 @@ public class BotGuild {
                 stmt.executeUpdate();
                 stmt.executeUpdate("COMMIT");
                 ret = output.getString("modrole-remove");
-                Logger.logReponse("removed role " + role.getName(), guild, messageId);
+                Logger.logger.logReponse("removed role " + role.getName(), guild, messageId);
             } else {
                 rs.close();
                 ret = output.getString("error-modrole-missing");
-                Logger.logReponse("role not modrole", guild, messageId);
+                Logger.logger.logReponse("role not modrole", guild, messageId);
             }
         } catch (SQLException ex) {
-            Logger.logGeneral("SQLError in : "+ sql);
-            Logger.logGeneral(ex.getMessage());
-            Logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logGeneral("SQLError in : "+ sql);
+            Logger.logger.logGeneral(ex.getMessage());
+            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
             return null;
         }
         return ret;
@@ -96,17 +96,17 @@ public class BotGuild {
                 stmt.executeUpdate();
                 stmt.execute("COMMIT");
                 ret = output.getString("modrole-add");
-                Logger.logReponse("added role " + role.getName(), guild, messageId);
+                Logger.logger.logReponse("added role " + role.getName(), guild, messageId);
             } else {
                 rs.close();
                 ret = output.getString("error-modrole-exists");
-                Logger.logReponse("role is modrole", guild, messageId);
+                Logger.logger.logReponse("role is modrole", guild, messageId);
             }
         } catch (SQLException ex) {
-            Logger.logGeneral("SQLError in: " + sql);
-            Logger.logGeneral(ex.getMessage());
-            Logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logGeneral("SQLError in: " + sql);
+            Logger.logger.logGeneral(ex.getMessage());
+            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
             return "";
         }
         return ret;
@@ -123,12 +123,12 @@ public class BotGuild {
             stmt.executeUpdate();
             stmt.execute("COMMIT ");
             ret = output.getString("modrole-clear");
-            Logger.logReponse("cleared modroles", guild, messageId);
+            Logger.logger.logReponse("cleared modroles", guild, messageId);
         } catch (SQLException ex) {
-            Logger.logGeneral("SQLError in: " + sql);
-            Logger.logGeneral(ex.getMessage());
-            Logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logGeneral("SQLError in: " + sql);
+            Logger.logger.logGeneral(ex.getMessage());
+            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
             return "";
         }
         return ret;
@@ -153,14 +153,14 @@ public class BotGuild {
             }
             rs.close();
         } catch (SQLException ex) {
-            Logger.logGeneral("SQLError in: " + sql);
-            Logger.logGeneral(ex.getMessage());
-            Logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logGeneral("VendorError: " + ex.getErrorCode());
-            Logger.logGeneral(ex.getStackTrace()[1].toString());
+            Logger.logger.logGeneral("SQLError in: " + sql);
+            Logger.logger.logGeneral(ex.getMessage());
+            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logGeneral(ex.getStackTrace()[1].toString());
             return "";
         }
-        Logger.logReponse("listed modroles", guild, messageId);
+        Logger.logger.logReponse("listed modroles", guild, messageId);
         return ret.toString();
     }
 
@@ -185,15 +185,15 @@ public class BotGuild {
                 stmt.executeUpdate();
                 stmt.execute("COMMIT");
                 ret.append(output.getString(enabled ? "disabled" : "enabled"));
-                Logger.logReponse("Emoji" + (!enabled ? "ENABLED" : "DISABLED)"), guild, messageId);
+                Logger.logger.logReponse("Emoji" + (!enabled ? "ENABLED" : "DISABLED)"), guild, messageId);
             } else
                 rs.close();
             stmt.close();
         } catch (SQLException ex) {
-            Logger.logGeneral("SQLError in: " + sql);
-            Logger.logGeneral(ex.getMessage());
-            Logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logGeneral("SQLError in: " + sql);
+            Logger.logger.logGeneral(ex.getMessage());
+            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
             return "";
         }
         return ret.toString();
@@ -206,7 +206,7 @@ public class BotGuild {
         ResultSet rs;
         if(!title.matches("[\\w\\d]+")) {
             ret.append(output.getString("error-title-unallowed"));
-            Logger.logReponse("unallowed char", guild, messageId);
+            Logger.logger.logReponse("unallowed char", guild, messageId);
         }else{
             if (title.contains("emoji")) {
                 ret.append(output.getString("error-title-emoji"));
@@ -218,7 +218,7 @@ public class BotGuild {
                     rs = stmt.executeQuery();
                     if (rs.next()) {
                         ret.append(output.getString("error-emoji-registered"));
-                        Logger.logReponse("guild found", guild, messageId);
+                        Logger.logger.logReponse("guild found", guild, messageId);
                         rs.close();
                     } else {
                         rs.close();
@@ -228,7 +228,7 @@ public class BotGuild {
                         rs = stmt.executeQuery();
                         if (rs.next()) {
                             ret.append(output.getString("error-emoji-title-used"));
-                            Logger.logReponse("title used", guild, messageId);
+                            Logger.logger.logReponse("title used", guild, messageId);
                         } else {
                             stmt = rgStmt[2];
                             sql = "INSERT INTO registered_emoji_server(guildid, title) VALUES (" + guild.getId() + ",'" + title + "')";
@@ -237,14 +237,14 @@ public class BotGuild {
                             stmt.executeUpdate();
                             stmt.execute("COMMIT");
                             ret.append(output.getString("emoji-guild-registered"));
-                            Logger.logReponse("guild registered", guild, messageId);
+                            Logger.logger.logReponse("guild registered", guild, messageId);
                         }
                     }
                 } catch (SQLException ex) {
-                    Logger.logGeneral("SQLError in: " + sql);
-                    Logger.logGeneral(ex.getMessage());
-                    Logger.logGeneral("SQLState: " + ex.getSQLState());
-                    Logger.logGeneral("VendorError: " + ex.getErrorCode());
+                    Logger.logger.logGeneral("SQLError in: " + sql);
+                    Logger.logger.logGeneral(ex.getMessage());
+                    Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
+                    Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
                     return "";
                 }
         }
@@ -272,18 +272,18 @@ public class BotGuild {
                 sql = "DELETE FROM registered_emoji_server WHERE guildid=" + guild.getId();
                 stmt.executeUpdate();
                 stmt.execute("COMMIT");
-                Logger.logReponse("guild unregistered", guild, messageId);
+                Logger.logger.logReponse("guild unregistered", guild, messageId);
                 ret.append(output.getString("emoji-guild-unregistered"));
             } else {
-                Logger.logReponse("guild was not registered", guild, messageId);
+                Logger.logger.logReponse("guild was not registered", guild, messageId);
                 ret.append(output.getString("error-emoji-unregistered"));
             }
             stmt.close();
         } catch (SQLException ex) {
-            Logger.logGeneral("SQLError in: " + sql);
-            Logger.logGeneral(ex.getMessage());
-            Logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logGeneral("SQLError in: " + sql);
+            Logger.logger.logGeneral(ex.getMessage());
+            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
             return "";
         }
         return ret.toString();
@@ -316,10 +316,10 @@ public class BotGuild {
             }
             rs.close();
         } catch (SQLException ex) {
-            Logger.logGeneral("SQLError in: " + sql);
-            Logger.logGeneral(ex.getMessage());
-            Logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logGeneral("SQLError in: " + sql);
+            Logger.logger.logGeneral(ex.getMessage());
+            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
             return "";
         }
         return ret;
@@ -350,10 +350,10 @@ public class BotGuild {
             }
             rs.close();
         } catch (SQLException ex) {
-            Logger.logGeneral("SQLError in: " + sql);
-            Logger.logGeneral(ex.getMessage());
-            Logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logGeneral("SQLError in: " + sql);
+            Logger.logger.logGeneral(ex.getMessage());
+            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
             return "";
         }
         return ret.toString();
@@ -396,10 +396,10 @@ public class BotGuild {
             }
             rs.close();
         } catch (SQLException ex) {
-            Logger.logGeneral("SQLError in: " + sql);
-            Logger.logGeneral(ex.getMessage());
-            Logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logGeneral("SQLError in: " + sql);
+            Logger.logger.logGeneral(ex.getMessage());
+            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
             return "";
         }
         return ret.toString();
@@ -425,7 +425,7 @@ public class BotGuild {
                 rs = stmt.executeQuery();
                 if (rs.next()) {
                     ret.append(output.getString("error-disabled"));
-                    Logger.logReponse("guild is disabled", guild, messageId);
+                    Logger.logger.logReponse("guild is disabled", guild, messageId);
                     rs.close();
                 } else {
                     rs.close();
@@ -435,18 +435,18 @@ public class BotGuild {
                     stmt.setLong(2,id);
                     stmt.execute();
                     ret.append(output.getString("disable-success"));
-                    Logger.logReponse(title + " server disabled", guild, messageId);
+                    Logger.logger.logReponse(title + " server disabled", guild, messageId);
                 }
             } else {
                 ret.append(output.getString("error-disabled-404"));
-                Logger.logReponse("guild not registered", guild, messageId);
+                Logger.logger.logReponse("guild not registered", guild, messageId);
             }
             stmt.close();
         } catch (SQLException ex) {
-            Logger.logGeneral("SQLError in: " + sql);
-            Logger.logGeneral(ex.getMessage());
-            Logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logGeneral("SQLError in: " + sql);
+            Logger.logger.logGeneral(ex.getMessage());
+            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
             return "";
         }
         return ret.toString();
@@ -471,17 +471,17 @@ public class BotGuild {
                 stmt.setLong(2,id);
                 stmt.execute();
                 ret.append(output.getString("enable-success"));
-                Logger.logReponse(title + " server enabled", guild, messageId);
+                Logger.logger.logReponse(title + " server enabled", guild, messageId);
             } else {
                 ret.append(output.getString("error-enable-404"));
-                Logger.logReponse("guild not registered", guild, messageId);
+                Logger.logger.logReponse("guild not registered", guild, messageId);
             }
             stmt.close();
         } catch (SQLException ex) {
-            Logger.logGeneral("SQLError in: " + sql);
-            Logger.logGeneral(ex.getMessage());
-            Logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logGeneral("SQLError in: " + sql);
+            Logger.logger.logGeneral(ex.getMessage());
+            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
             return "";
         }
         return ret.toString();
@@ -525,10 +525,10 @@ public class BotGuild {
             }
             rs.close();
         } catch (SQLException ex) {
-            Logger.logGeneral("SQLError in: " + sql);
-            Logger.logGeneral(ex.getMessage());
-            Logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logGeneral("SQLError in: " + sql);
+            Logger.logger.logGeneral(ex.getMessage());
+            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
             
             return ret.build();
         }
@@ -539,7 +539,7 @@ public class BotGuild {
             ret.addField(output.getString("status-title"), title != null ? title : "", false);
             ret.addField(output.getString("status-modroles"), Long.toString(modroles), false);
             ret.addField(output.getString("status-disabled"), Long.toString(disabled), false);
-            Logger.logReponse("printed status", guild, messageId);
+            Logger.logger.logReponse("printed status", guild, messageId);
         }
 
         return ret.build();
@@ -570,10 +570,10 @@ public class BotGuild {
             }
             rs.close();
         } catch (SQLException ex) {
-            Logger.logGeneral("SQLError in: " + sql);
-            Logger.logGeneral(ex.getMessage());
-            Logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logGeneral("SQLError in: " + sql);
+            Logger.logger.logGeneral(ex.getMessage());
+            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
         }
 
         return false;
@@ -596,10 +596,10 @@ public class BotGuild {
             } else
                 rs.close();
         } catch (SQLException ex) {
-            Logger.logGeneral("SQLError in: " + sql);
-            Logger.logGeneral(ex.getMessage());
-            Logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logGeneral("SQLError in: " + sql);
+            Logger.logger.logGeneral(ex.getMessage());
+            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
             return false;
         }
         return ret;
@@ -634,10 +634,10 @@ public class BotGuild {
                     }
                     rs.close();
                 } catch (SQLException ex) {
-                    Logger.logGeneral("SQLError in: " + sql);
-                    Logger.logGeneral(ex.getMessage());
-                    Logger.logGeneral("SQLState: " + ex.getSQLState());
-                    Logger.logGeneral("VendorError: " + ex.getErrorCode());
+                    Logger.logger.logGeneral("SQLError in: " + sql);
+                    Logger.logger.logGeneral(ex.getMessage());
+                    Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
+                    Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
                 }
         }
     }
@@ -664,10 +664,10 @@ public class BotGuild {
                 ret = true;
             }
         } catch (SQLException ex) {
-            Logger.logGeneral("SQLError in: " + sql);
-            Logger.logGeneral(ex.getMessage());
-            Logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logGeneral("SQLError in: " + sql);
+            Logger.logger.logGeneral(ex.getMessage());
+            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
         }
         return ret;
     }
@@ -696,7 +696,7 @@ public class BotGuild {
                 rs = stmt.executeQuery();
                 if (rs.next()) {
                     ret.append(output.getString("error-disabled"));
-                    Logger.logRemoteRep("guild is disabled", guild, messageId,remote);
+                    Logger.logger.logRemoteRep("guild is disabled", guild, messageId,remote);
                     rs.close();
                 } else {
                     rs.close();
@@ -706,17 +706,17 @@ public class BotGuild {
                     stmt.setLong(2,id);
                     stmt.executeUpdate();
                     ret.append(output.getString("disable-success"));
-                    Logger.logRemoteRep(title + " server disabled", guild, messageId,remote);
+                    Logger.logger.logRemoteRep(title + " server disabled", guild, messageId,remote);
                 }
             } else {
                 ret.append(output.getString("error-disabled-404"));
-                Logger.logReponse("guild not registered", guild, messageId);
+                Logger.logger.logReponse("guild not registered", guild, messageId);
             }
         } catch (SQLException ex) {
-            Logger.logGeneral("SQLError in: " + sql);
-            Logger.logGeneral(ex.getMessage());
-            Logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logGeneral("SQLError in: " + sql);
+            Logger.logger.logGeneral(ex.getMessage());
+            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
             return "";
         }
         return ret.toString();
@@ -741,16 +741,16 @@ public class BotGuild {
                 stmt.setLong(2,id);
                 stmt.executeUpdate();
                 ret.append(output.getString("enable-success"));
-                Logger.logRemoteRep(title + " server enabled", guild, messageId,remote);
+                Logger.logger.logRemoteRep(title + " server enabled", guild, messageId,remote);
             } else {
                 ret.append(output.getString("error-enable-404"));
-                Logger.logRemoteRep("guild not registered", guild, messageId,remote);
+                Logger.logger.logRemoteRep("guild not registered", guild, messageId,remote);
             }
         } catch (SQLException ex) {
-            Logger.logGeneral("SQLError in: " + sql);
-            Logger.logGeneral(ex.getMessage());
-            Logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logGeneral("SQLError in: " + sql);
+            Logger.logger.logGeneral(ex.getMessage());
+            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
             return "";
         }
         return ret.toString();
@@ -763,7 +763,7 @@ public class BotGuild {
         ResultSet rs;
         if(!title.matches("[\\w\\d]+")) {
             ret.append(output.getString("error-title-unallowed"));
-            Logger.logRemoteRep("un-allowed chars", guild, messageId,remote);
+            Logger.logger.logRemoteRep("un-allowed chars", guild, messageId,remote);
         }else{
             if (title.contains("emoji")) {
                 ret.append(output.getString("error-title-emoji"));
@@ -775,7 +775,7 @@ public class BotGuild {
                     rs = stmt.executeQuery();
                     if (rs.next()) {
                         ret.append(output.getString("error-emoji-registered"));
-                        Logger.logRemoteRep("guild found", guild, messageId,remote);
+                        Logger.logger.logRemoteRep("guild found", guild, messageId,remote);
                         rs.close();
                     } else {
                         rs.close();
@@ -785,7 +785,7 @@ public class BotGuild {
                         rs = stmt.executeQuery();
                         if (rs.next()) {
                             ret.append(output.getString("error-emoji-title-used"));
-                            Logger.logRemoteRep("title used", guild, messageId,remote);
+                            Logger.logger.logRemoteRep("title used", guild, messageId,remote);
                         } else {
                             stmt=rgStmt[2];
                             sql = "INSERT INTO registered_emoji_server(guildid, title) VALUES (" + guild.getId() + ",'" + title + "')";
@@ -793,14 +793,14 @@ public class BotGuild {
                             stmt.setString(2,title);
                             stmt.executeUpdate();
                             ret.append(output.getString("emoji-guild-registered"));
-                            Logger.logRemoteRep("guild registered", guild, messageId,remote);
+                            Logger.logger.logRemoteRep("guild registered", guild, messageId,remote);
                         }
                     }
                 } catch (SQLException ex) {
-                    Logger.logGeneral("SQLError in: " + sql);
-                    Logger.logGeneral(ex.getMessage());
-                    Logger.logGeneral("SQLState: " + ex.getSQLState());
-                    Logger.logGeneral("VendorError: " + ex.getErrorCode());
+                    Logger.logger.logGeneral("SQLError in: " + sql);
+                    Logger.logger.logGeneral(ex.getMessage());
+                    Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
+                    Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
                     return "";
                 }
         }
@@ -828,17 +828,17 @@ public class BotGuild {
                 stmt.setLong(1,guild.getIdLong());
                 stmt.executeUpdate();
                 stmt.execute("COMMIT");
-                Logger.logRemoteRep("guild unregistered", guild, messageId,remote);
+                Logger.logger.logRemoteRep("guild unregistered", guild, messageId,remote);
                 ret.append(output.getString("emoji-guild-unregistered"));
             } else {
-                Logger.logRemoteRep("guild was not registered", guild, messageId,remote);
+                Logger.logger.logRemoteRep("guild was not registered", guild, messageId,remote);
                 ret.append(output.getString("error-emoji-unregistered"));
             }
         } catch (SQLException ex) {
-            Logger.logGeneral("SQLError in: " + sql);
-            Logger.logGeneral(ex.getMessage());
-            Logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logGeneral("SQLError in: " + sql);
+            Logger.logger.logGeneral(ex.getMessage());
+            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
             return "";
         }
         return ret.toString();
@@ -864,18 +864,17 @@ public class BotGuild {
                 stmt.executeUpdate();
                 stmt.execute("COMMIT");
                 ret = output.getString("modrole-remove");
-                Logger.logRemoteRep("removed role " + role.getName(), guild, messageId,remote);
+                Logger.logger.logRemoteRep("removed role " + role.getName(), guild, messageId,remote);
             } else {
                 rs.close();
                 ret = output.getString("error-modrole-missing");
-                Logger.logRemoteRep("role not modrole", guild, messageId,remote);
+                Logger.logger.logRemoteRep("role not modrole", guild, messageId,remote);
             }
         } catch (SQLException ex) {
-            Logger.logGeneral("SQLError in : " + sql);
-            Logger.logGeneral(ex.getMessage());
-            Logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logGeneral("VendorError: " + ex.getErrorCode());
-
+            Logger.logger.logGeneral("SQLError in : " + sql);
+            Logger.logger.logGeneral(ex.getMessage());
+            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
             return null;
         }
         return ret;
@@ -902,17 +901,17 @@ public class BotGuild {
                 stmt.executeUpdate();
                 stmt.execute("COMMIT");
                 ret = output.getString("modrole-add");
-                Logger.logRemoteRep("added role " + role.getName(), guild, messageId,remote);
+                Logger.logger.logRemoteRep("added role " + role.getName(), guild, messageId,remote);
             } else {
                 rs.close();
                 ret = output.getString("error-modrole-exists");
-                Logger.logRemoteRep("role is modrole", guild, messageId,remote);
+                Logger.logger.logRemoteRep("role is modrole", guild, messageId,remote);
             }
         } catch (SQLException ex) {
-            Logger.logGeneral("SQLError in: " + sql);
-            Logger.logGeneral(ex.getMessage());
-            Logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logGeneral("SQLError in: " + sql);
+            Logger.logger.logGeneral(ex.getMessage());
+            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
             return "";
         }
         return ret;
@@ -929,12 +928,12 @@ public class BotGuild {
             stmt.executeUpdate();
             stmt.execute("COMMIT ");
             ret = output.getString("modrole-clear");
-            Logger.logRemoteRep("cleared modroles", guild, messageId,remote);
+            Logger.logger.logRemoteRep("cleared modroles", guild, messageId,remote);
         } catch (SQLException ex) {
-            Logger.logGeneral("SQLError in: " + sql);
-            Logger.logGeneral(ex.getMessage());
-            Logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logGeneral("SQLError in: " + sql);
+            Logger.logger.logGeneral(ex.getMessage());
+            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
             return "";
         }
         return ret;
@@ -960,14 +959,14 @@ public class BotGuild {
             rs.close();
             stmt.close();
         } catch (SQLException ex) {
-            Logger.logGeneral("SQLError in: " + sql);
-            Logger.logGeneral(ex.getMessage());
-            Logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logGeneral("VendorError: " + ex.getErrorCode());
-            Logger.logGeneral(ex.getStackTrace()[1].toString());
+            Logger.logger.logGeneral("SQLError in: " + sql);
+            Logger.logger.logGeneral(ex.getMessage());
+            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logGeneral(ex.getStackTrace()[1].toString());
             return "";
         }
-        Logger.logRemoteRep("listed modroles", guild, messageId,remote);
+        Logger.logger.logRemoteRep("listed modroles", guild, messageId,remote);
         return ret.toString();
     }
 
@@ -990,14 +989,14 @@ public class BotGuild {
                 stmt.setLong(2,guild.getIdLong());
                 stmt.executeUpdate();
                 ret.append(output.getString(enabled ? "disabled" : "enabled"));
-                Logger.logRemoteRep("Emoji" + (!enabled ? "ENABLED" : "DISABLED)"), guild, messageId,remote);
+                Logger.logger.logRemoteRep("Emoji" + (!enabled ? "ENABLED" : "DISABLED)"), guild, messageId,remote);
             } else
                 rs.close();
         } catch (SQLException ex) {
-            Logger.logGeneral("SQLError in: " + sql);
-            Logger.logGeneral(ex.getMessage());
-            Logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logGeneral("SQLError in: " + sql);
+            Logger.logger.logGeneral(ex.getMessage());
+            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
             return "";
         }
         return ret.toString();
@@ -1063,10 +1062,10 @@ public class BotGuild {
             stmts.add(this.delRolStmt[1]= conn.prepareStatement("DELETE FROM roles WHERE guildid=? AND roleid=?"));
 
         }catch (SQLException ex) {
-            Logger.logGeneral("SQLError in SQL preparation");
-            Logger.logGeneral(ex.getMessage());
-            Logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logGeneral("SQLError in SQL preparation");
+            Logger.logger.logGeneral(ex.getMessage());
+            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
+            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
             System.exit(-1);
         }
     }

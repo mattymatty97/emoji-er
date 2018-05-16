@@ -17,7 +17,6 @@ public class Global {
     private MessageChannel listener;
     private FileWriter fwGlobal;
     private Map<Long,FileWriter> fwServers;
-    private MyListener eventlistener;
 
     public Map<Long, LogLinker> getMapGuild() {
         return mapGuild;
@@ -45,14 +44,6 @@ public class Global {
 
     public Map<Long, FileWriter> getFwServers() {
         return fwServers;
-    }
-
-    public MyListener getEventlistener() {
-        return eventlistener;
-    }
-
-    public void setEventlistener(MyListener eventlistener) {
-        this.eventlistener = eventlistener;
     }
 
     private Global(){

@@ -24,11 +24,11 @@ public class Reconnector {
             }catch(Exception e){
                 e.printStackTrace();
             }
-            Logger.logGeneral("trying to reconnect to sql");
+            Logger.logger.logGeneral("trying to reconnect to sql");
             try {
                 Class.forName("org.postgresql.Driver");
             } catch (ClassNotFoundException e) {
-                Logger.logGeneral("Missing postgresql JDBC Driver!");
+                Logger.logger.logGeneral("Missing postgresql JDBC Driver!");
                 e.printStackTrace();
                 connected = false;
                 continue;
@@ -37,19 +37,19 @@ public class Reconnector {
                 String url= System.getenv("DATABASE_URL");
                 String username = System.getenv("DATABASE_USER");
                 String password = System.getenv("DATABASE_PASSWORD");
-                Logger.logGeneral("Connecting to: "+ url);
+                Logger.logger.logGeneral("Connecting to: "+ url);
                 conn = DriverManager.getConnection("jdbc:"+url,username,password);
-                Logger.logGeneral("SQL INITIALIZZATED");
+                Logger.logger.logGeneral("SQL INITIALIZZATED");
                 connected = true;
             } catch (SQLException ex) {
-                Logger.logGeneral("NOT CONNECTED RETRY");
+                Logger.logger.logGeneral("NOT CONNECTED RETRY");
                 connected = false;
             }
         }
         try {
             JDA api = new JDABuilder(AccountType.BOT).setToken(System.getenv("BOT_TOKEN")).buildAsync();
             api.addEventListener(new MyListener(conn));
-            api.getPresence().setGame(Game.playing("v1.7.0 - em prj"));
+            api.getPresence().setGame(Game.playing("v1.7.5 - em prj"));
         }catch (Exception e) {
             e.printStackTrace();
         }

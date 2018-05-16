@@ -12,36 +12,35 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.Queue;
 
-public class Logger {
+public class Logger implements Runnable{
     private static final DateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
     private static final DateFormat stf = new SimpleDateFormat("HH:mm:ss");
     private static String lastDate="0/0/0";
+    private static Queue<Datas> queue = new LinkedList<>();
+    public static Logger logger = new Logger();
+    public static Thread tlogger = new Thread(logger);
 
-    public static void logMessage(String log,Message message){
+    public void logMessage(String log,Message message){
 
         String time = stf.format(new Date());
         FileWriter fw;
         StringBuilder sb = new StringBuilder();
         Member sender = message.getMember();
         logGeneral("event in guild "+message.getGuild().getName()+" ["+message.getGuild().getId()+"]");
-        if((fw=openFile(message.getGuild()))!=null){
-            try{
-                fw.append("[").append(time).append("]\t");
 
-                sb.append("messageId [").append(message.getId()).append("]\t| ");
-                sb.append("User \"").append(sender.getEffectiveName()).append("\"(").append(sender.getUser().getId()).append(")");
-                sb.append(" triggered ").append(log);
+        sb.append("[").append(time).append("]\t");
 
-                fw.append(sb.toString()).append("\r\n");
-                System.out.println(sb.toString());
+        sb.append("messageId [").append(message.getId()).append("]\t| ");
+        sb.append("User \"").append(sender.getEffectiveName()).append("\"(").append(sender.getUser().getId()).append(")");
+        sb.append(" triggered ").append(log);
+        System.out.println(sb.toString());
 
-                fw.flush();
-            }catch (IOException ex)
-            {
-                ex.printStackTrace();
-            }
-        }
+        queue.add(new Datas(sb.toString(),message.getGuild()));
+        synchronized (this){notify();}
+
         LogLinker act = Global.getGbl().getMapGuild().get(message.getGuild().getIdLong());
         if(act!=null){
             EmbedBuilder builder = act.getMessage();
@@ -50,26 +49,19 @@ public class Logger {
         }
     }
 
-    public static void logReponse(String log,Guild guild,long messageId){
+    public void logReponse(String log,Guild guild,long messageId){
 
         String time = stf.format(new Date());
         StringBuilder sb = new StringBuilder();
-        FileWriter fw;
-        if((fw=openFile(guild))!=null){
-            try{
-                fw.append("[").append(time).append("]\t");
 
-                sb.append("messageId [").append(messageId).append("]\t| ").append(log);
+        sb.append("[").append(time).append("]\t");
 
-                fw.append(sb.toString()).append("\r\n");
-                System.out.println(sb.toString());
+        sb.append("messageId [").append(messageId).append("]\t| ").append(log);
 
-                fw.flush();
-            }catch (IOException ex)
-            {
-                ex.printStackTrace();
-            }
-        }
+        System.out.println(sb.toString());
+
+        queue.add(new Datas(sb.toString(),guild));
+        synchronized (this){notify();}
 
         LogLinker act = Global.getGbl().getMapGuild().get(guild.getIdLong());
         if(act!=null)
@@ -81,24 +73,20 @@ public class Logger {
         }
     }
 
-    public static void logEvent(String log,Guild guild){
+    public void logEvent(String log,Guild guild){
 
         String time = stf.format(new Date());
-        FileWriter fw;
-        if((fw=openFile(guild))!=null){
-            try{
-                fw.append("[").append(time).append("]\t");
+        StringBuilder sb = new StringBuilder();
 
-                fw.append(log).append("\r\n");
+        logGeneral(log+": "+guild.getName());
 
-                logGeneral(log+": "+guild.getName());
+        sb.append("[").append(time).append("]\t");
 
-                fw.flush();
-            }catch (IOException ex)
-            {
-                ex.printStackTrace();
-            }
-        }
+        sb.append(log);
+
+        queue.add(new Datas(sb.toString(),guild));
+        synchronized (this){notify();}
+
         LogLinker act = Global.getGbl().getMapGuild().get(guild.getIdLong());
         if(act!=null)
         {
@@ -111,111 +99,51 @@ public class Logger {
         }
     }
 
-    public static void logGeneral(String log)
+    public void logGeneral(String log)
     {
-        String date = sdf.format(new Date());
         String time = stf.format(new Date());
-        File file = new File("./logs/"+date+"/BOT.log");
-        if (!date.equals(lastDate)) {
-            closeFiles();
-            lastDate=date;
-        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("[").append(time).append("]\t");
+        sb.append(log);
+        System.out.println(sb.toString());
 
-        FileWriter fw = Global.getGbl().getFwGlobal();
-
-        if(file.getParentFile().exists() || file.getParentFile().mkdirs())
-        {
-            try {
-                fw = new FileWriter(file, true);
-                Global.getGbl().setFwGlobal(fw);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        try{
-            fw.append("[").append(time).append("]\t");
-            fw.append(log).append("\r\n");
-            System.out.println(log);
-            fw.flush();
-        }catch (IOException ex)
-        {
-            ex.printStackTrace();
-        }
+        queue.add(new Datas(sb.toString()));
+        synchronized (this){notify();}
     }
 
-
-    public static void logRemoteMsg(String log, Message message, Guild guild){
+    public void logRemoteMsg(String log, Message message, Guild guild){
 
         String time = stf.format(new Date());
-        FileWriter fw;
         StringBuilder sb = new StringBuilder();
         Member sender = message.getMember();
         logGeneral("event in guild "+message.getGuild().getName()+" ["+message.getGuild().getId()+"]");
-        if((fw=openFile(message.getGuild()))!=null){
-            try{
-                fw.append("[").append(time).append("]\t");
+                sb.append("[").append(time).append("]\t");
 
                 sb.append("messageId [").append(message.getId()).append("]\t| ");
                 sb.append("User \"").append(sender.getEffectiveName()).append("\"(").append(sender.getUser().getId()).append(")");
-                sb.append(" triggered ").append(log).append(" on guild ").append(guild.getName());
+                sb.append(" triggered ").append(log);
                 sb.append("[").append(guild.getId()).append("]");
 
-                fw.append(sb.toString()).append("\r\n");
                 System.out.println(sb.toString());
 
-                fw.flush();
-            }catch (IOException ex)
-            {
-                ex.printStackTrace();
-            }
-        }
-        if((fw=openFile(guild))!=null){
-            try{
-                sb.replace(0,sb.length(),"");
-                fw.append("[").append(time).append("]\t");
+                queue.add(new Datas(sb.toString(),message.getGuild(),guild,false));
 
-                sb.append("messageId [").append(message.getId()).append("]\t| ");
-                sb.append("User \"").append(sender.getEffectiveName()).append("\"(").append(sender.getUser().getId()).append(")");
-                sb.append(" triggered ").append(log).append(" remotely");
-
-                fw.append(sb.toString()).append("\r\n");
-                //System.out.println(sb.toString());
-
-                fw.flush();
-            }catch (IOException ex)
-            {
-                ex.printStackTrace();
-            }
-        }
+                synchronized (this){notify();}
     }
 
-    public static void logRemoteRep(String log,Guild guild,long messageId,Guild remote){
+    public void logRemoteRep(String log,Guild guild,long messageId,Guild remote){
 
         String time = stf.format(new Date());
         StringBuilder sb = new StringBuilder();
-        FileWriter fw1,fw2;
-        if((fw1=openFile(guild))!=null && (fw2=openFile(remote))!=null){
-            try{
-                fw1.append("[").append(time).append("]\t");
-                fw2.append("[").append(time).append("]\t");
 
-
-                sb.append("messageId [").append(messageId).append("]\t| ").append(log);
-
-                fw1.append(sb.toString()).append("\r\n");
-                fw2.append(sb.toString()).append("\r\n");
-                System.out.println(sb.toString());
-
-                fw1.flush();
-                fw2.flush();
-            }catch (IOException ex)
-            {
-                ex.printStackTrace();
-            }
-        }
+        sb.append("[").append(time).append("]\t");
+        sb.append("messageId [").append(messageId).append("]\t| ").append(log);
+        System.out.println(sb.toString());
+        queue.add(new Datas(sb.toString(),guild,remote,true));
     }
 
-    public static void logInit()
+
+    public void logInit()
     {
         String date = sdf.format(new Date());
         File file = new File("./logs/"+date+"/BOT.log");
@@ -236,7 +164,7 @@ public class Logger {
         }
     }
 
-    private static FileWriter openFile(Guild guild)
+    private FileWriter openFile(Guild guild)
     {
         String date = sdf.format(new Date());
         File file = new File("./logs/"+date+"/"+guild.getIdLong()+".log");
@@ -272,7 +200,33 @@ public class Logger {
         return null;
     }
 
-    public static void closeFiles(){
+    private FileWriter openFile()
+    {
+        String date = sdf.format(new Date());
+        String time = stf.format(new Date());
+        File file = new File("./logs/"+date+"/BOT.log");
+        if (!date.equals(lastDate)) {
+            closeFiles();
+            lastDate=date;
+        }
+
+        FileWriter fw = Global.getGbl().getFwGlobal();
+        if(fw!=null)
+            return fw;
+        if(file.getParentFile().exists() || file.getParentFile().mkdirs())
+        {
+            try {
+                fw = new FileWriter(file, true);
+                Global.getGbl().setFwGlobal(fw);
+                return fw;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+    public void closeFiles(){
         Collection<FileWriter> fileWriters = Global.getGbl().getFwServers().values();
         for (FileWriter fw: fileWriters) {
             try {
@@ -291,4 +245,73 @@ public class Logger {
         Global.getGbl().setFwGlobal(null);
     }
 
+    @Override
+    public void run() {
+        synchronized (this) {
+            try {
+                while (true) {
+                    while (queue.size() > 0) {
+                        FileWriter fw, fw1, fw2;
+                        Datas data = queue.poll();
+                        if (data.isGlobal) {
+                            if ((fw = openFile()) != null) {
+                                try {
+                                    fw.append(data.text);
+                                    fw.flush();
+                                } catch (IOException ex) {
+                                    ex.printStackTrace();
+                                }
+                            }
+                        } else if (data.isRemote) {
+                            if (data.isRep) {
+                                if ((fw1 = openFile(data.guild)) != null && (fw2 = openFile(data.remote)) != null) {
+                                    try {
+                                        fw1.append(data.text).append("\r\n");
+                                        fw2.append(data.text).append("\r\n");
+                                        fw1.flush();
+                                        fw2.flush();
+                                    } catch (IOException ex) {
+                                        ex.printStackTrace();
+                                    }
+                                }
+                            } else {
+                                if ((fw = openFile(data.guild)) != null) {
+                                    try {
+                                        fw.append(data.text);
+                                        fw.append(" on guild ").append(data.remote.getName());
+                                        fw.append("\r\n");
+                                        fw.flush();
+                                    } catch (IOException ex) {
+                                        ex.printStackTrace();
+                                    }
+                                }
+                                if ((fw = openFile(data.remote)) != null) {
+                                    try {
+                                        fw.append(data.text);
+                                        fw.append(" remotely");
+                                        fw.append("\r\n");
+                                        fw.flush();
+                                    } catch (IOException ex) {
+                                        ex.printStackTrace();
+                                    }
+                                }
+                            }
+                        } else {
+                            if ((fw = openFile(data.guild)) != null) {
+                                try {
+                                    fw.append(data.text).append("\r\n");
+                                    fw.flush();
+                                } catch (IOException ex) {
+                                    ex.printStackTrace();
+                                }
+                            }
+                        }
+                    }
+                    wait();
+                }
+            } catch (InterruptedException ex) {
+                System.err.println("Exiting logger daemon");
+            }
+        }
+    }
 }
