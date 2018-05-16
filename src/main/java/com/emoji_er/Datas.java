@@ -1,6 +1,5 @@
 package com.emoji_er;
 
-import com.sun.istack.internal.NotNull;
 import net.dv8tion.jda.core.entities.Guild;
 
 class Datas{
@@ -20,7 +19,7 @@ class Datas{
         this.remote=null;
     }
 
-    public Datas(String text, @NotNull Guild guild)  throws NullPointerException{
+    public Datas(String text, Guild guild)  throws NullPointerException{
         if(guild==null){
             throw new NullPointerException();
         }
@@ -32,7 +31,7 @@ class Datas{
         this.remote=null;
     }
 
-    public Datas(String text,@NotNull Guild guild,@NotNull Guild remote,boolean isRep) throws NullPointerException {
+    public Datas(String text, Guild guild, Guild remote,boolean isRep) throws NullPointerException {
         if(guild==null || remote==null){
             throw new NullPointerException();
         }

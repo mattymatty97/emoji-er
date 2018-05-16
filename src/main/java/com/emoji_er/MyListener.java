@@ -104,6 +104,10 @@ public class MyListener extends ListenerAdapter{
                 onConsoleMessageReceived(event);
             else {
                 if (message.getContent().matches(System.getenv("DEFAULT_EMOJI_PREFIX") + "emoji\\.\\w+" + System.getenv("DEFAULT_EMOJI_PREFIX")) || message.getContent().matches(System.getenv("DEFAULT_EMOJI_PREFIX") + "emoji\\.\\w+" + System.getenv("DEFAULT_EMOJI_PREFIX") + " .+")) {
+                    if (!PermissionUtil.checkPermission(event.getTextChannel(), event.getGuild().getSelfMember(), Permission.MESSAGE_EMBED_LINKS)) {
+                        channel.sendMessage("Error could not send embeds, pls change my permissions!").queue();
+                        return;
+                    }
                     channel.sendTyping().queue();
                     String args[] = message.getContent().split(" +");
                     String command = args[0].split(System.getenv("DEFAULT_EMOJI_PREFIX"))[1].split("\\.")[1];
