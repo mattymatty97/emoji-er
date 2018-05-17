@@ -125,7 +125,7 @@ public class Logger implements Runnable{
         sb.append("[").append(time).append("]\t");
         sb.append(log);
 
-        System.out.println(ansi().fgRed().a(sb.toString()).reset());
+        System.err.println(ansi().fgRed().a(sb.toString()).reset());
 
         queue.add(new Datas(sb.toString()));
         synchronized (this){notify();}
