@@ -5,11 +5,9 @@ import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
 
 import java.sql.*;
-import java.net.URI;
 
 import net.dv8tion.jda.core.entities.Game;
 import sun.misc.Signal;
-import sun.misc.SignalHandler;
 import org.fusesource.jansi.AnsiConsole;
 
 import static org.fusesource.jansi.Ansi.ansi;
@@ -37,6 +35,7 @@ public class BOT
             String password = System.getenv("DATABASE_PASSWORD");
             Logger.logger.logGeneral("Connecting to: "+ url);
             conn = DriverManager.getConnection("jdbc:"+url,username,password);
+            conn.setAutoCommit(false);
             Logger.logger.logGeneral("SQL INITIALIZZATED");
         } catch (SQLException ex) {
             Logger.logger.logGeneral("SQLException: " + ex.getMessage());
@@ -58,7 +57,7 @@ public class BOT
         });
 
         api.addEventListener(listener);
-        api.getPresence().setGame(Game.playing("v1.7.7 - em prj"));
+        api.getPresence().setGame(Game.playing("v1.7.8 - em prj"));
 
     }
 

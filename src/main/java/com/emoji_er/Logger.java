@@ -27,9 +27,13 @@ public class Logger implements Runnable{
     public static Thread tlogger = new Thread(logger);
 
     public void logMessage(String log,Message message){
+        String debug = System.getenv().get("DEBUG");
+        if(debug==null || debug.isEmpty())
+            debug = "";
+        else
+            debug = "["+ Thread.currentThread().getName() +"]\u2BB7\r\n";
 
         String time = stf.format(new Date());
-        FileWriter fw;
         StringBuilder sb = new StringBuilder();
         Member sender = message.getMember();
         logGeneral("event in guild "+message.getGuild().getName()+" ["+message.getGuild().getId()+"]");
@@ -39,7 +43,7 @@ public class Logger implements Runnable{
         sb.append("messageId [").append(message.getId()).append("]\t| ");
         sb.append("User \"").append(sender.getEffectiveName()).append("\"(").append(sender.getUser().getId()).append(")");
         sb.append(" triggered ").append(log);
-        System.out.println(ansi().fgBrightYellow().a(sb.toString()).reset());
+        System.out.println(debug + ansi().fgBrightYellow().a(sb.toString()).reset());
 
         queue.add(new Datas(sb.toString(),message.getGuild()));
         synchronized (this){notify();}
@@ -207,7 +211,6 @@ public class Logger implements Runnable{
     private FileWriter openFile()
     {
         String date = sdf.format(new Date());
-        String time = stf.format(new Date());
         File file = new File("./logs/"+date+"/BOT.log");
         if (!date.equals(lastDate)) {
             closeFiles();

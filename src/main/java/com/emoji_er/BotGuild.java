@@ -57,7 +57,7 @@ public class BotGuild {
                     stmt.setLong(1, guild.getIdLong());
                     stmt.setLong(2, role.getIdLong());
                     stmt.executeUpdate();
-                    stmt.executeUpdate("COMMIT");
+                    stmt.getConnection().commit();
                     ret = output.getString("modrole-remove");
                     Logger.logger.logReponse("removed role " + role.getName(), guild, messageId);
                 } else {
@@ -94,7 +94,7 @@ public class BotGuild {
                     stmt.setLong(2, role.getIdLong());
                     stmt.setString(3, role.getName().replaceAll("[\',\"]", ""));
                     stmt.execute();
-                    stmt.execute("COMMIT");
+                    stmt.getConnection().commit();
                     ret = output.getString("modrole-add");
                     Logger.logger.logReponse("added role " + role.getName(), guild, messageId);
                 } else {
@@ -119,7 +119,7 @@ public class BotGuild {
             synchronized (clModStmt) {
                 stmt.setLong(1, guild.getIdLong());
                 stmt.executeUpdate();
-                stmt.execute("COMMIT ");
+                stmt.getConnection().commit();
             }
             ret = output.getString("modrole-clear");
             Logger.logger.logReponse("cleared modroles", guild, messageId);
@@ -164,7 +164,7 @@ public class BotGuild {
                     stmt.setBoolean(1, !enabled);
                     stmt.setLong(2, guild.getIdLong());
                     stmt.executeUpdate();
-                    stmt.execute("COMMIT");
+                    stmt.getConnection().commit();
                     ret.append(output.getString(enabled ? "disabled" : "enabled"));
                     Logger.logger.logReponse("Emoji" + (!enabled ? "ENABLED" : "DISABLED)"), guild, messageId);
                 } else
@@ -213,7 +213,7 @@ public class BotGuild {
                                 stmt.setLong(1, guild.getIdLong());
                                 stmt.setString(2, title);
                                 stmt.executeUpdate();
-                                stmt.execute("COMMIT");
+                                stmt.getConnection().commit();
                                 ret.append(output.getString("emoji-guild-registered"));
                                 Logger.logger.logReponse("guild registered", guild, messageId);
                             }
@@ -247,7 +247,7 @@ public class BotGuild {
                     stmt.setLong(1, guild.getIdLong());
                     sql = "DELETE FROM registered_emoji_server WHERE guildid=" + guild.getId();
                     stmt.executeUpdate();
-                    stmt.execute("COMMIT");
+                    stmt.getConnection().commit();
                     Logger.logger.logReponse("guild unregistered", guild, messageId);
                     ret.append(output.getString("emoji-guild-unregistered"));
                 } else {
@@ -587,7 +587,7 @@ public class BotGuild {
                             stmt.setLong(2, role.getIdLong());
                             stmt.setString(3, role.getName().replaceAll("[\',\"]", ""));
                             stmt.execute();
-                            stmt.execute("COMMIT");
+                            stmt.getConnection().commit();
                         }
                         rs.close();
                     }
@@ -616,7 +616,7 @@ public class BotGuild {
                     stmt.setLong(1, role.getGuild().getIdLong());
                     stmt.setLong(2, role.getIdLong());
                     stmt.executeUpdate();
-                    stmt.execute("COMMIT");
+                    stmt.getConnection().commit();
                     ret = true;
                 }
             }
@@ -777,7 +777,7 @@ public class BotGuild {
                     sql = "(remote) DELETE FROM registered_emoji_server WHERE guildid=" + guild.getId();
                     stmt.setLong(1, guild.getIdLong());
                     stmt.executeUpdate();
-                    stmt.execute("COMMIT");
+                    stmt.getConnection().commit();
                     Logger.logger.logRemoteRep("guild unregistered", guild, messageId, remote);
                     ret.append(output.getString("emoji-guild-unregistered"));
                 } else {
@@ -810,7 +810,7 @@ public class BotGuild {
                     stmt.setLong(1, guild.getIdLong());
                     stmt.setLong(2, role.getIdLong());
                     stmt.executeUpdate();
-                    stmt.execute("COMMIT");
+                    stmt.getConnection().commit();
                     ret = output.getString("modrole-remove");
                     Logger.logger.logRemoteRep("removed role " + role.getName(), guild, messageId, remote);
                 } else {
@@ -845,7 +845,7 @@ public class BotGuild {
                     stmt.setLong(2, role.getIdLong());
                     stmt.setString(3, role.getName().replaceAll("[\',\"]", ""));
                     stmt.execute();
-                    stmt.execute("COMMIT");
+                    stmt.getConnection().commit();
                     ret = output.getString("modrole-add");
                     Logger.logger.logRemoteRep("added role " + role.getName(), guild, messageId, remote);
                 } else {
@@ -870,7 +870,7 @@ public class BotGuild {
             synchronized (clModStmt) {
                 stmt.setLong(1, guild.getIdLong());
                 stmt.executeUpdate();
-                stmt.execute("COMMIT ");
+                stmt.getConnection().commit();
             }
             ret = output.getString("modrole-clear");
             Logger.logger.logRemoteRep("cleared modroles", guild, messageId,remote);

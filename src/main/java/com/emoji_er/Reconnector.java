@@ -4,11 +4,7 @@ import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
 
-import java.net.URISyntaxException;
 import java.sql.*;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import net.dv8tion.jda.core.entities.Game;
@@ -49,7 +45,7 @@ public class Reconnector {
         try {
             JDA api = new JDABuilder(AccountType.BOT).setToken(System.getenv("BOT_TOKEN")).buildAsync();
             api.addEventListener(new MyListener(conn));
-            api.getPresence().setGame(Game.playing("v1.7.7 - em prj"));
+            api.getPresence().setGame(Game.playing("v1.7.8 - em prj"));
         }catch (Exception e) {
             e.printStackTrace();
         }
