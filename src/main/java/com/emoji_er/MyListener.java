@@ -171,7 +171,7 @@ public class MyListener implements EventListener {
 //------USER-------------------SERVER--------------------------------------
                         case "servers":
                             Logger.logger.logMessage("servers", message);
-                            String result = botGuild.printServers(guild.getIdLong(), event.getJDA(), output);
+                            String result = botGuild.printServers(guild.getIdLong(), event.getJDA());
                             SendMsg(channel, output.getString("emoji-server-list") + "\n" + result);
                             Logger.logger.logReponse("server list shown", guild, messageId);
                             break;

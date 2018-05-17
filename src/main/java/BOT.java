@@ -58,7 +58,7 @@ public class BOT
         });
 
         api.addEventListener(listener);
-        api.getPresence().setGame(Game.playing("v1.7.6 - em prj"));
+        api.getPresence().setGame(Game.playing("v1.7.7 - em prj"));
 
     }
 
