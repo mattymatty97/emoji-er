@@ -18,6 +18,7 @@ public class BOT
         Connection conn=null;
         AnsiConsole.systemInstall();
 
+        Logger.tlogger.setPriority(Thread.currentThread().getPriority()-2);
         Logger.tlogger.start();
 
         Logger.logger.logInit();
@@ -25,7 +26,7 @@ public class BOT
         try {
             Class.forName("org.postgresql.Driver");
         } catch (ClassNotFoundException e) {
-            System.err.println("Missing posgresql JDBC Driver!");
+            System.err.println(ansi().fgRed()+"Missing posgresql JDBC Driver!");
             e.printStackTrace();
             return;
         }
@@ -38,9 +39,9 @@ public class BOT
             conn.setAutoCommit(false);
             Logger.logger.logGeneral("SQL INITIALIZZATED");
         } catch (SQLException ex) {
-            Logger.logger.logGeneral("SQLException: " + ex.getMessage());
-            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logGeneral(ansi().fgRed()+"SQLException: " + ex.getMessage());
+            Logger.logger.logGeneral(ansi().fgRed()+"SQLState: " + ex.getSQLState());
+            Logger.logger.logGeneral(ansi().fgRed()+"VendorError: " + ex.getErrorCode());
             System.exit(-1);
         }
 

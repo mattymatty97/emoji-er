@@ -16,7 +16,6 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import static org.fusesource.jansi.Ansi.ansi;
-import static org.fusesource.jansi.Ansi.Color.*;
 
 public class Logger implements Runnable{
     private static final DateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
@@ -113,7 +112,20 @@ public class Logger implements Runnable{
         sb.append("[").append(time).append("]\t");
         sb.append(log);
 
-        System.out.println(ansi().fg(YELLOW).a(sb.toString()).reset());
+        System.out.println(ansi().fgYellow().a(sb.toString()).reset());
+
+        queue.add(new Datas(sb.toString()));
+        synchronized (this){notify();}
+    }
+
+    public void logError(String log)
+    {
+        String time = stf.format(new Date());
+        StringBuilder sb = new StringBuilder();
+        sb.append("[").append(time).append("]\t");
+        sb.append(log);
+
+        System.out.println(ansi().fgRed().a(sb.toString()).reset());
 
         queue.add(new Datas(sb.toString()));
         synchronized (this){notify();}

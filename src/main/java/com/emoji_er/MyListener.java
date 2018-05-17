@@ -36,7 +36,11 @@ public class MyListener implements EventListener {
     private Connection conn;
     private BotGuild botGuild;
     public static boolean deleted = false;
-    private ExecutorService threads= Executors.newCachedThreadPool(a->{Thread b = new Thread(a);b.setPriority(b.getPriority()+1);return b;});
+    private ExecutorService threads= Executors.newCachedThreadPool(a->{
+        Thread b = new Thread(a);
+        b.setPriority(b.getPriority()-1);
+        return b;
+    });
 
     @Override
     public void onEvent(Event event)
@@ -86,10 +90,10 @@ public class MyListener implements EventListener {
             stmt2.close();
             stmt1.close();
         } catch (SQLException ex) {
-            Logger.logger.logGeneral("SQLError in : " + sql);
-            Logger.logger.logGeneral("SQLException: " + ex.getMessage());
-            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logError("SQLError in : " + sql);
+            Logger.logger.logError("SQLException: " + ex.getMessage());
+            Logger.logger.logError("SQLState: " + ex.getSQLState());
+            Logger.logger.logError("VendorError: " + ex.getErrorCode());
 
         }
         updateServerCount(event.getJDA());
@@ -476,10 +480,10 @@ public class MyListener implements EventListener {
             stmt.execute("COMMIT");
             stmt.close();
         } catch (SQLException ex) {
-            Logger.logger.logGeneral("SQLError in: " + sql);
-            Logger.logger.logGeneral("SQLException: " + ex.getMessage());
-            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logError("SQLError in: " + sql);
+            Logger.logger.logError("SQLException: " + ex.getMessage());
+            Logger.logger.logError("SQLState: " + ex.getSQLState());
+            Logger.logger.logError("VendorError: " + ex.getErrorCode());
 
         }
         botGuild.autoModRole(event.getGuild());
@@ -504,9 +508,9 @@ public class MyListener implements EventListener {
             Logger.logger.logEvent("GUILD HAS LEAVED", event.getGuild());
         } catch (SQLException ex) {
             Logger.logger.logGeneral("SQLError in : " + sql);
-            Logger.logger.logGeneral("SQLException: " + ex.getMessage());
-            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logError("SQLException: " + ex.getMessage());
+            Logger.logger.logError("SQLState: " + ex.getSQLState());
+            Logger.logger.logError("VendorError: " + ex.getErrorCode());
         }
         updateServerCount(event.getJDA());
     }
@@ -566,10 +570,10 @@ public class MyListener implements EventListener {
             stmt.close();
             return true;
         } catch (SQLException ex) {
-            Logger.logger.logGeneral("SQLError in : SELECT 1");
-            Logger.logger.logGeneral("SQLException: " + ex.getMessage());
-            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logError("SQLError in : SELECT 1");
+            Logger.logger.logError("SQLException: " + ex.getMessage());
+            Logger.logger.logError("SQLState: " + ex.getSQLState());
+            Logger.logger.logError("VendorError: " + ex.getErrorCode());
 
         }
         return false;
@@ -627,10 +631,10 @@ public class MyListener implements EventListener {
             }
             stmt1.close();
         } catch (SQLException ex) {
-            Logger.logger.logGeneral("SQLError in : " + sql);
-            Logger.logger.logGeneral("SQLException: " + ex.getMessage());
-            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logError("SQLError in : " + sql);
+            Logger.logger.logError("SQLException: " + ex.getMessage());
+            Logger.logger.logError("SQLState: " + ex.getSQLState());
+            Logger.logger.logError("VendorError: " + ex.getErrorCode());
             Logger.logger.logGeneral(ex.getStackTrace()[1].toString());
         }
     }

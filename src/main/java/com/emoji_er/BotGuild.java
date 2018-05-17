@@ -11,6 +11,8 @@ import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.*;
 
+import static org.fusesource.jansi.Ansi.ansi;
+
 /**
  * @author mattymatty
  * local class for storing per guild informations.
@@ -945,10 +947,10 @@ public class BotGuild {
     }
 
     private String sqlError(String sql, SQLException ex) {
-        Logger.logger.logGeneral("SQLError in : "+ sql);
-        Logger.logger.logGeneral(ex.getMessage());
-        Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
-        Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
+        Logger.logger.logError("SQLError in : "+ sql);
+        Logger.logger.logError(ex.getMessage());
+        Logger.logger.logError("SQLState: " + ex.getSQLState());
+        Logger.logger.logError("VendorError: " + ex.getErrorCode());
         return null;
     }
 
@@ -1009,10 +1011,10 @@ public class BotGuild {
             stmts.add(this.delRolStmt[1]= conn.prepareStatement("DELETE FROM roles WHERE guildid=? AND roleid=?"));
 
         }catch (SQLException ex) {
-            Logger.logger.logGeneral("SQLError in SQL preparation");
-            Logger.logger.logGeneral(ex.getMessage());
-            Logger.logger.logGeneral("SQLState: " + ex.getSQLState());
-            Logger.logger.logGeneral("VendorError: " + ex.getErrorCode());
+            Logger.logger.logError("SQLError in SQL preparation");
+            Logger.logger.logError(ex.getMessage());
+            Logger.logger.logError("SQLState: " + ex.getSQLState());
+            Logger.logger.logError("VendorError: " + ex.getErrorCode());
             System.exit(-1);
         }
     }

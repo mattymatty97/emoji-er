@@ -9,6 +9,8 @@ import java.util.concurrent.TimeUnit;
 
 import net.dv8tion.jda.core.entities.Game;
 
+import static org.fusesource.jansi.Ansi.ansi;
+
 public class Reconnector {
     public static void reconnect(){
         boolean connected=false;
@@ -38,7 +40,7 @@ public class Reconnector {
                 Logger.logger.logGeneral("SQL INITIALIZZATED");
                 connected = true;
             } catch (SQLException ex) {
-                Logger.logger.logGeneral("NOT CONNECTED RETRY");
+                Logger.logger.logGeneral(ansi().fgRed()+"NOT CONNECTED RETRY");
                 connected = false;
             }
         }
