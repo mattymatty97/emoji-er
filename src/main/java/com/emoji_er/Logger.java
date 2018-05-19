@@ -21,7 +21,12 @@ public class Logger implements Runnable{
     private static final DateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
     private static final DateFormat stf = new SimpleDateFormat("HH:mm:ss");
     private static String lastDate="0/0/0";
-    private static Queue<Datas> queue = new LinkedList<>();
+    private static Queue<Datas> queue = new LinkedList<Datas>(){
+        @Override
+        public synchronized boolean add(Datas e) {
+            return super.add(e);
+        }
+    };
     public static Logger logger = new Logger();
     public static Thread tlogger = new Thread(logger);
 
