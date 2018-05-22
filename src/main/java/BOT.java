@@ -15,6 +15,7 @@ public class BOT
 {
     public static void main(String[] arguments) throws Exception
     {
+
         Connection conn=null;
         AnsiConsole.systemInstall();
 
@@ -25,7 +26,7 @@ public class BOT
         try {
             Class.forName("org.postgresql.Driver");
         } catch (ClassNotFoundException e) {
-            System.err.println("Missing posgresql JDBC Driver!");
+            System.err.println("\r"+"Missing posgresql JDBC Driver!");
             e.printStackTrace();
             return;
         }
@@ -49,16 +50,25 @@ public class BOT
         MyListener listener = new MyListener(conn);
 
         Signal.handle(new Signal("INT"), sig -> {
-            Logger.logger.closeFiles();
-            System.err.println(ansi().fgRed().a("Received SIGINT").reset());
+            System.err.println("\r"+ansi().fgRed().a("Received SIGINT").reset());
             listener.close();
+            api.shutdown();
             Logger.tlogger.interrupt();
+            try {
+                Logger.tlogger.join();
+            }catch (Exception ignore){}
+            Logger.logger.closeFiles();
             System.exit(sig.getNumber());
         });
 
         api.addEventListener(listener);
         api.getPresence().setGame(Game.playing("v1.7.9 - em prj"));
 
+        while (!Thread.interrupted()){
+            Thread.sleep(300);
+            System.out.print("\r                     ");
+            System.out.print(ansi().fgCyan().a("\rActive Threads: ").fgBrightGreen().a(Thread.activeCount()).fgBlack());
+        }
     }
 
 }

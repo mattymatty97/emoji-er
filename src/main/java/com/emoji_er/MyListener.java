@@ -799,18 +799,18 @@ public class MyListener implements EventListener {
     }
 
     public void close(){
-        System.err.println(ansi().fg(RED).a("Closing Statements").reset());
+        System.err.println("\r"+ansi().fg(RED).a("Closing Statements").reset());
         botGuild.close();
-        System.err.println(ansi().fg(GREEN).a("Statements closed").reset());
+        System.err.println("\r"+ansi().fg(GREEN).a("Statements closed").reset());
         System.err.println();
-        System.err.println(ansi().fg(RED).a("Closing threads").reset());
+        System.err.println("\r"+ansi().fg(RED).a("Closing threads").reset());
         threads.shutdown();
-        System.err.println(ansi().fg(GREEN).a("Threads closed").reset());
+        System.err.println("\r"+ansi().fg(GREEN).a("Threads closed").reset());
         System.err.println();
         try {
-            System.err.println(ansi().fg(RED).a("Closing connection").reset());
+            System.err.println("\r"+ansi().fg(RED).a("Closing connection").reset());
             conn.close();
-            System.err.println(ansi().fg(GREEN).a("Connection closed").reset());
+            System.err.println("\r"+ansi().fg(GREEN).a("Connection closed").reset());
         } catch (SQLException ignored) {
         }
     }
