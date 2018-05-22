@@ -58,7 +58,8 @@ public class Logger implements Runnable {
         sb.append("messageId [").append(message.getId()).append("]\t| ");
         sb.append("User \"").append(sender.getEffectiveName()).append("\"(").append(sender.getUser().getId()).append(")");
         sb.append(" triggered ").append(log);
-        System.out.println("\r"+debug + ansi().fgBrightYellow().a(sb.toString()).reset());
+
+        System.out.println("\r"+ansi()+ debug + ansi().fgBrightYellow().a(sb.toString()).reset());
 
         queue.add(new GuildMsg(sb.toString(), message.getGuild(),false));
         sem.release();
@@ -80,7 +81,7 @@ public class Logger implements Runnable {
 
         sb.append("messageId [").append(messageId).append("]\t| ").append(log);
 
-        System.out.println("\r"+sb.toString());
+        System.out.println("\r"+ansi().reset() + sb.toString());
 
         queue.add(new GuildMsg(sb.toString(), guild,true));
         sem.release();
@@ -160,7 +161,7 @@ public class Logger implements Runnable {
         sb.append("messageId [").append(messageId).append("]\t| ").append(log);
 
         System.out.print("\r                     ");
-        System.out.println("\r"+sb.toString());
+        System.out.println("\r"+ansi()+sb.toString());
         queue.add(new RemoteMsg(sb.toString(), guild, remote, true));
         sem.release();
     }

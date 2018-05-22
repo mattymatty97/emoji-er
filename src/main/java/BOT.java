@@ -7,6 +7,7 @@ import net.dv8tion.jda.core.JDABuilder;
 import java.sql.*;
 
 import net.dv8tion.jda.core.entities.Game;
+import org.fusesource.jansi.Ansi;
 import sun.misc.Signal;
 import org.fusesource.jansi.AnsiConsole;
 
@@ -50,7 +51,7 @@ public class BOT
         MyListener listener = new MyListener(conn);
 
         Signal.handle(new Signal("INT"), sig -> {
-            System.err.println("\r"+ansi().fgRed().a("Received SIGINT").reset());
+            System.err.println("\r"+ansi().fgRed().a("Received SIGINT").reset().a((char)27).a("[?25h"));
             listener.close();
             api.shutdown();
             Logger.tlogger.interrupt();
@@ -66,8 +67,8 @@ public class BOT
 
         while (!Thread.interrupted()){
             Thread.sleep(300);
-            System.out.print("\r                     ");
-            System.out.print(ansi().fgCyan().a("\rActive Threads: ").fgBrightGreen().a(Thread.activeCount()).fgBlack());
+            //System.out.print("\r                     ");
+            System.out.print("\r"+ansi().fgCyan().a("Active Threads: ").fgBrightGreen().a(Thread.activeCount())+(char)27+"[?25l");
         }
     }
 
