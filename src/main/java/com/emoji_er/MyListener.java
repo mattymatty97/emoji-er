@@ -81,8 +81,7 @@ public class MyListener implements EventListener {
     }
 
     @Override
-    public void onEvent(Event event)
-    {
+    public void onEvent(Event event) {
         if (event instanceof ReadyEvent)
             onReady((ReadyEvent) event);
         else if (event instanceof MessageReceivedEvent) {
@@ -149,6 +148,7 @@ public class MyListener implements EventListener {
         }
         updateServerCount(event.getJDA());
         Logger.logger.logGeneral("------------SYSTEM READY---------------\r\n");
+        Logger.started = true;
     }
 
 
@@ -718,7 +718,6 @@ public class MyListener implements EventListener {
         return jda.getGuildById(guildId) != null;
     }
 
-
     private void onConsoleMessageReceived(MessageReceivedEvent event) {
         ResourceBundle output = ResourceBundle.getBundle("messages");
 
@@ -842,6 +841,7 @@ public class MyListener implements EventListener {
         }
 
     }
+
 
     public MyListener(Connection conn) {
         this.conn = conn;

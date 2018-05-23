@@ -1,4 +1,3 @@
-import com.emoji_er.Global;
 import com.emoji_er.Logger;
 import com.emoji_er.MyListener;
 import com.emoji_er.Output;
@@ -54,11 +53,10 @@ public class BOT
 
         JDA api = new JDABuilder(AccountType.BOT).setToken(System.getenv("BOT_TOKEN")).buildAsync();
 
-        Global.getGbl().setApi(api);
-
         MyListener listener = new MyListener(conn);
 
         Signal.handle(new Signal("INT"), sig -> {
+            Logger.started = false;
             System.out.println((char)27+"[?25h");
             System.err.println(ansi().fgRed().a("Received SIGINT").reset());
             api.shutdown();
@@ -74,7 +72,7 @@ public class BOT
         api.addEventListener(listener);
         api.getPresence().setGame(Game.playing("v1.7.11 - em prj"));
 
-        while (Logger.started && !Thread.interrupted()) ;
+        while (!Logger.started && !Thread.interrupted()) ;
 
         Output.run();
     }

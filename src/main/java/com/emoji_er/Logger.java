@@ -129,8 +129,6 @@ public class Logger implements Runnable {
 
         if (!started) {
             debug = "";
-            if (log.contains("SYSTEM READY"))
-                started = true;
         }
 
         String time = stf.format(new Date());
