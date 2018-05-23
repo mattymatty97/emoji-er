@@ -1,6 +1,9 @@
 package com.emoji_er;
 
-import com.emoji_er.datas.*;
+import com.emoji_er.datas.Datas;
+import com.emoji_er.datas.GeneralMsg;
+import com.emoji_er.datas.GuildMsg;
+import com.emoji_er.datas.RemoteMsg;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
@@ -17,8 +20,8 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.Semaphore;
 
+import static org.fusesource.jansi.Ansi.Color.YELLOW;
 import static org.fusesource.jansi.Ansi.ansi;
-import static org.fusesource.jansi.Ansi.Color.*;
 
 public class Logger implements Runnable {
     private static final DateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
@@ -36,17 +39,13 @@ public class Logger implements Runnable {
         }
     };
     private static Semaphore sem = new Semaphore(0);
-
+    public static boolean started = false;
 
     public static Logger logger = new Logger();
     public static Thread tlogger = new Thread(logger,"Logger Thread");
 
     public void logMessage(String log, Message message) {
-        String debug = System.getenv().get("DEBUG");
-        if (debug == null || debug.isEmpty())
-            debug = "";
-        else
-            debug = "[" + Thread.currentThread().getName() + "]\u2BB7\r\n";
+
 
         String time = stf.format(new Date());
         StringBuilder sb = new StringBuilder();
@@ -59,7 +58,7 @@ public class Logger implements Runnable {
         sb.append("User \"").append(sender.getEffectiveName()).append("\"(").append(sender.getUser().getId()).append(")");
         sb.append(" triggered ").append(log);
 
-        Output.println(ansi() + debug + ansi().fgBrightYellow().a(sb.toString()).reset());
+        Output.println(ansi().fgBrightYellow().a(sb.toString()).reset().toString());
 
         queue.add(new GuildMsg(sb.toString(), message.getGuild(),false));
         sem.release();
@@ -122,13 +121,25 @@ public class Logger implements Runnable {
     }
 
     public void logGeneral(String log) {
+        String debug = System.getenv().get("DEBUG");
+        if (debug == null || debug.isEmpty())
+            debug = "";
+        else
+            debug = "[" + Thread.currentThread().getName() + "]\u2BB7\r\n";
+
+        if (!started) {
+            debug = "";
+            if (log.contains("SYSTEM READY"))
+                started = true;
+        }
+
         String time = stf.format(new Date());
         StringBuilder sb = new StringBuilder();
         sb.append("[").append(time).append("]\t");
         sb.append(log);
 
 
-        Output.println(ansi().fg(YELLOW).a(sb.toString()).reset().toString());
+        Output.println(debug + ansi().fg(YELLOW).a(sb.toString()).reset());
 
 
         queue.add(new GeneralMsg(sb.toString()));

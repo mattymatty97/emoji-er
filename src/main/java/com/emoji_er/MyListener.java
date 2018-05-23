@@ -1,5 +1,6 @@
 package com.emoji_er;
 
+
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.Permission;
@@ -21,29 +22,60 @@ import org.json.JSONObject;
 
 import java.awt.*;
 import java.io.IOException;
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.List;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.ResourceBundle;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
-
+import static org.fusesource.jansi.Ansi.Color.GREEN;
+import static org.fusesource.jansi.Ansi.Color.RED;
 import static org.fusesource.jansi.Ansi.ansi;
-import static org.fusesource.jansi.Ansi.Color.*;
 
 public class MyListener implements EventListener {
     private Connection conn;
     private BotGuild botGuild;
-    public static boolean deleted = false;
     private ExecutorService threads= Executors.newCachedThreadPool(new MyThreadFactory());
 
     private class MyThreadFactory implements ThreadFactory{
+        private final Queue<Integer> tQueue = new PriorityQueue<Integer>() {
+            @Override
+            public synchronized boolean add(Integer e) {
+                return super.add(e);
+            }
+
+            @Override
+            public synchronized Integer poll() {
+                return super.poll();
+            }
+        };
         private int ctn=0;
+
         @Override
         public Thread newThread(Runnable r) {
-            Thread b = new Thread(r,"Event Thread: "+(ctn++));
-            b.setPriority(b.getPriority()+1);
+
+            int index;
+            synchronized (tQueue) {
+                if (tQueue.size() == 0)
+                    index = ctn++;
+                else
+                    index = tQueue.poll();
+            }
+
+            Thread b = new Thread(() -> {
+                try {
+                    r.run();
+                } finally {
+                    tQueue.add(Integer.parseInt(Thread.currentThread().getName().replace("Event Thread: ", "")));
+                }
+            }, "Event Thread: " + index);
+            b.setPriority(Thread.NORM_PRIORITY + 1);
             return b;
         }
     }
@@ -52,18 +84,31 @@ public class MyListener implements EventListener {
     public void onEvent(Event event)
     {
         if (event instanceof ReadyEvent)
-            threads.submit(()->onReady((ReadyEvent) event));
-        else if (event instanceof MessageReceivedEvent)
-            threads.submit(()->onMessageReceived((MessageReceivedEvent) event));
+            onReady((ReadyEvent) event);
+        else if (event instanceof MessageReceivedEvent) {
+            MessageReceivedEvent ev = (MessageReceivedEvent) event;
+            if (!ev.isFromType(ChannelType.TEXT)) return;
+            //if is a bot exit immediately
+            if (ev.getAuthor().isBot()) return;
+            //if i cant write
+            if (!PermissionUtil.checkPermission(ev.getTextChannel(), ev.getGuild().getSelfMember(), Permission.MESSAGE_WRITE))
+                return;
+            MessageChannel channel = ev.getChannel();
+            //get message
+            Message message = ev.getMessage();
+            if (Global.getGbl().getMapChannel().get(channel.getIdLong()) != null ||
+                    message.getContent().replaceAll("[^" + System.getenv("DEFAULT_EMOJI_PREFIX") + "]", "").length() >= 2)
+                threads.execute(() -> onMessageReceived((MessageReceivedEvent) event));
+        }
         else if (event instanceof RoleDeleteEvent)
-            threads.submit(()->onRoleDelete((RoleDeleteEvent) event));
+            threads.execute(() -> onRoleDelete((RoleDeleteEvent) event));
         else if (event instanceof GuildJoinEvent)
-            threads.submit(()->onGuildJoin((GuildJoinEvent) event));
+            threads.execute(() -> onGuildJoin((GuildJoinEvent) event));
         else if (event instanceof GuildLeaveEvent)
-            threads.submit(()->onGuildLeave((GuildLeaveEvent) event));
+            threads.execute(() -> onGuildLeave((GuildLeaveEvent) event));
     }
 
-    public void onReady(ReadyEvent event) {
+    private void onReady(ReadyEvent event) {
         String sql = "";
         List<Guild> guilds = event.getJDA().getSelfUser().getMutualGuilds();
         Statement stmt1, stmt2;
@@ -107,7 +152,7 @@ public class MyListener implements EventListener {
     }
 
 
-    public void onMessageReceived(MessageReceivedEvent event) {
+    private void onMessageReceived(MessageReceivedEvent event) {
         //locales generation (dynamic strings from file selectionable by language)
         ResourceBundle output = ResourceBundle.getBundle("messages");
         if (checkConnection()) {
@@ -440,13 +485,12 @@ public class MyListener implements EventListener {
     }
 
 
-    public void onRoleDelete(RoleDeleteEvent event) {
+    private void onRoleDelete(RoleDeleteEvent event) {
         ResourceBundle output;
         if (checkConnection()) {
             output = ResourceBundle.getBundle("messages");
 
             if (botGuild.onRoleDeleted(event.getRole())) {
-                deleted = false;
                 Logger.logger.logEvent("role deleted in guild: ", event.getGuild());
                 try {
                     TextChannel channel = event.getGuild().getDefaultChannel();
@@ -468,7 +512,7 @@ public class MyListener implements EventListener {
     }
 
 
-    public void onGuildJoin(GuildJoinEvent event) {
+    private void onGuildJoin(GuildJoinEvent event) {
         ResourceBundle output = ResourceBundle.getBundle("messages");
         String sql = "";
         //search for existent informations class for server
@@ -497,7 +541,7 @@ public class MyListener implements EventListener {
     }
 
 
-    public void onGuildLeave(GuildLeaveEvent event) {
+    private void onGuildLeave(GuildLeaveEvent event) {
         String sql = "";
         try {
             Statement stmt = conn.createStatement();
@@ -675,14 +719,10 @@ public class MyListener implements EventListener {
     }
 
 
-    public void onConsoleMessageReceived(MessageReceivedEvent event) {
+    private void onConsoleMessageReceived(MessageReceivedEvent event) {
         ResourceBundle output = ResourceBundle.getBundle("messages");
 
         Guild remote = event.getGuild();
-
-        String guildname = event.getGuild().getName();
-        //get sender member
-        Member member = event.getMember();
         //get channel to send
         MessageChannel channel = event.getChannel();
         //get message

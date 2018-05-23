@@ -19,6 +19,11 @@ public class Global {
     private FileWriter fwGlobal;
     private Map<Long,FileWriter> fwServers;
     private JDA api;
+    private Map<String, String> envMap = System.getenv();
+
+    public Map<String, String> getEnvMap() {
+        return envMap;
+    }
 
     public JDA getApi() {
         return api;
