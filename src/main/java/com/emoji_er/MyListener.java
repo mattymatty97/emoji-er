@@ -44,7 +44,7 @@ public class MyListener implements EventListener {
     private ExecutorService threads= Executors.newCachedThreadPool(new MyThreadFactory());
 
     private class MyThreadFactory implements ThreadFactory{
-        private final Queue<Integer> tQueue = new PriorityQueue<Integer>() {
+        private final Queue<Integer> tQueue = new PriorityQueue<Integer>((a, b) -> b - a) {
             @Override
             public synchronized boolean add(Integer e) {
                 return super.add(e);
