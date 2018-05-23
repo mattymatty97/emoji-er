@@ -290,7 +290,7 @@ public class Logger implements Runnable {
             if (data instanceof GeneralMsg) {
                 if ((fw = openFile()) != null) {
                     try {
-                        fw.append(data.getText());
+                        fw.append(data.getText()).append("\r\n");
                         fw.flush();
                     } catch (IOException ex) {
                         ex.printStackTrace();
