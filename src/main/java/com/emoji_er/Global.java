@@ -1,5 +1,6 @@
 package com.emoji_er;
 
+import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.MessageChannel;
 
 import java.io.FileWriter;
@@ -17,6 +18,15 @@ public class Global {
     private MessageChannel listener;
     private FileWriter fwGlobal;
     private Map<Long,FileWriter> fwServers;
+    private JDA api;
+
+    public JDA getApi() {
+        return api;
+    }
+
+    public void setApi(JDA api) {
+        this.api = api;
+    }
 
     public Map<Long, LogLinker> getMapGuild() {
         return mapGuild;

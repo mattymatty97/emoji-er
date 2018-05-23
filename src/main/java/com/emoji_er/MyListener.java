@@ -36,7 +36,17 @@ public class MyListener implements EventListener {
     private Connection conn;
     private BotGuild botGuild;
     public static boolean deleted = false;
-    private ExecutorService threads= Executors.newCachedThreadPool(a->{Thread b = new Thread(a);b.setPriority(b.getPriority()+1);return b;});
+    private ExecutorService threads= Executors.newCachedThreadPool(new MyThreadFactory());
+
+    private class MyThreadFactory implements ThreadFactory{
+        private int ctn=0;
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread b = new Thread(r,"Event Thread: "+(ctn++));
+            b.setPriority(b.getPriority()+1);
+            return b;
+        }
+    }
 
     @Override
     public void onEvent(Event event)
@@ -799,18 +809,18 @@ public class MyListener implements EventListener {
     }
 
     public void close(){
-        System.err.println("\r"+ansi().fg(RED).a("Closing Statements").reset());
+        System.err.println(ansi().fg(RED).a("Closing Statements").reset());
         botGuild.close();
-        System.err.println("\r"+ansi().fg(GREEN).a("Statements closed").reset());
+        System.err.println(ansi().fg(GREEN).a("Statements closed").reset());
         System.err.println();
-        System.err.println("\r"+ansi().fg(RED).a("Closing threads").reset());
+        System.err.println(ansi().fg(RED).a("Closing threads").reset());
         threads.shutdown();
-        System.err.println("\r"+ansi().fg(GREEN).a("Threads closed").reset());
+        System.err.println(ansi().fg(GREEN).a("Threads closed").reset());
         System.err.println();
         try {
-            System.err.println("\r"+ansi().fg(RED).a("Closing connection").reset());
+            System.err.println(ansi().fg(RED).a("Closing connection").reset());
             conn.close();
-            System.err.println("\r"+ansi().fg(GREEN).a("Connection closed").reset());
+            System.err.println(ansi().fg(GREEN).a("Connection closed").reset());
         } catch (SQLException ignored) {
         }
     }

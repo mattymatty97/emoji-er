@@ -3,4 +3,5 @@ out/
 .gradle/
 build/
 logs/
+testing/
 _config.yml

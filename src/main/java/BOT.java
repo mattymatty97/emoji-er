@@ -7,7 +7,6 @@ import net.dv8tion.jda.core.JDABuilder;
 import java.sql.*;
 
 import net.dv8tion.jda.core.entities.Game;
-import org.fusesource.jansi.Ansi;
 import sun.misc.Signal;
 import org.fusesource.jansi.AnsiConsole;
 
@@ -16,7 +15,7 @@ public class BOT
 {
     public static void main(String[] arguments) throws Exception
     {
-
+        System.out.print((char)27+"[?25l");
         Connection conn=null;
         AnsiConsole.systemInstall();
 
@@ -48,10 +47,13 @@ public class BOT
 
         JDA api = new JDABuilder(AccountType.BOT).setToken(System.getenv("BOT_TOKEN")).buildAsync();
 
+        Global.getGbl().setApi(api);
+
         MyListener listener = new MyListener(conn);
 
         Signal.handle(new Signal("INT"), sig -> {
-            System.err.println("\r"+ansi().fgRed().a("Received SIGINT").reset().a((char)27).a("[?25h"));
+            System.out.println((char)27+"[?25h");
+            System.err.println(ansi().fgRed().a("Received SIGINT").reset());
             listener.close();
             api.shutdown();
             Logger.tlogger.interrupt();
@@ -63,13 +65,11 @@ public class BOT
         });
 
         api.addEventListener(listener);
-        api.getPresence().setGame(Game.playing("v1.7.9 - em prj"));
+        api.getPresence().setGame(Game.playing("v1.7.10 - em prj"));
 
-        while (!Thread.interrupted()){
-            Thread.sleep(300);
-            //System.out.print("\r                     ");
-            System.out.print("\r"+ansi().fgCyan().a("Active Threads: ").fgBrightGreen().a(Thread.activeCount())+(char)27+"[?25l");
-        }
+        while (api.getStatus()!= JDA.Status.CONNECTED && !Thread.interrupted());
+
+        Output.run();
     }
 
 }

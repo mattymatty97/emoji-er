@@ -39,7 +39,7 @@ public class Logger implements Runnable {
 
 
     public static Logger logger = new Logger();
-    public static Thread tlogger = new Thread(logger);
+    public static Thread tlogger = new Thread(logger,"Logger Thread");
 
     public void logMessage(String log, Message message) {
         String debug = System.getenv().get("DEBUG");
@@ -59,7 +59,7 @@ public class Logger implements Runnable {
         sb.append("User \"").append(sender.getEffectiveName()).append("\"(").append(sender.getUser().getId()).append(")");
         sb.append(" triggered ").append(log);
 
-        System.out.println("\r"+ansi()+ debug + ansi().fgBrightYellow().a(sb.toString()).reset());
+        Output.println(ansi() + debug + ansi().fgBrightYellow().a(sb.toString()).reset());
 
         queue.add(new GuildMsg(sb.toString(), message.getGuild(),false));
         sem.release();
@@ -81,7 +81,8 @@ public class Logger implements Runnable {
 
         sb.append("messageId [").append(messageId).append("]\t| ").append(log);
 
-        System.out.println("\r"+ansi().reset() + sb.toString());
+
+        Output.println(ansi().reset() + sb.toString());
 
         queue.add(new GuildMsg(sb.toString(), guild,true));
         sem.release();
@@ -125,8 +126,10 @@ public class Logger implements Runnable {
         StringBuilder sb = new StringBuilder();
         sb.append("[").append(time).append("]\t");
         sb.append(log);
-        System.out.print("\r                     ");
-        System.out.println("\r"+ansi().fg(YELLOW).a(sb.toString()).reset());
+
+
+        Output.println(ansi().fg(YELLOW).a(sb.toString()).reset().toString());
+
 
         queue.add(new GeneralMsg(sb.toString()));
         sem.release();
@@ -144,8 +147,9 @@ public class Logger implements Runnable {
         sb.append(" triggered ").append(log);
         sb.append("[").append(guild.getId()).append("]");
 
-        System.out.print("\r                     ");
-        System.out.println("\r"+ansi().fgBrightYellow().a(sb.toString()).reset());
+        synchronized (System.out) {
+            System.out.println(ansi().fgBrightYellow().a(sb.toString()).reset());
+        }
 
         queue.add(new RemoteMsg(sb.toString(), message.getGuild(), guild, false));
 
@@ -160,8 +164,10 @@ public class Logger implements Runnable {
         sb.append("[").append(time).append("]\t");
         sb.append("messageId [").append(messageId).append("]\t| ").append(log);
 
-        System.out.print("\r                     ");
-        System.out.println("\r"+ansi()+sb.toString());
+
+        Output.println(sb.toString());
+
+
         queue.add(new RemoteMsg(sb.toString(), guild, remote, true));
         sem.release();
     }
@@ -270,9 +276,9 @@ public class Logger implements Runnable {
                 }
             } catch (InterruptedException ignored) {
             } finally {
-                    System.err.println("\r"+ansi().fgYellow().a("Flushing last queued messages").reset());
+                    System.err.println(ansi().fgYellow().a("Flushing last queued messages").reset());
                     print(false);
-                    System.err.println("\r"+ansi().fgRed().a("Exiting logger daemon").reset());
+                    System.err.println(ansi().fgRed().a("Exiting logger daemon").reset());
             }
         }
     }
