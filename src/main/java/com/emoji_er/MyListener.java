@@ -606,6 +606,7 @@ public class MyListener implements EventListener {
                 helpMsg.addField("listen", output.getString("help-def-listen"), false);
             }
         }
+        helpMsg.addField("", output.getString("help-last"), false);
         if (member.getUser().getIdLong() == Long.parseLong(System.getenv("OWNER_ID")))
             helpMsg.setFooter(output.getString("help-footer-owner"), null);
         else
