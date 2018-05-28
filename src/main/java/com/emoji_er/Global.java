@@ -17,6 +17,11 @@ public class Global {
     private MessageChannel listener;
     private FileWriter fwGlobal;
     private Map<Long,FileWriter> fwServers;
+    private Map<String, String> envMap = System.getenv();
+
+    public Map<String, String> getEnvMap() {
+        return envMap;
+    }
 
     public Map<Long, LogLinker> getMapGuild() {
         return mapGuild;

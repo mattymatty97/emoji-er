@@ -4,12 +4,15 @@ import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
 
-import java.sql.*;
 import java.util.concurrent.TimeUnit;
 
 import net.dv8tion.jda.core.entities.Game;
 
 import static org.fusesource.jansi.Ansi.ansi;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 public class Reconnector {
     public static void reconnect(){
@@ -47,7 +50,7 @@ public class Reconnector {
         try {
             JDA api = new JDABuilder(AccountType.BOT).setToken(System.getenv("BOT_TOKEN")).buildAsync();
             api.addEventListener(new MyListener(conn));
-            api.getPresence().setGame(Game.playing("v1.7.8 - em prj"));
+            api.getPresence().setGame(Game.playing("v1.7.11 - em prj"));
         }catch (Exception e) {
             e.printStackTrace();
         }

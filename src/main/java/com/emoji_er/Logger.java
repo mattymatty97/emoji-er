@@ -1,5 +1,9 @@
 package com.emoji_er;
 
+import com.emoji_er.datas.Datas;
+import com.emoji_er.datas.GeneralMsg;
+import com.emoji_er.datas.GuildMsg;
+import com.emoji_er.datas.RemoteMsg;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
@@ -14,43 +18,50 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.Semaphore;
 
 import static org.fusesource.jansi.Ansi.ansi;
+import static org.fusesource.jansi.Ansi.Color.*;
 
 public class Logger implements Runnable{
     private static final DateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
     private static final DateFormat stf = new SimpleDateFormat("HH:mm:ss");
-    private static String lastDate="0/0/0";
-    private static Queue<Datas> queue = new LinkedList<Datas>(){
+    private static String lastDate = "0/0/0";
+    private static Queue<Datas> queue = new LinkedList<Datas>() {
         @Override
-        public synchronized boolean add(Datas e) {
-            return super.add(e);
+        public synchronized boolean add(Datas a) {
+            return super.add(a);
+        }
+
+        @Override
+        public synchronized Datas poll(){
+            return super.poll();
         }
     };
-    public static Logger logger = new Logger();
-    public static Thread tlogger = new Thread(logger);
+    private static Semaphore sem = new Semaphore(0);
+    public static boolean started = false;
 
-    public void logMessage(String log,Message message){
-        String debug = System.getenv().get("DEBUG");
-        if(debug==null || debug.isEmpty())
-            debug = "";
-        else
-            debug = "["+ Thread.currentThread().getName() +"]\u2BB7\r\n";
+    public static Logger logger = new Logger();
+    public static Thread tlogger = new Thread(logger,"Logger Thread");
+
+    public void logMessage(String log, Message message) {
+
 
         String time = stf.format(new Date());
         StringBuilder sb = new StringBuilder();
         Member sender = message.getMember();
-        logGeneral("event in guild "+message.getGuild().getName()+" ["+message.getGuild().getId()+"]");
+        logGeneral("event in guild " + message.getGuild().getName() + " [" + message.getGuild().getId() + "]");
 
         sb.append("[").append(time).append("]\t");
 
         sb.append("messageId [").append(message.getId()).append("]\t| ");
         sb.append("User \"").append(sender.getEffectiveName()).append("\"(").append(sender.getUser().getId()).append(")");
         sb.append(" triggered ").append(log);
-        System.out.println(debug + ansi().fgBrightYellow().a(sb.toString()).reset());
 
-        queue.add(new Datas(sb.toString(),message.getGuild()));
-        synchronized (this){notify();}
+        Output.println(ansi().fgBrightYellow().a(sb.toString()).reset().toString());
+
+        queue.add(new GuildMsg(sb.toString(), message.getGuild(),false));
+        sem.release();
 
         LogLinker act = Global.getGbl().getMapGuild().get(message.getGuild().getIdLong());
         if(act!=null){
@@ -71,8 +82,10 @@ public class Logger implements Runnable{
 
         System.out.println(sb.toString());
 
-        queue.add(new Datas(sb.toString(),guild));
-        synchronized (this){notify();}
+        Output.println(ansi().reset() + sb.toString());
+
+        queue.add(new GuildMsg(sb.toString(), guild,true));
+        sem.release();
 
         LogLinker act = Global.getGbl().getMapGuild().get(guild.getIdLong());
         if(act!=null)
@@ -95,8 +108,8 @@ public class Logger implements Runnable{
 
         sb.append(log);
 
-        queue.add(new Datas(sb.toString(),guild));
-        synchronized (this){notify();}
+        queue.add(new GuildMsg(sb.toString(), guild,false));
+        sem.release();
 
         LogLinker act = Global.getGbl().getMapGuild().get(guild.getIdLong());
         if(act!=null)
@@ -110,30 +123,28 @@ public class Logger implements Runnable{
         }
     }
 
-    public void logGeneral(String log)
-    {
+    public void logGeneral(String log) {
+        String debug = System.getenv().get("DEBUG");
+        if (debug == null || debug.isEmpty())
+            debug = "";
+        else
+            debug = "[" + Thread.currentThread().getName() + "]\u2BB7\r\n";
+
+        if (!started) {
+            debug = "";
+        }
+
         String time = stf.format(new Date());
         StringBuilder sb = new StringBuilder();
         sb.append("[").append(time).append("]\t");
         sb.append(log);
 
-        System.out.println(ansi().fgYellow().a(sb.toString()).reset());
 
-        queue.add(new Datas(sb.toString()));
-        synchronized (this){notify();}
-    }
+        Output.println(debug + ansi().fg(YELLOW).a(sb.toString()).reset());
 
-    public void logError(String log)
-    {
-        String time = stf.format(new Date());
-        StringBuilder sb = new StringBuilder();
-        sb.append("[").append(time).append("]\t");
-        sb.append(log);
 
-        System.err.println(ansi().fgRed().a(sb.toString()).reset());
-
-        queue.add(new Datas(sb.toString()));
-        synchronized (this){notify();}
+        queue.add(new GeneralMsg(sb.toString()));
+        sem.release();
     }
 
     public void logRemoteMsg(String log, Message message, Guild guild){
@@ -149,11 +160,13 @@ public class Logger implements Runnable{
                 sb.append(" triggered ").append(log);
                 sb.append("[").append(guild.getId()).append("]");
 
-                System.out.println(ansi().fgBrightYellow().a(sb.toString()).reset());
+        synchronized (System.out) {
+            System.out.println(ansi().fgBrightYellow().a(sb.toString()).reset());
+        }
 
-                queue.add(new Datas(sb.toString(),message.getGuild(),guild,false));
+        queue.add(new RemoteMsg(sb.toString(), message.getGuild(), guild, false));
 
-                synchronized (this){notify();}
+        sem.release();
     }
 
     public void logRemoteRep(String log,Guild guild,long messageId,Guild remote){
@@ -163,8 +176,13 @@ public class Logger implements Runnable{
 
         sb.append("[").append(time).append("]\t");
         sb.append("messageId [").append(messageId).append("]\t| ").append(log);
-        System.out.println(sb.toString());
-        queue.add(new Datas(sb.toString(),guild,remote,true));
+
+
+        Output.println(sb.toString());
+
+
+        queue.add(new RemoteMsg(sb.toString(), guild, remote, true));
+        sem.release();
     }
 
 
@@ -273,70 +291,83 @@ public class Logger implements Runnable{
     public void run() {
         synchronized (this) {
             try {
-                while (true) {
-                    while (queue.size() > 0) {
-                        FileWriter fw, fw1, fw2;
-                        Datas data = queue.poll();
-                        if (data.isGlobal) {
-                            if ((fw = openFile()) != null) {
-                                try {
-                                    fw.append(data.text);
-                                    fw.flush();
-                                } catch (IOException ex) {
-                                    ex.printStackTrace();
-                                }
-                            }
-                        } else if (data.isRemote) {
-                            if (data.isRep) {
-                                if ((fw1 = openFile(data.guild)) != null && (fw2 = openFile(data.remote)) != null) {
-                                    try {
-                                        fw1.append(data.text).append("\r\n");
-                                        fw2.append(data.text).append("\r\n");
-                                        fw1.flush();
-                                        fw2.flush();
-                                    } catch (IOException ex) {
-                                        ex.printStackTrace();
-                                    }
-                                }
-                            } else {
-                                if ((fw = openFile(data.guild)) != null) {
-                                    try {
-                                        fw.append(data.text);
-                                        fw.append(" on guild ").append(data.remote.getName());
-                                        fw.append("\r\n");
-                                        fw.flush();
-                                    } catch (IOException ex) {
-                                        ex.printStackTrace();
-                                    }
-                                }
-                                if ((fw = openFile(data.remote)) != null) {
-                                    try {
-                                        fw.append(data.text);
-                                        fw.append(" remotely");
-                                        fw.append("\r\n");
-                                        fw.flush();
-                                    } catch (IOException ex) {
-                                        ex.printStackTrace();
-                                    }
-                                }
-                            }
-                        } else {
-                            if ((fw = openFile(data.guild)) != null) {
-                                try {
-                                    fw.append(data.text).append("\r\n");
-                                    fw.flush();
-                                } catch (IOException ex) {
-                                    ex.printStackTrace();
-                                }
-                            }
-                        }
-                        Thread.yield();
-                    }
-                    wait();
+                while (!Thread.interrupted()) {
+                    sem.acquire(3);
+                    print(true);
                 }
-            } catch (InterruptedException ex) {
-                System.err.println(ansi().fgRed().a("Exiting logger daemon").reset());
+            } catch (InterruptedException ignored) {
+            } finally {
+                    System.err.println(ansi().fgYellow().a("Flushing last queued messages").reset());
+                    print(false);
+                    System.err.println(ansi().fgRed().a("Exiting logger daemon").reset());
             }
         }
+    }
+
+    private void print(boolean yield){
+        while (queue.size() > 0) {
+            FileWriter fw, fw1, fw2;
+            Datas data = queue.poll();
+            if (data instanceof GeneralMsg) {
+                if ((fw = openFile()) != null) {
+                    try {
+                        fw.append(data.getText()).append("\r\n");
+                        fw.flush();
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            } else if (data instanceof RemoteMsg) {
+                RemoteMsg rem = (RemoteMsg)data;
+                if (rem.isReponse()) {
+                    if ((fw1 = openFile(rem.getGuild())) != null && (fw2 = openFile(rem.getRemote())) != null) {
+                        try {
+                            fw1.append(rem.getText()).append("\r\n");
+                            fw2.append(rem.getText()).append("\r\n");
+                            fw1.flush();
+                            fw2.flush();
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                } else {
+                    if ((fw = openFile(rem.getGuild())) != null) {
+                        try {
+                            fw.append(rem.getText());
+                            fw.append(" on guild ").append(rem.getRemote().getName());
+                            fw.append("\r\n");
+                            fw.flush();
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                    if ((fw = openFile(rem.getRemote())) != null) {
+                        try {
+                            fw.append(rem.getText());
+                            fw.append(" remotely");
+                            fw.append("\r\n");
+                            fw.flush();
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                }
+            } else {
+                GuildMsg msg = (GuildMsg)data;
+                if ((fw = openFile(msg.getGuild())) != null) {
+                    try {
+                        fw.append(msg.getText()).append("\r\n");
+                        fw.flush();
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            }
+            if(yield)
+                Thread.yield();
+        }
+        int n = sem.availablePermits();
+        if(n>0 && queue.size()==0)
+            sem.acquireUninterruptibly(n);
     }
 }
