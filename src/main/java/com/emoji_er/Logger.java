@@ -1,9 +1,5 @@
 package com.emoji_er;
 
-import com.emoji_er.datas.Datas;
-import com.emoji_er.datas.GeneralMsg;
-import com.emoji_er.datas.GuildMsg;
-import com.emoji_er.datas.RemoteMsg;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
@@ -16,18 +12,19 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
+import com.emoji_er.datas.*;
+
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.Semaphore;
 
 import static org.fusesource.jansi.Ansi.ansi;
-import static org.fusesource.jansi.Ansi.Color.*;
 
 public class Logger implements Runnable{
     private static final DateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
     private static final DateFormat stf = new SimpleDateFormat("HH:mm:ss");
-    private static String lastDate = "0/0/0";
-    private static Queue<Datas> queue = new LinkedList<Datas>() {
+    private static String lastDate="0/0/0";
+    private static Queue<Datas> queue = new LinkedList<Datas>(){
         @Override
         public synchronized boolean add(Datas a) {
             return super.add(a);
@@ -50,7 +47,7 @@ public class Logger implements Runnable{
         String time = stf.format(new Date());
         StringBuilder sb = new StringBuilder();
         Member sender = message.getMember();
-        logGeneral("event in guild " + message.getGuild().getName() + " [" + message.getGuild().getId() + "]");
+        logGeneral("event in guild "+message.getGuild().getName()+" ["+message.getGuild().getId()+"]");
 
         sb.append("[").append(time).append("]\t");
 
@@ -123,6 +120,31 @@ public class Logger implements Runnable{
         }
     }
 
+    public void logError(String log){
+        String debug = System.getenv().get("DEBUG");
+        if (debug == null || debug.isEmpty())
+            debug = "";
+        else
+            debug = "[" + Thread.currentThread().getName() + "]\u2BB7\r\n";
+
+        if (!started) {
+            debug = "";
+        }
+
+        String time = stf.format(new Date());
+        StringBuilder sb = new StringBuilder();
+        sb.append("[").append(time).append("]\t");
+        sb.append(log);
+
+
+        Output.println(debug + ansi().fgRed().a(sb.toString()).reset());
+
+
+        queue.add(new GeneralMsg(sb.toString()));
+        sem.release();
+    }
+
+
     public void logGeneral(String log) {
         String debug = System.getenv().get("DEBUG");
         if (debug == null || debug.isEmpty())
@@ -140,7 +162,7 @@ public class Logger implements Runnable{
         sb.append(log);
 
 
-        Output.println(debug + ansi().fg(YELLOW).a(sb.toString()).reset());
+        Output.println(debug + ansi().fgYellow().a(sb.toString()).reset());
 
 
         queue.add(new GeneralMsg(sb.toString()));

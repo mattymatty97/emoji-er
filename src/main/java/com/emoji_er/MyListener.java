@@ -35,6 +35,7 @@ import java.util.concurrent.ThreadFactory;
 
 
 import static org.fusesource.jansi.Ansi.ansi;
+import static org.fusesource.jansi.Ansi.Color.*;
 
 public class MyListener implements EventListener {
     private Connection conn;
@@ -79,7 +80,8 @@ public class MyListener implements EventListener {
     }
 
     @Override
-    public void onEvent(Event event) {
+    public void onEvent(Event event)
+    {
         if (event instanceof ReadyEvent)
             onReady((ReadyEvent) event);
         else if (event instanceof MessageReceivedEvent) {
@@ -154,14 +156,6 @@ public class MyListener implements EventListener {
         //locales generation (dynamic strings from file selectionable by language)
         ResourceBundle output = ResourceBundle.getBundle("messages");
         if (checkConnection()) {
-            //if is a direct message exit immediately
-            if (!event.isFromType(ChannelType.TEXT)) return;
-            //if is a bot exit immediately
-            if (event.getAuthor().isBot()) return;
-            //if i cant write
-            if (!PermissionUtil.checkPermission(event.getTextChannel(), event.getGuild().getSelfMember(), Permission.MESSAGE_WRITE))
-                return;
-
             Guild guild = event.getGuild();
 
             updateDatabase(guild, output);
@@ -604,10 +598,13 @@ public class MyListener implements EventListener {
                 helpMsg.addField("listen", output.getString("help-def-listen"), false);
             }
         }
+
+        helpMsg.addField("",output.getString("help-last"),false);
+
         if (member.getUser().getIdLong() == Long.parseLong(System.getenv("OWNER_ID")))
-            helpMsg.setFooter(output.getString("help-footer-owner"), null);
+            helpMsg.setFooter(output.getString("help-footer-owner"), member.getUser().getAvatarUrl());
         else
-            helpMsg.setFooter(output.getString("help-footer"), null);
+            helpMsg.setFooter(output.getString("help-footer"), guild.getIconUrl());
         channel.sendMessage(helpMsg.build()).queue();
     }
 
