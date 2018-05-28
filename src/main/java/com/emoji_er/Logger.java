@@ -77,8 +77,6 @@ public class Logger implements Runnable{
 
         sb.append("messageId [").append(messageId).append("]\t| ").append(log);
 
-        System.out.println(sb.toString());
-
         Output.println(ansi().reset() + sb.toString());
 
         queue.add(new GuildMsg(sb.toString(), guild,true));
