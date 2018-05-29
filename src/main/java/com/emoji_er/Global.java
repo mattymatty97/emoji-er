@@ -7,6 +7,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Global {
+    public static final String version = "v1.7.12 - em prj";
+    public static final String build = "1";
+
+
     private static Global gbl = new Global();
     public static Global getGbl(){
         return gbl;

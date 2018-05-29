@@ -29,7 +29,8 @@ public class BOT
         Logger.tlogger.start();
 
         Logger.logger.logInit();
-        Logger.logger.logGeneral("-----------SYSTEM STARTED------------");
+        Logger.logger.logGeneral("-----------STARTING SYSTEM------------");
+        Logger.logger.logGeneral("SYSTEM VERSION: "+Global.version+" BUILD: "+Global.build);
         try {
             Class.forName("org.postgresql.Driver");
         } catch (ClassNotFoundException e) {
@@ -71,7 +72,7 @@ public class BOT
         });
 
         api.addEventListener(listener);
-        api.getPresence().setGame(Game.playing("v1.7.11 - em prj"));
+        api.getPresence().setGame(Game.playing(Global.version));
 
         while (!Logger.started && !Thread.interrupted()) ;
 

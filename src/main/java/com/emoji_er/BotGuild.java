@@ -403,6 +403,7 @@ public class BotGuild {
                         stmt.setLong(1, guild.getIdLong());
                         stmt.setLong(2, id);
                         stmt.execute();
+                        stmt.getConnection().commit();
                         ret.append(output.getString("disable-success"));
                         Logger.logger.logReponse(title + " server disabled", guild, messageId);
                     }
@@ -436,6 +437,7 @@ public class BotGuild {
                     stmt.setLong(1, guild.getIdLong());
                     stmt.setLong(2, id);
                     stmt.execute();
+                    stmt.getConnection().commit();
                     ret.append(output.getString("enable-success"));
                     Logger.logger.logReponse(title + " server enabled", guild, messageId);
                 } else {
@@ -524,7 +526,6 @@ public class BotGuild {
                     for (Role role : roles) {
                         if (role.getIdLong() == rs.getLong(1)) {
                             rs.close();
-                            stmt.close();
                             return true;
                         }
                     }
@@ -662,6 +663,7 @@ public class BotGuild {
                         stmt.setLong(1, guild.getIdLong());
                         stmt.setLong(2, id);
                         stmt.executeUpdate();
+                        stmt.getConnection().commit();
                         ret.append(output.getString("disable-success"));
                         Logger.logger.logRemoteRep(title + " server disabled", guild, messageId, remote);
                     }
@@ -695,6 +697,7 @@ public class BotGuild {
                     stmt.setLong(1, guild.getIdLong());
                     stmt.setLong(2, id);
                     stmt.executeUpdate();
+                    stmt.getConnection().commit();
                     ret.append(output.getString("enable-success"));
                     Logger.logger.logRemoteRep(title + " server enabled", guild, messageId, remote);
                 } else {
@@ -745,6 +748,7 @@ public class BotGuild {
                                 stmt.setLong(1, guild.getIdLong());
                                 stmt.setString(2, title);
                                 stmt.executeUpdate();
+                                stmt.getConnection().commit();
                                 ret.append(output.getString("emoji-guild-registered"));
                                 Logger.logger.logRemoteRep("guild registered", guild, messageId, remote);
                             }
@@ -918,6 +922,7 @@ public class BotGuild {
                     stmt.setBoolean(1, !enabled);
                     stmt.setLong(2, guild.getIdLong());
                     stmt.executeUpdate();
+                    stmt.getConnection().commit();
                     ret.append(output.getString(enabled ? "disabled" : "enabled"));
                     Logger.logger.logRemoteRep("Emoji" + (!enabled ? "ENABLED" : "DISABLED)"), guild, messageId, remote);
                 } else

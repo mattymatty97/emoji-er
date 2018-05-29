@@ -70,9 +70,11 @@ public class MyListener implements EventListener {
             Thread b = new Thread(() -> {
                 try {
                     r.run();
-                } finally {
+                }catch (Exception ex){
                     tQueue.add(Integer.parseInt(Thread.currentThread().getName().replace("Event Thread: ", "")));
+                    throw ex;
                 }
+                tQueue.add(Integer.parseInt(Thread.currentThread().getName().replace("Event Thread: ", "")));
             }, "Event Thread: " + index);
             b.setPriority(Thread.NORM_PRIORITY + 1);
             return b;
@@ -92,6 +94,14 @@ public class MyListener implements EventListener {
             //if i cant write
             if (!PermissionUtil.checkPermission(ev.getTextChannel(), ev.getGuild().getSelfMember(), Permission.MESSAGE_WRITE))
                 return;
+            if (!PermissionUtil.checkPermission(ev.getTextChannel(), ev.getGuild().getSelfMember(), Permission.MESSAGE_EMBED_LINKS)) {
+                ev.getTextChannel().sendMessage("Missing permission EMBED_LINKS please fix").queue();
+                return;
+            }
+            if (!PermissionUtil.checkPermission(ev.getTextChannel(), ev.getGuild().getSelfMember(), Permission.MESSAGE_EXT_EMOJI)) {
+                ev.getTextChannel().sendMessage("Missing permission USE_EXTERNAL_EMOJI please fix").queue();
+                return;
+            }
             MessageChannel channel = ev.getChannel();
             //get message
             Message message = ev.getMessage();
@@ -134,7 +144,7 @@ public class MyListener implements EventListener {
                     stmt2.execute(sql);
                     sql = "DELETE FROM guilds WHERE guildid=" + rs.getLong(1);
                     stmt2.execute(sql);
-                    stmt2.execute("COMMIT");
+                    stmt2.getConnection().commit();
                 }
             }
             stmt2.close();
@@ -519,7 +529,7 @@ public class MyListener implements EventListener {
             Statement stmt = conn.createStatement();
             sql = "INSERT INTO guilds(guildid, guildname) VALUES (" + event.getGuild().getIdLong() + ",'" + event.getGuild().getName().replaceAll("[\',\"]", "") + "')";
             stmt.execute(sql);
-            stmt.execute("COMMIT");
+            stmt.getConnection().commit();
             stmt.close();
         } catch (SQLException ex) {
             Logger.logger.logError("SQLError in: " + sql);
@@ -545,7 +555,7 @@ public class MyListener implements EventListener {
             stmt.execute(sql);
             sql = "DELETE FROM guilds WHERE guildid=" + event.getGuild().getIdLong();
             stmt.execute(sql);
-            stmt.execute("COMMIT");
+            stmt.getConnection().commit();
             stmt.close();
             Logger.logger.logEvent("GUILD HAS LEAVED", event.getGuild());
         } catch (SQLException ex) {
@@ -619,7 +629,6 @@ public class MyListener implements EventListener {
             Logger.logger.logError("SQLException: " + ex.getMessage());
             Logger.logger.logError("SQLState: " + ex.getSQLState());
             Logger.logger.logError("VendorError: " + ex.getErrorCode());
-
         }
         return false;
     }
@@ -664,7 +673,7 @@ public class MyListener implements EventListener {
                 rs.close();
                 sql = "INSERT INTO guilds(guildid, guildname) VALUES (" + guild.getIdLong() + ",'" + guild.getName().replaceAll("[',\"]", "") + "')";
                 stmt1.execute(sql);
-                stmt1.execute("COMMIT");
+                stmt1.getConnection().commit();
                 botGuild.autoModRole(guild);
                 updateServerCount(guild.getJDA());
                 try {
