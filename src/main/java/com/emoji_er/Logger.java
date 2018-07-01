@@ -64,7 +64,7 @@ public class Logger implements Runnable{
         if(act!=null){
             EmbedBuilder builder = act.getMessage();
             builder.setAuthor(message.getAuthor().getName(),null,message.getAuthor().getAvatarUrl());
-            builder.setDescription(message.getRawContent());
+            builder.setDescription(message.getContentRaw());
         }
     }
 

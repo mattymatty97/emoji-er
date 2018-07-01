@@ -106,7 +106,7 @@ public class MyListener implements EventListener {
             //get message
             Message message = ev.getMessage();
             if (Global.getGbl().getMapChannel().get(channel.getIdLong()) != null ||
-                    message.getContent().replaceAll("[^" + System.getenv("DEFAULT_EMOJI_PREFIX") + "]", "").length() >= 2)
+                    message.getContentDisplay().replaceAll("[^" + System.getenv("DEFAULT_EMOJI_PREFIX") + "]", "").length() >= 2)
                 threads.execute(() -> onMessageReceived((MessageReceivedEvent) event));
         }
         else if (event instanceof RoleDeleteEvent)
@@ -186,12 +186,12 @@ public class MyListener implements EventListener {
             if (Global.getGbl().getMapChannel().get(channel.getIdLong()) != null)
                 onConsoleMessageReceived(event);
             else {
-                if (message.getContent().matches(System.getenv("DEFAULT_EMOJI_PREFIX") + "emoji\\.\\w+" + System.getenv("DEFAULT_EMOJI_PREFIX")) || message.getContent().matches(System.getenv("DEFAULT_EMOJI_PREFIX") + "emoji\\.\\w+" + System.getenv("DEFAULT_EMOJI_PREFIX") + " .+")) {
+                if (message.getContentDisplay().matches(System.getenv("DEFAULT_EMOJI_PREFIX") + "emoji\\.\\w+" + System.getenv("DEFAULT_EMOJI_PREFIX")) || message.getContentDisplay().matches(System.getenv("DEFAULT_EMOJI_PREFIX") + "emoji\\.\\w+" + System.getenv("DEFAULT_EMOJI_PREFIX") + " .+")) {
                     if (!PermissionUtil.checkPermission(event.getTextChannel(), event.getGuild().getSelfMember(), Permission.MESSAGE_EMBED_LINKS)) {
                         channel.sendMessage("Error could not send embeds, pls change my permissions!").queue();
                         return;
                     }
-                    String args[] = message.getContent().split(" +");
+                    String args[] = message.getContentDisplay().split(" +");
                     String command = args[0].split(System.getenv("DEFAULT_EMOJI_PREFIX"))[1].split("\\.")[1];
                     switch (command) {
 //------USER---------------------HELP--------------------------------------
@@ -434,7 +434,7 @@ public class MyListener implements EventListener {
                     /*--------------------EMOJI REPLACEMENT------------------*/
                 } else {
                     if (botGuild.emojiEnabled(guild)) {
-                        String args[] = message.getRawContent().split(System.getenv("DEFAULT_EMOJI_PREFIX"));
+                        String args[] = message.getContentRaw().split(System.getenv("DEFAULT_EMOJI_PREFIX"));
                         if (args.length >= 1) {
                             StringBuilder ret = new StringBuilder(args[0]);
                             boolean found = false;
@@ -741,7 +741,7 @@ public class MyListener implements EventListener {
         //get bind guild
         Guild guild = event.getJDA().getGuildById(Global.getGbl().getMapChannel().get(channel.getIdLong()).getGuildId());
 
-        String args[] = message.getContent().split(" +");
+        String args[] = message.getContentDisplay().split(" +");
 
         switch (args[0].equals("") ? args[1] : args[0]) {
             case "end":
