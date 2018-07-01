@@ -30,7 +30,8 @@ public class BOT
 
         Logger.logger.logInit();
         Logger.logger.logGeneral("-----------STARTING SYSTEM------------");
-        Logger.logger.logGeneral("SYSTEM VERSION: "+Global.version+" BUILD: "+Global.build);
+        Logger.logger.logGeneral("SYSTEM VERSION: "+Global.version);
+        Logger.logger.logGeneral("BUILD: "+Global.build+"\r\n");
         try {
             Class.forName("org.postgresql.Driver");
         } catch (ClassNotFoundException e) {

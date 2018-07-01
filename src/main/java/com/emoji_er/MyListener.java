@@ -150,6 +150,9 @@ public class MyListener implements EventListener {
             stmt2.close();
             stmt1.close();
         } catch (SQLException ex) {
+            try {
+                conn.rollback();
+            }catch (SQLException ignored){}
             Logger.logger.logError("SQLError in : " + sql);
             Logger.logger.logError("SQLException: " + ex.getMessage());
             Logger.logger.logError("SQLState: " + ex.getSQLState());
@@ -694,18 +697,20 @@ public class MyListener implements EventListener {
     }
 
     private void SendMsg(MessageChannel channel, String text) {
-        int messages = ((Double) Math.ceil(text.length() / 1000.0)).intValue();
+        long messages = Math.round((Math.ceil(text.length() / 1000.0)));
         if (messages > 1) {
             int s = 0;
-            for (int i = 0; i < messages; i++) {
-                int p = s, a = s;
+            int p = s,a;
+            while (p!=text.length()){
+                a = s;
                 while ((a - s) < 1000 & a != -1) {
                     p = a;
                     a = text.indexOf("\n", p + 1);
                 }
                 if (a == -1)
                     p = text.length();
-                channel.sendMessage(text.substring(s, p)).queue();
+                if(p>s)
+                    channel.sendMessage(text.substring(s, p)).queue();
                 s = p;
             }
         } else {
