@@ -218,11 +218,17 @@ public class MyListener implements EventListener {
                             break;
 //------USER-------------------LIST----------------------------------------
                         case "list":
-                            channel.sendTyping().queue();
+                            channel.sendTyping().complete();
                             Logger.logger.logMessage("list", message);
                             if (args.length >= 2) {
-                                SendMsg(channel, output.getString("emoji-list") + "\n" + botGuild.getEmojiList(args[1].replace(" ", ""), event.getJDA()));
-                                Logger.logger.logReponse("emoji list shown", guild, messageId);
+                                try {
+                                    String ret = botGuild.getEmojiList(args[1].replace(" ", ""), event.getJDA());
+                                    SendMsg(channel, output.getString("emoji-list") + "\n" + ret);
+                                    Logger.logger.logReponse("emoji list shown", guild, messageId);
+                                }catch(EmojiError err){
+                                    channel.sendMessage(output.getString(err.getMessage())).queue();
+                                    Logger.logger.logReponse(err.getMessage(), guild, messageId);
+                                }
                             } else {
                                 channel.sendMessage(output.getString("error-emoji-list")).queue();
                                 Logger.logger.logReponse("error emoji list", guild, messageId);
@@ -230,7 +236,7 @@ public class MyListener implements EventListener {
                             break;
 //------USER-------------------SERVER--------------------------------------
                         case "servers":
-                            channel.sendTyping().queue();
+                            channel.sendTyping().complete();
                             Logger.logger.logMessage("servers", message);
                             String result = botGuild.printServers(guild.getIdLong(), event.getJDA());
                             SendMsg(channel, output.getString("emoji-server-list") + "\n" + result);
@@ -238,7 +244,7 @@ public class MyListener implements EventListener {
                             break;
 //------MOD--------------------REGISTER------------------------------------
                         case "register":
-                            channel.sendTyping().queue();
+                            channel.sendTyping().complete();
                             Logger.logger.logMessage("register", message);
                             if (member.isOwner() || botGuild.memberIsMod(member, guild.getIdLong())) {
                                 if (args.length >= 2) {
@@ -258,7 +264,7 @@ public class MyListener implements EventListener {
                             break;
 //------MOD------------------UNREGISTER------------------------------------
                         case "unregister":
-                            channel.sendTyping().queue();
+                            channel.sendTyping().complete();
                             Logger.logger.logMessage("unregister", message);
                             if (member.isOwner() || botGuild.memberIsMod(member, guild.getIdLong())) {
                                 channel.sendMessage(botGuild.unRegisterGuild(guild, output, messageId)).queue();
@@ -269,7 +275,7 @@ public class MyListener implements EventListener {
                             break;
 //------MOD------------------MODROLE---------------------------------------
                         case "modrole":
-                            channel.sendTyping().queue();
+                            channel.sendTyping().complete();
                             //if member is allowed
                             if (member.isOwner() || botGuild.memberIsMod(member, guild.getIdLong())) {
                                 //if there are other arguments
@@ -321,7 +327,7 @@ public class MyListener implements EventListener {
                             break;
 //------MOD------------------TOGGLE---------------------------------------
                         case "toggle":
-                            channel.sendTyping().queue();
+                            channel.sendTyping().complete();
                             Logger.logger.logMessage("toggle", message);
                             if (member.isOwner() || botGuild.memberIsMod(member, guild.getIdLong())) {
                                 channel.sendMessage(botGuild.toggleEmoji(guild, output, messageId)).queue();
@@ -332,14 +338,14 @@ public class MyListener implements EventListener {
                             break;
 //------MOD------------------STATUS---------------------------------------
                         case "status":
-                            channel.sendTyping().queue();
+                            channel.sendTyping().complete();
                             Logger.logger.logMessage("status", message);
                             channel.sendMessage(botGuild.printStatus(guild, output, messageId)).queue();
                             Logger.logger.logReponse("status shown",guild,messageId);
                             break;
 //------MOD------------------ENABLE---------------------------------------
                         case "enable":
-                            channel.sendTyping().queue();
+                            channel.sendTyping().complete();
                             Logger.logger.logMessage("enable", message);
                             if (member.isOwner() || botGuild.memberIsMod(member, guild.getIdLong())) {
                                 if (args.length >= 2) {
@@ -354,7 +360,7 @@ public class MyListener implements EventListener {
                             break;
 //------MOD------------------DISABLE---------------------------------------
                         case "disable":
-                            channel.sendTyping().queue();
+                            channel.sendTyping().complete();
                             Logger.logger.logMessage("disable", message);
                             if (member.isOwner() || botGuild.memberIsMod(member, guild.getIdLong())) {
                                 if (args.length >= 2) {
@@ -450,7 +456,7 @@ public class MyListener implements EventListener {
                                             if (emoji != null) {
                                                 ret.append(emoji);
                                                 if(!used)
-                                                    channel.sendTyping().queue();
+                                                    channel.sendTyping().complete();
                                                 found = true;
                                                 used = true;
                                             }

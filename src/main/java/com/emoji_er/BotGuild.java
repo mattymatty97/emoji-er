@@ -297,7 +297,7 @@ public class BotGuild {
         return ret;
     }
 
-    public String getEmojiList(String title, JDA api) {
+    public String getEmojiList(String title, JDA api) throws EmojiError{
         String sql = "";
         StringBuilder ret = new StringBuilder();
         PreparedStatement stmt;
@@ -309,19 +309,23 @@ public class BotGuild {
                 stmt.setString(1, title);
                 rs = stmt.executeQuery();
                 if (rs.next()) {
+                    rs.close();
                     Guild guild = api.getGuildById(rs.getLong(1));
                     if (guild != null) {
                         ret.append(guild.getName());
                         List<Emote> emoji = guild.getEmotes();
                         for (Emote emote : emoji) {
                             ret.append("\n");
-                            ret.append(title).append(".");
-                            ret.append(emote.getName());
-                            ret.append("   ").append(emote.getAsMention());
+                            ret.append(emote.getAsMention());
+                            ret.append("   :").append(title).append(".");
+                            ret.append(emote.getName()).append(":");
+
                         }
                     }
+                }else{
+                    rs.close();
+                    throw new EmojiError("error-list-404");
                 }
-                rs.close();
             }
         } catch (SQLException ex) {
             return sqlError(sql, ex);
