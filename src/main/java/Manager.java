@@ -10,7 +10,7 @@ public class Manager {
 
         JDA api = new JDABuilder(AccountType.BOT).setToken(System.getenv("BOT_TOKEN")).buildBlocking();
 
-        api.getSelfUser().getManager().setAvatar(Icon.from(new File("/home/mattymatty/Desktop/Senzanome.png"))).queue();
+        api.getSelfUser().getManager().setAvatar(Icon.from(new File("/home/mattymatty/Desktop/pfp/emoji-er.png"))).queue();
 
         api.shutdown();
 

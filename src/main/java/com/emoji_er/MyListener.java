@@ -25,13 +25,9 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.*;
 import java.util.List;
-import java.util.PriorityQueue;
-import java.util.Queue;
-import java.util.ResourceBundle;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.*;
 
 
 import static org.fusesource.jansi.Ansi.ansi;
@@ -40,46 +36,36 @@ import static org.fusesource.jansi.Ansi.Color.*;
 public class MyListener implements EventListener {
     private Connection conn;
     private BotGuild botGuild;
-    private ExecutorService threads= Executors.newCachedThreadPool(new MyThreadFactory());
+    private static ExecutorService eventThreads = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+            60L, TimeUnit.SECONDS,
+            new SynchronousQueue<>()){
 
-    private class MyThreadFactory implements ThreadFactory{
-        private final Queue<Integer> tQueue = new PriorityQueue<Integer>((a, b) -> b - a) {
-            @Override
-            public synchronized boolean add(Integer e) {
-                return super.add(e);
-            }
-
-            @Override
-            public synchronized Integer poll() {
-                return super.poll();
-            }
-        };
-        private int ctn=0;
+        Map<Thread,Integer> threads = new HashMap<>();
 
         @Override
-        public Thread newThread(Runnable r) {
-
+        protected void beforeExecute(Thread t, Runnable r) {
+            super.beforeExecute(t,r);
             int index;
-            synchronized (tQueue) {
-                if (tQueue.size() == 0)
-                    index = ctn++;
-                else
-                    index = tQueue.poll();
+            synchronized (Global.eventQueue) {
+                index = Optional.ofNullable(Global.eventQueue.poll()).orElse(-1);
             }
+            if(index==-1)
+                index=Global.maxEventCtn++;
 
-            Thread b = new Thread(() -> {
-                try {
-                    r.run();
-                }catch (Exception ex){
-                    tQueue.add(Integer.parseInt(Thread.currentThread().getName().replace("Event Thread: ", "")));
-                    throw ex;
-                }
-                tQueue.add(Integer.parseInt(Thread.currentThread().getName().replace("Event Thread: ", "")));
-            }, "Event Thread: " + index);
-            b.setPriority(Thread.NORM_PRIORITY + 1);
-            return b;
+            t.setName("Event Thread: " + index);
+            threads.put(t,index);
         }
-    }
+
+        @Override
+        protected void afterExecute(Runnable r, Throwable t) {
+            super.afterExecute(r,t);
+            synchronized (Global.eventQueue) {
+                Thread thread = Thread.currentThread();
+                int index = threads.get(thread);
+                Global.eventQueue.add(index);
+            }
+        }
+    };
 
     @Override
     public void onEvent(Event event)
@@ -107,14 +93,14 @@ public class MyListener implements EventListener {
             Message message = ev.getMessage();
             if (Global.getGbl().getMapChannel().get(channel.getIdLong()) != null ||
                     message.getContentDisplay().replaceAll("[^" + System.getenv("DEFAULT_EMOJI_PREFIX") + "]", "").length() >= 2)
-                threads.execute(() -> onMessageReceived((MessageReceivedEvent) event));
+                eventThreads.execute(() -> onMessageReceived((MessageReceivedEvent) event));
         }
         else if (event instanceof RoleDeleteEvent)
-            threads.execute(() -> onRoleDelete((RoleDeleteEvent) event));
+            eventThreads.execute(() -> onRoleDelete((RoleDeleteEvent) event));
         else if (event instanceof GuildJoinEvent)
-            threads.execute(() -> onGuildJoin((GuildJoinEvent) event));
+            eventThreads.execute(() -> onGuildJoin((GuildJoinEvent) event));
         else if (event instanceof GuildLeaveEvent)
-            threads.execute(() -> onGuildLeave((GuildLeaveEvent) event));
+            eventThreads.execute(() -> onGuildLeave((GuildLeaveEvent) event));
     }
 
     private void onReady(ReadyEvent event) {
@@ -869,7 +855,7 @@ public class MyListener implements EventListener {
         System.err.println(ansi().fgGreen().a("Statements closed").reset());
         System.err.println();
         System.err.println(ansi().fgRed().a("Closing threads").reset());
-        threads.shutdown();
+        eventThreads.shutdown();
         System.err.println(ansi().fgGreen().a("Threads closed").reset());
         System.err.println();
         try {

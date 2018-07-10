@@ -309,7 +309,6 @@ public class BotGuild {
                 stmt.setString(1, title);
                 rs = stmt.executeQuery();
                 if (rs.next()) {
-                    rs.close();
                     Guild guild = api.getGuildById(rs.getLong(1));
                     if (guild != null) {
                         ret.append(guild.getName());
@@ -322,6 +321,7 @@ public class BotGuild {
 
                         }
                     }
+                    rs.close();
                 }else{
                     rs.close();
                     throw new EmojiError("error-list-404");
