@@ -7,7 +7,7 @@ import java.util.*;
 
 public class Global {
     public static final String version = "v1.7.14 - em prj";
-    public static final String build = "2";
+    public static final String build = "3";
 
 
     private static Global gbl = new Global();
@@ -15,7 +15,7 @@ public class Global {
         return gbl;
     }
 
-    public static final Queue<Integer> eventQueue = new PriorityQueue<>(Comparator.reverseOrder());
+    public static final Queue<Integer> eventQueue = new PriorityQueue<>();
     public static int maxEventCtn = 1;
 
     private Map<Long,LogLinker> mapGuild;
