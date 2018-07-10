@@ -202,6 +202,14 @@ public class MyListener implements EventListener {
                                 Global.getGbl().setListener(null);
                             }
                             break;
+//------USER--------------------PING---------------------------------------
+
+                        case "invite":
+                            Logger.logger.logMessage("invite", message);
+                            channel.sendMessage(output.getString("invite")).queue();
+                            Logger.logger.logReponse("invite link sent", guild, messageId);
+                            break;
+
 //------USER-------------------LIST----------------------------------------
                         case "list":
                             channel.sendTyping().complete();
@@ -572,6 +580,7 @@ public class MyListener implements EventListener {
         helpMsg.setDescription(output.getString("help-description"));
         helpMsg.addField("help", output.getString("help-def-help"), false);
         helpMsg.addField("ping", output.getString("help-def-ping"), false);
+        helpMsg.addField("invite", output.getString("help-def-invite"), false);
         helpMsg.addField("list", output.getString("help-def-list"), false);
         helpMsg.addField("servers", output.getString("help-def-servers"), false);
         helpMsg.addField("status", output.getString("help-def-status"), false);
