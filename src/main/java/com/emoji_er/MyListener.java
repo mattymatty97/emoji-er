@@ -498,15 +498,17 @@ public class MyListener implements EventListener {
             if (botGuild.onRoleDeleted(event.getRole())) {
                 Logger.logger.logEvent("role deleted in guild: ", event.getGuild());
                 try {
-                    TextChannel channel = event.getGuild().getDefaultChannel();
+                    TextChannel channel = Optional.ofNullable(event.getGuild().getDefaultChannel()).orElse(event.getGuild().getSystemChannel());
                     channel.sendMessage(output.getString("event-role-deleted")).queue();
                     channel.sendMessage(output.getString("event-role-deleted-2")).queue();
                 } catch (InsufficientPermissionException ex) {
-                    event.getGuild().getOwner().getUser().openPrivateChannel().queue((PrivateChannel channel) ->
-                    {
-                        channel.sendMessage(output.getString("event-role-deleted")).queue();
-                        channel.sendMessage(output.getString("event-role-deleted-2")).queue();
-                    });
+                    try {
+                        event.getGuild().getOwner().getUser().openPrivateChannel().queue((PrivateChannel channel) ->
+                        {
+                            channel.sendMessage(output.getString("event-role-deleted")).queue();
+                            channel.sendMessage(output.getString("event-role-deleted-2")).queue();
+                        });
+                    }catch (Exception ignored){}
                 }
 
             }
@@ -523,10 +525,13 @@ public class MyListener implements EventListener {
         //search for existent informations class for server
         Logger.logger.logEvent("GUILD HAS JOINED", event.getGuild());
         try {
-            event.getGuild().getDefaultChannel().sendMessage(output.getString("event-join")).queue();
+            Optional.ofNullable(event.getGuild().getDefaultChannel()).orElse(event.getGuild().getSystemChannel())
+                    .sendMessage(output.getString("event-join")).queue();
         } catch (InsufficientPermissionException ex) {
-            event.getGuild().getOwner().getUser().openPrivateChannel().queue((PrivateChannel channel) ->
-                    channel.sendMessage(output.getString("event-join")).queue());
+            try {
+                event.getGuild().getOwner().getUser().openPrivateChannel().queue((PrivateChannel channel) ->
+                        channel.sendMessage(output.getString("event-join")).queue());
+            }catch (Exception ignored){}
         }
         try {
             Statement stmt = conn.createStatement();
@@ -681,10 +686,13 @@ public class MyListener implements EventListener {
                 botGuild.autoModRole(guild);
                 updateServerCount(guild.getJDA());
                 try {
-                    guild.getDefaultChannel().sendMessage(output.getString("event-join")).queue();
+                    Optional.ofNullable(guild.getDefaultChannel()).orElse(guild.getSystemChannel())
+                            .sendMessage(output.getString("event-join")).queue();
                 } catch (InsufficientPermissionException ex) {
-                    guild.getOwner().getUser().openPrivateChannel().queue((PrivateChannel channel) ->
-                            channel.sendMessage(output.getString("event-join")).queue());
+                    try {
+                        guild.getOwner().getUser().openPrivateChannel().queue((PrivateChannel channel) ->
+                                channel.sendMessage(output.getString("event-join")).queue());
+                    }catch(Exception ignored){}
                 }
             }
             stmt1.close();
