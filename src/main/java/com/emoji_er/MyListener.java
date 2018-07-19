@@ -552,6 +552,7 @@ public class MyListener implements EventListener {
 
 
     private void onGuildLeave(GuildLeaveEvent event) {
+        ResourceBundle output = ResourceBundle.getBundle("messages");
         String sql = "";
         try {
             Statement stmt = conn.createStatement();
@@ -566,6 +567,12 @@ public class MyListener implements EventListener {
             stmt.getConnection().commit();
             stmt.close();
             Logger.logger.logEvent("GUILD HAS LEAVED", event.getGuild());
+            if (Global.getGbl().getMapGuild().containsKey(event.getGuild().getIdLong())){
+                LogLinker act = Global.getGbl().getMapGuild().get(event.getGuild().getIdLong());
+                act.delete();
+                act.getChannel().sendMessage(output.getString("console-stopped")).queue();
+                Logger.logger.logReponse("console daemon stopped in channel:" + act.getChannel().getName(), event.getJDA().getGuildById(System.getenv("SUPPORT_GUILD_ID")), 0);
+            }
         } catch (SQLException ex) {
             Logger.logger.logGeneral("SQLError in : " + sql);
             Logger.logger.logError("SQLException: " + ex.getMessage());
