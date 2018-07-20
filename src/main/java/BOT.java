@@ -17,6 +17,8 @@ import java.util.Map;
 import static org.fusesource.jansi.Ansi.ansi;
 public class BOT
 {
+    private static JDA api;
+    private static MyListener listener;
     public static void main(String[] arguments) throws Exception
     {
         System.out.print((char)27+"[?25l");
@@ -54,11 +56,13 @@ public class BOT
             System.exit(-1);
         }
 
-        JDA api = new JDABuilder(AccountType.BOT).setToken(System.getenv("BOT_TOKEN")).buildAsync();
+        api = new JDABuilder(AccountType.BOT).setToken(System.getenv("BOT_TOKEN")).buildAsync();
 
-        MyListener listener = new MyListener(conn);
+        listener = new MyListener(conn);
 
+        Thread main = Thread.currentThread();
         Signal.handle(new Signal("INT"), sig -> {
+            main.interrupt();
             Logger.started = false;
             System.out.println((char)27+"[?25h");
             System.err.println(ansi().fgRed().a("Received SIGINT").reset());
@@ -126,6 +130,35 @@ public class BOT
             } catch (NumberFormatException ex) {
                 throw new Exception("Environement variable ( OWNER_ID ) is not valid");
             }
+
+    }
+
+    private static void setExHandler(){
+        Thread main = Thread.currentThread();
+        Thread.UncaughtExceptionHandler handler = new Thread.UncaughtExceptionHandler(){
+
+            @Override
+            public void uncaughtException(Thread t, Throwable e) {
+                main.interrupt();
+                System.err.println(e.getMessage());
+                e.printStackTrace();
+                Logger.started = false;
+                System.out.println((char)27+"[?25h");
+                System.err.println(ansi().fgRed().a("Aborting for unhandled Exception").reset());
+                try {
+                    api.shutdown();
+                    listener.close();
+                }catch (Exception ignore){}
+                Logger.tlogger.interrupt();
+                try {
+                    Logger.tlogger.join();
+                }catch (Exception ignore){}
+                Logger.logger.closeFiles();
+                System.exit(-1);
+            }
+        };
+
+        Thread.setDefaultUncaughtExceptionHandler(handler);
 
     }
 

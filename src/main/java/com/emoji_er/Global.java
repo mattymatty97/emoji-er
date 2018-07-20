@@ -6,7 +6,7 @@ import java.io.FileWriter;
 import java.util.*;
 
 public class Global {
-    public static final String version = "v1.7.16 - em prj";
+    public static final String version = "v1.7.17 - em prj";
     public static final String build = "1";
 
 
