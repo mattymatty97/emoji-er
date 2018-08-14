@@ -154,6 +154,7 @@ public class MyListener implements EventListener {
     private void onMessageReceived(MessageReceivedEvent event) {
         //locales generation (dynamic strings from file selectionable by language)
         ResourceBundle output = ResourceBundle.getBundle("messages");
+        ScheduledFuture typing;
         if (checkConnection()) {
             Guild guild = event.getGuild();
 
@@ -212,7 +213,7 @@ public class MyListener implements EventListener {
 
 //------USER-------------------LIST----------------------------------------
                         case "list":
-                            channel.sendTyping().complete();
+                            typing = channel.sendTyping().queueAfter(1,TimeUnit.SECONDS);
                             Logger.logger.logMessage("list", message);
                             if (args.length >= 2) {
                                 try {
@@ -227,18 +228,20 @@ public class MyListener implements EventListener {
                                 channel.sendMessage(output.getString("error-emoji-list")).queue();
                                 Logger.logger.logReponse("error emoji list", guild, messageId);
                             }
+                            typing.cancel(true);
                             break;
 //------USER-------------------SERVER--------------------------------------
                         case "servers":
-                            channel.sendTyping().complete();
+                            typing = channel.sendTyping().queueAfter(1,TimeUnit.SECONDS);
                             Logger.logger.logMessage("servers", message);
                             String result = botGuild.printServers(guild.getIdLong(), event.getJDA());
                             SendMsg(channel, output.getString("emoji-server-list") + "\n" + result);
                             Logger.logger.logReponse("server list shown", guild, messageId);
+                            typing.cancel(true);
                             break;
 //------MOD--------------------REGISTER------------------------------------
                         case "register":
-                            channel.sendTyping().complete();
+                            typing = channel.sendTyping().queueAfter(1,TimeUnit.SECONDS);
                             Logger.logger.logMessage("register", message);
                             if (member.isOwner() || botGuild.memberIsMod(member, guild.getIdLong())) {
                                 if (args.length >= 2) {
@@ -255,10 +258,11 @@ public class MyListener implements EventListener {
                                 channel.sendMessage(output.getString("error-user-permission")).queue();
                                 Logger.logger.logReponse("user not allowed", guild, messageId);
                             }
+                            typing.cancel(true);
                             break;
 //------MOD------------------UNREGISTER------------------------------------
                         case "unregister":
-                            channel.sendTyping().complete();
+                            typing = channel.sendTyping().queueAfter(1,TimeUnit.SECONDS);
                             Logger.logger.logMessage("unregister", message);
                             if (member.isOwner() || botGuild.memberIsMod(member, guild.getIdLong())) {
                                 channel.sendMessage(botGuild.unRegisterGuild(guild, output, messageId)).queue();
@@ -266,10 +270,11 @@ public class MyListener implements EventListener {
                                 channel.sendMessage(output.getString("error-user-permission")).queue();
                                 Logger.logger.logReponse("user not allowed", guild, messageId);
                             }
+                            typing.cancel(true);
                             break;
 //------MOD------------------MODROLE---------------------------------------
                         case "modrole":
-                            channel.sendTyping().complete();
+                            typing = channel.sendTyping().queueAfter(1,TimeUnit.SECONDS);
                             //if member is allowed
                             if (member.isOwner() || botGuild.memberIsMod(member, guild.getIdLong())) {
                                 //if there are other arguments
@@ -318,10 +323,11 @@ public class MyListener implements EventListener {
                                 channel.sendMessage(output.getString("error-user-permission")).queue();
                                 Logger.logger.logReponse("user not allowed", guild, messageId);
                             }
+                            typing.cancel(true);
                             break;
 //------MOD------------------TOGGLE---------------------------------------
                         case "toggle":
-                            channel.sendTyping().complete();
+                            typing = channel.sendTyping().queueAfter(1,TimeUnit.SECONDS);
                             Logger.logger.logMessage("toggle", message);
                             if (member.isOwner() || botGuild.memberIsMod(member, guild.getIdLong())) {
                                 channel.sendMessage(botGuild.toggleEmoji(guild, output, messageId)).queue();
@@ -329,17 +335,19 @@ public class MyListener implements EventListener {
                                 channel.sendMessage(output.getString("error-user-permission")).queue();
                                 Logger.logger.logReponse("user not allowed", guild, messageId);
                             }
+                            typing.cancel(true);
                             break;
 //------MOD------------------STATUS---------------------------------------
                         case "status":
-                            channel.sendTyping().complete();
+                            typing = channel.sendTyping().queueAfter(1,TimeUnit.SECONDS);
                             Logger.logger.logMessage("status", message);
                             channel.sendMessage(botGuild.printStatus(guild, output, messageId)).queue();
                             Logger.logger.logReponse("status shown",guild,messageId);
+                            typing.cancel(true);
                             break;
 //------MOD------------------ENABLE---------------------------------------
                         case "enable":
-                            channel.sendTyping().complete();
+                            typing = channel.sendTyping().queueAfter(1,TimeUnit.SECONDS);
                             Logger.logger.logMessage("enable", message);
                             if (member.isOwner() || botGuild.memberIsMod(member, guild.getIdLong())) {
                                 if (args.length >= 2) {
@@ -351,10 +359,11 @@ public class MyListener implements EventListener {
                                 channel.sendMessage(output.getString("error-user-permission")).queue();
                                 Logger.logger.logReponse("user not allowed", guild, messageId);
                             }
+                            typing.cancel(true);
                             break;
 //------MOD------------------DISABLE---------------------------------------
                         case "disable":
-                            channel.sendTyping().complete();
+                            typing = channel.sendTyping().queueAfter(1,TimeUnit.SECONDS);
                             Logger.logger.logMessage("disable", message);
                             if (member.isOwner() || botGuild.memberIsMod(member, guild.getIdLong())) {
                                 if (args.length >= 2) {
@@ -366,6 +375,7 @@ public class MyListener implements EventListener {
                                 channel.sendMessage(output.getString("error-user-permission")).queue();
                                 Logger.logger.logReponse("user not allowed", guild, messageId);
                             }
+                            typing.cancel(true);
                             break;
                         default:
                             if (guildIsSupport(guild))
