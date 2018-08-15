@@ -359,9 +359,9 @@ public class BotGuild {
                     if (guild != null) {
                         ret.append("\n");
                         if (rs.getBoolean(3))
-                            ret.append("-");
+                            ret.append("- ");
                         else
-                            ret.append("+");
+                            ret.append("+ ");
                         ret.append(rs.getString(2));
                         for (int i = 0; i < (15 - rs.getString(2).length()); i++)
                             ret.append(" ");
