@@ -359,11 +359,11 @@ public class BotGuild {
                     if (guild != null) {
                         ret.append("\n");
                         if (rs.getBoolean(3))
-                            ret.append("-   ");
+                            ret.append("-    ");
                         else
-                            ret.append("+   ");
+                            ret.append("+    ");
                         ret.append(rs.getString(2));
-                        for (int i = 0; i < (12 - rs.getString(2).length()); i++)
+                        for (int i = 0; i < (11 - rs.getString(2).length()); i++)
                             ret.append(" ");
                         ret.append(" ");
                         ret.append(guild.getName());
