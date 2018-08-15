@@ -741,9 +741,9 @@ public class MyListener implements EventListener {
                     p = text.length();
                 if(p>s)
                     channel.sendMessage(
-                                    ((codeBlock)?"```\r\n":"") +
+                                    ((codeBlock)?"```\n":"") +
                                     text.substring(s, p) +
-                                    ((codeBlock)?"\r\n```":"")
+                                    ((codeBlock)?"\n```":"")
                     ).queue();
                 s = p;
             }
