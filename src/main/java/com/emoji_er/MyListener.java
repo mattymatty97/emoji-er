@@ -235,7 +235,7 @@ public class MyListener implements EventListener {
                             typing = channel.sendTyping().queueAfter(1,TimeUnit.SECONDS);
                             Logger.logger.logMessage("servers", message);
                             String result = botGuild.printServers(guild.getIdLong(), event.getJDA());
-                            SendMsg(channel, output.getString("emoji-server-list") + "\n" + result,true);
+                            SendMsg(channel, output.getString("emoji-server-list") + "\n" + result,"diff");
                             Logger.logger.logReponse("server list shown", guild, messageId);
                             typing.cancel(true);
                             break;
@@ -723,10 +723,11 @@ public class MyListener implements EventListener {
     }
 
     private void SendMsg(MessageChannel channel, String text){
-        SendMsg(channel,text,false);
+        SendMsg(channel,text,null);
     }
 
-    private void SendMsg(MessageChannel channel, String text, boolean codeBlock) {
+    private void SendMsg(MessageChannel channel, String text, String codeStyle) {
+        boolean codeBlock = codeStyle!=null;
         long messages = Math.round((Math.ceil(text.length() / 1000.0)));
         if (messages > 1) {
             int s = 0;
@@ -741,7 +742,7 @@ public class MyListener implements EventListener {
                     p = text.length();
                 if(p>s)
                     channel.sendMessage(
-                                    ((codeBlock)?"```\n":"") +
+                                    ((codeBlock)?"```"+codeStyle+"\n":"") +
                                     text.substring(s, p) +
                                     ((codeBlock)?"\n```":"")
                     ).queue();
