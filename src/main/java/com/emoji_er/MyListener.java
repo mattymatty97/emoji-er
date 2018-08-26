@@ -31,7 +31,6 @@ import java.util.concurrent.*;
 
 
 import static org.fusesource.jansi.Ansi.ansi;
-import static org.fusesource.jansi.Ansi.Color.*;
 
 public class MyListener implements EventListener {
     private Connection conn;
@@ -80,19 +79,12 @@ public class MyListener implements EventListener {
             //if i cant write
             if (!PermissionUtil.checkPermission(ev.getTextChannel(), ev.getGuild().getSelfMember(), Permission.MESSAGE_WRITE))
                 return;
-            if (!PermissionUtil.checkPermission(ev.getTextChannel(), ev.getGuild().getSelfMember(), Permission.MESSAGE_EMBED_LINKS)) {
-                ev.getTextChannel().sendMessage("Missing permission EMBED_LINKS please fix").queue();
-                return;
-            }
-            if (!PermissionUtil.checkPermission(ev.getTextChannel(), ev.getGuild().getSelfMember(), Permission.MESSAGE_EXT_EMOJI)) {
-                ev.getTextChannel().sendMessage("Missing permission USE_EXTERNAL_EMOJI please fix").queue();
-                return;
-            }
+
             MessageChannel channel = ev.getChannel();
             //get message
             Message message = ev.getMessage();
             if (Global.getGbl().getMapChannel().get(channel.getIdLong()) != null ||
-                    message.getContentDisplay().replaceAll("[^" + System.getenv("DEFAULT_EMOJI_PREFIX") + "]", "").length() >= 2)
+                    message.getContentDisplay().matches(".*"+ System.getenv("DEFAULT_EMOJI_PREFIX") +"\\w+\\.\\w+"+ System.getenv("DEFAULT_EMOJI_PREFIX") + ".*"))
                 eventThreads.execute(() -> onMessageReceived((MessageReceivedEvent) event));
         }
         else if (event instanceof RoleDeleteEvent)
@@ -156,6 +148,14 @@ public class MyListener implements EventListener {
         ResourceBundle output = ResourceBundle.getBundle("messages");
         ScheduledFuture typing;
         if (checkConnection()) {
+            if (!PermissionUtil.checkPermission(event.getTextChannel(), event.getGuild().getSelfMember(), Permission.MESSAGE_EMBED_LINKS)) {
+                event.getTextChannel().sendMessage("Error i'm unable to send embedded messages, pls change my permissions! ( EMBED_LIKNS )").queue();
+                return;
+            }
+            if (!PermissionUtil.checkPermission(event.getTextChannel(), event.getGuild().getSelfMember(), Permission.MESSAGE_EXT_EMOJI)) {
+                event.getTextChannel().sendMessage("Error i'm unable to send external emoticons, pls change my permissions! ( USE_EXTERNAL_EMOJI )").queue();
+                return;
+            }
             Guild guild = event.getGuild();
 
             updateDatabase(guild, output);
@@ -174,10 +174,7 @@ public class MyListener implements EventListener {
                 onConsoleMessageReceived(event);
             else {
                 if (message.getContentDisplay().matches(System.getenv("DEFAULT_EMOJI_PREFIX") + "emoji\\.\\w+" + System.getenv("DEFAULT_EMOJI_PREFIX")) || message.getContentDisplay().matches(System.getenv("DEFAULT_EMOJI_PREFIX") + "emoji\\.\\w+" + System.getenv("DEFAULT_EMOJI_PREFIX") + " .+")) {
-                    if (!PermissionUtil.checkPermission(event.getTextChannel(), event.getGuild().getSelfMember(), Permission.MESSAGE_EMBED_LINKS)) {
-                        channel.sendMessage("Error could not send embeds, pls change my permissions!").queue();
-                        return;
-                    }
+
                     String args[] = message.getContentDisplay().split(" +");
                     String command = args[0].split(System.getenv("DEFAULT_EMOJI_PREFIX"))[1].split("\\.")[1];
                     switch (command) {
