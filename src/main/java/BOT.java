@@ -56,9 +56,13 @@ public class BOT
             System.exit(-1);
         }
 
-        api = new JDABuilder(AccountType.BOT).setToken(System.getenv("BOT_TOKEN")).buildAsync();
+        api = new JDABuilder(AccountType.BOT).setToken(System.getenv("BOT_TOKEN")).buildBlocking(JDA.Status.LOADING_SUBSYSTEMS);
 
         listener = new MyListener(conn);
+
+        Thread pinger = new Thread(new Pinger(api.getSelfUser().getIdLong()),"Ping-er Thread");
+        pinger.setPriority(Thread.MAX_PRIORITY);
+
 
         Thread main = Thread.currentThread();
         Signal.handle(new Signal("INT"), sig -> {
@@ -67,6 +71,7 @@ public class BOT
             System.out.println((char)27+"[?25h");
             System.err.println(ansi().fgRed().a("Received SIGINT").reset());
             api.shutdown();
+            pinger.interrupt();
             listener.close();
             Logger.tlogger.interrupt();
             try {
@@ -80,6 +85,8 @@ public class BOT
         api.getPresence().setGame(Game.playing(Global.version));
 
         while (!Logger.started && !Thread.interrupted()) ;
+
+        pinger.start();
 
         Output.run();
     }
@@ -130,6 +137,10 @@ public class BOT
             } catch (NumberFormatException ex) {
                 throw new Exception("Environement variable ( OWNER_ID ) is not valid");
             }
+
+        var = env.get("LISTENER_IP");
+        if (var == null || var.isEmpty())
+            throw new Exception("Missing environement variable: LISTENER_IP");
 
     }
 
