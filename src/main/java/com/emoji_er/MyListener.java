@@ -265,11 +265,11 @@ public class MyListener implements EventListener {
                                 history.retrievePast(10).complete();
                                 List<Message> messages = history.getRetrievedHistory();
 
-                                Message m = channel.sendMessage(output.getString("emoji-react-success").replace("{time}","5")).complete();
+                                Message m = channel.sendMessage(output.getString("emoji-react-success").replace("{time}","5").replace("{user}",member.getAsMention())).complete();
 
                                 messages.forEach(m2 -> m2.addReaction(emoji).queue());
                                 for (int ctn=5;ctn>0;ctn--){
-                                        m.editMessage(output.getString("emoji-react-success").replace("{time}",String.valueOf(ctn))).queueAfter(5-ctn,TimeUnit.SECONDS);
+                                        m.editMessage(output.getString("emoji-react-success").replace("{time}",String.valueOf(ctn)).replace("{user}",member.getAsMention())).queueAfter(5-ctn,TimeUnit.SECONDS);
                                 }
 
                                 try {
