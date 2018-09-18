@@ -17,6 +17,7 @@ import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+import org.apache.logging.log4j.core.util.SystemMillisClock;
 import org.json.JSONObject;
 
 import java.awt.*;
@@ -265,9 +266,10 @@ public class MyListener implements EventListener {
                                 history.retrievePast(10).complete();
                                 List<Message> messages = history.getRetrievedHistory();
 
-                                Message m = channel.sendMessage(output.getString("emoji-react-success").replace("{time}","5").replace("{user}",member.getAsMention())).complete();
+                                Message m = channel.sendMessage(output.getString("emoji-react-success").replace("{time}","6").replace("{user}",member.getAsMention())).complete();
 
-                                messages.forEach(m2 -> m2.addReaction(emoji).queue());
+                                long start = System.currentTimeMillis();
+                                messages.forEach(m2 -> m2.addReaction(emoji).queueAfter(1000 - ( start - System.currentTimeMillis() ),TimeUnit.MILLISECONDS));
                                 for (int ctn=5;ctn>0;ctn--){
                                         m.editMessage(output.getString("emoji-react-success").replace("{time}",String.valueOf(ctn)).replace("{user}",member.getAsMention())).queueAfter(5-ctn,TimeUnit.SECONDS);
                                 }
@@ -281,7 +283,8 @@ public class MyListener implements EventListener {
                                 m.delete().queue();
 
                                 List<MessageReaction> reactions = messages.stream().map(m2 -> m2.getChannel().getMessageById(m2.getId()).complete()).flatMap((Message m2)-> m2.getReactions().stream()).collect(Collectors.toList());
-                                reactions.forEach(r ->r.removeReaction().queue());
+                                long restart = System.currentTimeMillis();
+                                reactions.forEach(r ->r.removeReaction().queueAfter(1000 - ( restart - System.currentTimeMillis() ),TimeUnit.MILLISECONDS));
 
                                 Logger.logger.logReponse("success", guild, messageId);
                             }

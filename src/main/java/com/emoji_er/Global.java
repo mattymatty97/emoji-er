@@ -6,8 +6,8 @@ import java.io.FileWriter;
 import java.util.*;
 
 public class Global {
-    public static final String version = "v1.9.3 - em prj";
-    public static final String build = "2";
+    public static final String version = "v1.9.4 - em prj";
+    public static final String build = "1";
 
 
     private static Global gbl = new Global();
