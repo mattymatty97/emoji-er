@@ -263,9 +263,9 @@ public class BotGuild {
         return ret.toString();
     }
 
-    public String getEmoji(String arg, long guildId, JDA api) {
+    public Emote getEmoji(String arg, long guildId, JDA api) {
         String sql = "";
-        String ret = null;
+        Emote ret = null;
         PreparedStatement stmt;
         ResultSet rs;
         String args[] = arg.split("\\.");
@@ -286,13 +286,14 @@ public class BotGuild {
                     Guild guild = api.getGuildById(rs.getLong(1));
                     List<Emote> emoji = guild.getEmotesByName(args[1], false);
                     if (emoji.size() == 1) {
-                        ret = emoji.get(0).getAsMention();
+                        ret = emoji.get(0);
                     }
                 }
                 rs.close();
             }
         } catch (SQLException ex) {
-            return sqlError(sql, ex);
+            sqlError(sql, ex);
+            return ret;
         }
         return ret;
     }

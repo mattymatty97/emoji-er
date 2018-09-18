@@ -28,6 +28,7 @@ import java.sql.Statement;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 
 import static org.fusesource.jansi.Ansi.ansi;
@@ -164,7 +165,7 @@ public class MyListener implements EventListener {
             //get sender member
             Member member = event.getMember();
             //get channel to send
-            MessageChannel channel = event.getChannel();
+            TextChannel channel = event.getTextChannel();
             //get message
             Message message = event.getMessage();
             //get id
@@ -175,7 +176,7 @@ public class MyListener implements EventListener {
             else {
                 if (message.getContentDisplay().matches(System.getenv("DEFAULT_EMOJI_PREFIX") + "emoji\\.\\w+" + System.getenv("DEFAULT_EMOJI_PREFIX")) || message.getContentDisplay().matches(System.getenv("DEFAULT_EMOJI_PREFIX") + "emoji\\.\\w+" + System.getenv("DEFAULT_EMOJI_PREFIX") + " .+")) {
 
-                    String args[] = message.getContentDisplay().split(" +");
+                    String args[] = message.getContentRaw().split(" +");
                     String command = args[0].split(System.getenv("DEFAULT_EMOJI_PREFIX"))[1].split("\\.")[1];
                     switch (command) {
 //------USER---------------------HELP--------------------------------------
@@ -236,6 +237,56 @@ public class MyListener implements EventListener {
                             Logger.logger.logReponse("server list shown", guild, messageId);
                             typing.cancel(true);
                             break;
+//------USER-------------------REACT---------------------------------------
+                        case "react": {
+                            if(args.length>1 && args[1].matches(":?\\w+\\.\\w+:?")){
+                                Logger.logger.logMessage("react", message);
+
+                                TextChannel reactChannel;
+                                if (args.length>2 && message.getMentionedChannels().size()==1){
+                                    reactChannel = message.getMentionedChannels().get(0);
+                                }else{
+                                    reactChannel = channel;
+                                }
+
+                                Emote emoji = botGuild.getEmoji(args[1].replace(":",""), guild.getIdLong(), event.getJDA());
+
+                                if(emoji==null){
+                                    channel.sendMessage(output.getString("error-emoji-404")).queue();
+                                    Logger.logger.logReponse("emoji not found", guild, messageId);
+                                    break;
+                                }
+
+                                try {
+                                    message.delete().complete();
+                                }catch (Exception ignored){}
+
+                                MessageHistory history = new MessageHistory(reactChannel);
+                                history.retrievePast(10).complete();
+                                List<Message> messages = history.getRetrievedHistory();
+
+                                Message m = channel.sendMessage(output.getString("emoji-react-success").replace("{time}","5")).complete();
+
+                                messages.forEach(m2 -> m2.addReaction(emoji).queue());
+                                for (int ctn=5;ctn>0;ctn--){
+                                        m.editMessage(output.getString("emoji-react-success").replace("{time}",String.valueOf(ctn))).queueAfter(5-ctn,TimeUnit.SECONDS);
+                                }
+
+                                try {
+                                    Thread.sleep(5000);
+                                } catch (InterruptedException ex) {
+                                    return;
+                                }
+
+                                m.delete().queue();
+
+                                List<MessageReaction> reactions = messages.stream().map(m2 -> m2.getChannel().getMessageById(m2.getId()).complete()).flatMap((Message m2)-> m2.getReactions().stream()).collect(Collectors.toList());
+                                reactions.forEach(r ->r.removeReaction().queue());
+
+                                Logger.logger.logReponse("success", guild, messageId);
+                            }
+                        }
+                        break;
 //------MOD--------------------REGISTER------------------------------------
                         case "register":
                             typing = channel.sendTyping().queueAfter(1,TimeUnit.SECONDS);
@@ -452,10 +503,10 @@ public class MyListener implements EventListener {
                                     String arg = args[i];
                                     if (!last) {
                                         if (arg.matches("\\w+\\.\\w+")) {
-                                            String emoji;
+                                            Emote emoji;
                                             emoji = botGuild.getEmoji(arg, guild.getIdLong(), event.getJDA());
                                             if (emoji != null) {
-                                                ret.append(emoji);
+                                                ret.append(emoji.getAsMention());
                                                 if(!used)
                                                     channel.sendTyping().complete();
                                                 found = true;
@@ -603,6 +654,7 @@ public class MyListener implements EventListener {
         helpMsg.addField("list", output.getString("help-def-list"), false);
         helpMsg.addField("servers", output.getString("help-def-servers"), false);
         helpMsg.addField("status", output.getString("help-def-status"), false);
+        helpMsg.addField("react", output.getString("help-def-react"), false);
 
         //if is allowed to use mod commands
         if (member.isOwner() || botGuild.memberIsMod(member, guild.getIdLong())) {
