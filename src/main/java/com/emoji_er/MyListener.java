@@ -268,8 +268,7 @@ public class MyListener implements EventListener {
 
                                 Message m = channel.sendMessage(output.getString("emoji-react-success").replace("{time}","6").replace("{user}",member.getAsMention())).complete();
 
-                                long start = System.currentTimeMillis();
-                                messages.forEach(m2 -> m2.addReaction(emoji).queueAfter(1000 - ( start - System.currentTimeMillis() ),TimeUnit.MILLISECONDS));
+                                messages.forEach(m2 -> m2.addReaction(emoji).complete());
                                 for (int ctn=5;ctn>0;ctn--){
                                         m.editMessage(output.getString("emoji-react-success").replace("{time}",String.valueOf(ctn)).replace("{user}",member.getAsMention())).queueAfter(5-ctn,TimeUnit.SECONDS);
                                 }
@@ -283,8 +282,7 @@ public class MyListener implements EventListener {
                                 m.delete().queue();
 
                                 List<MessageReaction> reactions = messages.stream().map(m2 -> m2.getChannel().getMessageById(m2.getId()).complete()).flatMap((Message m2)-> m2.getReactions().stream()).collect(Collectors.toList());
-                                long restart = System.currentTimeMillis();
-                                reactions.forEach(r ->r.removeReaction().queueAfter(1000 - ( restart - System.currentTimeMillis() ),TimeUnit.MILLISECONDS));
+                                reactions.forEach(r ->r.removeReaction().queue());
 
                                 Logger.logger.logReponse("success", guild, messageId);
                             }
