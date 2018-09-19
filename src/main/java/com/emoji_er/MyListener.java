@@ -298,6 +298,18 @@ public class MyListener implements EventListener {
                             }
                         }
                         break;
+//------USER-------------------SUPPORT---------------------------------------
+                        case "support":
+                            Logger.logger.logMessage("support", message);
+                            channel.sendMessage(output.getString("support-msg")).queue();
+                            Logger.logger.logReponse("support link sent", guild, messageId);
+                            break;
+//------USER-------------------OTHER---------------------------------------
+                        case "other":
+                            Logger.logger.logMessage("other", message);
+                            channel.sendMessage(output.getString("other-msg")).queue();
+                            Logger.logger.logReponse("other bots sent", guild, messageId);
+                            break;
 //------MOD--------------------REGISTER------------------------------------
                         case "register":
                             typing = channel.sendTyping().queueAfter(1,TimeUnit.SECONDS);
@@ -614,6 +626,8 @@ public class MyListener implements EventListener {
         helpMsg.addField("servers", output.getString("help-def-servers"), false);
         helpMsg.addField("status", output.getString("help-def-status"), false);
         helpMsg.addField("react", output.getString("help-def-react"), false);
+        helpMsg.addField("support", output.getString("help-def-support"), false);
+        helpMsg.addField("other", output.getString("help-def-other"), false);
 
         //if is allowed to use mod commands
         if (member.isOwner() || botGuild.memberIsMod(member, guild.getIdLong())) {
