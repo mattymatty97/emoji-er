@@ -236,7 +236,8 @@ public class MyListener implements EventListener {
                             break;
 //------USER-------------------REACT---------------------------------------
                         case "react": {
-                            if(args.length>1 && args[1].matches(":?(\\w+\\.)?\\w+:?")){
+                            if(args.length>1 && message.getContentDisplay().split(" +")[1].matches(":?(\\w+\\.)?\\w+:?")){
+                                String arg = message.getContentDisplay().split(" +")[1];
                                 Logger.logger.logMessage("react", message);
 
                                 TextChannel reactChannel;
@@ -247,11 +248,11 @@ public class MyListener implements EventListener {
                                 }
 
                                 Emote emoji_d;
-                                if(args[1].matches(":?\\w+\\.\\w+:?"))
-                                    emoji_d = botGuild.getEmoji(args[1].replace(":",""), guild.getIdLong(), event.getJDA());
+                                if(arg.matches(":?\\w+\\.\\w+:?"))
+                                    emoji_d = botGuild.getEmoji(arg.replace(":",""), guild.getIdLong(), event.getJDA());
                                 else
                                     try {
-                                        emoji_d = guild.getEmotesByName(args[1].replace(":",""),true).get(0);
+                                        emoji_d = guild.getEmotesByName(arg.replace(":",""),true).get(0);
                                     }catch (IndexOutOfBoundsException ex){
                                         emoji_d = null;
                                     }
