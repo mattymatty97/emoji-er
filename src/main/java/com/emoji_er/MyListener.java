@@ -82,10 +82,13 @@ public class MyListener implements EventListener {
             if (!PermissionUtil.checkPermission(ev.getTextChannel(), ev.getGuild().getSelfMember(), Permission.MESSAGE_WRITE))
                 return;
 
+
             MessageChannel channel = ev.getChannel();
+            String topic = ev.getMessage().getTextChannel().getTopic();
             //get message
             Message message = ev.getMessage();
-            if (message.getContentDisplay().matches(".*"+ System.getenv("DEFAULT_EMOJI_PREFIX") +"(\\w+\\.)?\\w+"+ System.getenv("DEFAULT_EMOJI_PREFIX") + ".*"))
+            if ( (topic == null || !topic.contains(":emoji.deny:")) &&
+                    message.getContentDisplay().matches(".*"+ System.getenv("DEFAULT_EMOJI_PREFIX") +"(\\w+\\.)?\\w+"+ System.getenv("DEFAULT_EMOJI_PREFIX") + ".*"))
                 eventThreads.execute(() -> onMessageReceived((MessageReceivedEvent) event));
         }
         else if (event instanceof RoleDeleteEvent)
