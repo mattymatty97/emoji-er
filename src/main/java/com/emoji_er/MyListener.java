@@ -464,7 +464,7 @@ public class MyListener implements EventListener {
                                             }catch (IndexOutOfBoundsException ex) {
                                                 emoji = null;
                                             }
-                                            if (emoji != null && !PermissionUtil.canInteract(member,emoji)) {
+                                            if (emoji != null && !isNitro(member.getUser())) {
                                                 ret.append(emoji.getAsMention());
                                                 if(!used)
                                                     channel.sendTyping().complete();
@@ -505,6 +505,10 @@ public class MyListener implements EventListener {
 
     }
 
+    private boolean isNitro(User user)
+    {
+        return user instanceof SelfUser && ((SelfUser) user).isNitro();
+    }
 
     private void onRoleDelete(RoleDeleteEvent event) {
         ResourceBundle output;
