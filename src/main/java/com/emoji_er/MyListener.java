@@ -85,7 +85,7 @@ public class MyListener implements EventListener {
             MessageChannel channel = ev.getChannel();
             //get message
             Message message = ev.getMessage();
-            if (message.getContentDisplay().matches(".*"+ System.getenv("DEFAULT_EMOJI_PREFIX") +"\\w+\\.\\w+"+ System.getenv("DEFAULT_EMOJI_PREFIX") + ".*"))
+            if (message.getContentDisplay().matches(".*"+ System.getenv("DEFAULT_EMOJI_PREFIX") +"(\\w+\\.)?\\w+"+ System.getenv("DEFAULT_EMOJI_PREFIX") + ".*"))
                 eventThreads.execute(() -> onMessageReceived((MessageReceivedEvent) event));
         }
         else if (event instanceof RoleDeleteEvent)
