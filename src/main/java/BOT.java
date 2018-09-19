@@ -82,6 +82,7 @@ public class BOT
         });
 
         api.addEventListener(listener);
+        api.addEventListener(new SupportListener(491954024367652867L));
         api.getPresence().setGame(Game.playing(Global.version));
 
         while (!Logger.started && !Thread.interrupted()) ;
