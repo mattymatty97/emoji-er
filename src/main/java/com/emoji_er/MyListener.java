@@ -85,8 +85,7 @@ public class MyListener implements EventListener {
             MessageChannel channel = ev.getChannel();
             //get message
             Message message = ev.getMessage();
-            if (Global.getGbl().getMapChannel().get(channel.getIdLong()) != null ||
-                    message.getContentDisplay().matches(".*"+ System.getenv("DEFAULT_EMOJI_PREFIX") +"\\w+\\.\\w+"+ System.getenv("DEFAULT_EMOJI_PREFIX") + ".*"))
+            if (message.getContentDisplay().matches(".*"+ System.getenv("DEFAULT_EMOJI_PREFIX") +"\\w+\\.\\w+"+ System.getenv("DEFAULT_EMOJI_PREFIX") + ".*"))
                 eventThreads.execute(() -> onMessageReceived((MessageReceivedEvent) event));
         }
         else if (event instanceof RoleDeleteEvent)
@@ -144,7 +143,7 @@ public class MyListener implements EventListener {
         Logger.started = true;
     }
 
-
+    @SuppressWarnings("Duplicates")
     private void onMessageReceived(MessageReceivedEvent event) {
         //locales generation (dynamic strings from file selectionable by language)
         ResourceBundle output = ResourceBundle.getBundle("messages");
@@ -172,9 +171,6 @@ public class MyListener implements EventListener {
             //get id
             long messageId = message.getIdLong();
 
-            if (Global.getGbl().getMapChannel().get(channel.getIdLong()) != null)
-                onConsoleMessageReceived(event);
-            else {
                 if (message.getContentDisplay().matches(System.getenv("DEFAULT_EMOJI_PREFIX") + "emoji\\.\\w+" + System.getenv("DEFAULT_EMOJI_PREFIX")) || message.getContentDisplay().matches(System.getenv("DEFAULT_EMOJI_PREFIX") + "emoji\\.\\w+" + System.getenv("DEFAULT_EMOJI_PREFIX") + " .+")) {
 
                     String args[] = message.getContentRaw().split(" +");
@@ -240,7 +236,7 @@ public class MyListener implements EventListener {
                             break;
 //------USER-------------------REACT---------------------------------------
                         case "react": {
-                            if(args.length>1 && args[1].matches(":?\\w+\\.\\w+:?")){
+                            if(args.length>1 && args[1].matches(":?(\\w+\\.)?\\w+:?")){
                                 Logger.logger.logMessage("react", message);
 
                                 TextChannel reactChannel;
@@ -250,13 +246,23 @@ public class MyListener implements EventListener {
                                     reactChannel = channel;
                                 }
 
-                                Emote emoji = botGuild.getEmoji(args[1].replace(":",""), guild.getIdLong(), event.getJDA());
+                                Emote emoji_d;
+                                if(args[1].matches(":?\\w+\\.\\w+:?"))
+                                    emoji_d = botGuild.getEmoji(args[1].replace(":",""), guild.getIdLong(), event.getJDA());
+                                else
+                                    try {
+                                        emoji_d = guild.getEmotesByName(args[1].replace(":",""),true).get(0);
+                                    }catch (IndexOutOfBoundsException ex){
+                                        emoji_d = null;
+                                    }
 
-                                if(emoji==null){
+                                if(emoji_d==null){
                                     channel.sendMessage(output.getString("error-emoji-404")).queue();
                                     Logger.logger.logReponse("emoji not found", guild, messageId);
                                     break;
                                 }
+
+                                final Emote emoji = emoji_d;
 
                                 try {
                                     message.delete().complete();
@@ -426,74 +432,11 @@ public class MyListener implements EventListener {
                             }
                             typing.cancel(true);
                             break;
-                        default:
-                            if (guildIsSupport(guild))
-                                switch (command) {
-                                    case "console":
-                                        Logger.logger.logMessage("console", message);
-                                        if (member.isOwner() || botGuild.memberIsMod(member, guild.getIdLong())) {
-                                            if (guild.getTextChannelById(channel.getIdLong()).getTopic().contains(":console:")) {
-                                                LogLinker act = Global.getGbl().getMapChannel().get(channel.getIdLong());
-                                                if (act == null) {
-                                                    if (args.length >= 2) {
-                                                        if (args[1].matches("\\d{18}")) {
-                                                            long guildId = Long.parseLong(args[1]);
-
-                                                            if (guildIdIsValid(guildId, message)) {
-                                                                new LogLinker(guildId, channel);
-                                                                channel.sendMessage(output.getString("console-started")).queue();
-                                                                Logger.logger.logReponse("log daemon started in channel: " + channel.getName(), guild, messageId);
-                                                            } else {
-                                                                channel.sendMessage(output.getString("error-console-non_mutual")).queue();
-                                                                Logger.logger.logReponse("guild non mutual", guild, messageId);
-                                                            }
-                                                        } else {
-                                                            channel.sendMessage(output.getString("error-console-non_id")).queue();
-                                                            Logger.logger.logReponse("not an id", guild, messageId);
-                                                        }
-                                                    } else {
-                                                        channel.sendMessage(output.getString("error-console-no_id")).queue();
-                                                        Logger.logger.logReponse("mssing id", guild, messageId);
-                                                    }
-                                                } else {
-                                                    channel.sendMessage(output.getString("error-console-active")).queue();
-                                                    Logger.logger.logReponse("already a running daemon", guild, messageId);
-                                                }
-                                            } else {
-                                                channel.sendMessage(output.getString("error-console-channel")).queue();
-                                                Logger.logger.logReponse("channel not console channel", guild, messageId);
-                                            }
-                                        } else {
-                                            channel.sendMessage(output.getString("error-user-permission")).queue();
-                                            Logger.logger.logReponse("user not allowed", guild, messageId);
-                                        }
-                                        break;
-                                    case "listen":
-                                        Logger.logger.logMessage("listen", message);
-                                        if (member.isOwner() || botGuild.memberIsMod(member, guild.getIdLong())) {
-                                            if (guild.getTextChannelById(channel.getIdLong()).getTopic().contains(":console:")) {
-                                                if (Global.getGbl().getListener() == null) {
-                                                    Global.getGbl().setListener(channel);
-                                                    channel.sendMessage(output.getString("listen-enabled")).queue();
-                                                    Logger.logger.logReponse("listener enabled", guild, messageId);
-                                                } else {
-                                                    channel.sendMessage(output.getString("error-listen")).queue();
-                                                    Logger.logger.logReponse("error listener active", guild, messageId);
-                                                }
-                                            } else {
-                                                channel.sendMessage(output.getString("error-console-channel")).queue();
-                                                Logger.logger.logReponse("channel not console channel", guild, messageId);
-                                            }
-                                        } else {
-                                            channel.sendMessage(output.getString("error-user-permission")).queue();
-                                            Logger.logger.logReponse("user not allowed", guild, messageId);
-                                        }
-                                }
                     }
                     /*--------------------EMOJI REPLACEMENT------------------*/
                 } else {
                     if (botGuild.emojiEnabled(guild)) {
-                        String args[] = message.getContentRaw().split(System.getenv("DEFAULT_EMOJI_PREFIX"));
+                        String args[] = message.getContentDisplay().split(System.getenv("DEFAULT_EMOJI_PREFIX"));
                         if (args.length >= 1) {
                             StringBuilder ret = new StringBuilder(args[0]);
                             boolean found = false;
@@ -507,6 +450,20 @@ public class MyListener implements EventListener {
                                             Emote emoji;
                                             emoji = botGuild.getEmoji(arg, guild.getIdLong(), event.getJDA());
                                             if (emoji != null) {
+                                                ret.append(emoji.getAsMention());
+                                                if(!used)
+                                                    channel.sendTyping().complete();
+                                                found = true;
+                                                used = true;
+                                            }
+                                        }else if(arg.matches("\\w+")){
+                                            Emote emoji;
+                                            try {
+                                                emoji = guild.getEmotesByName(arg,true).get(0);
+                                            }catch (IndexOutOfBoundsException ex) {
+                                                emoji = null;
+                                            }
+                                            if (emoji != null && !PermissionUtil.canInteract(member,emoji)) {
                                                 ret.append(emoji.getAsMention());
                                                 if(!used)
                                                     channel.sendTyping().complete();
@@ -540,7 +497,6 @@ public class MyListener implements EventListener {
                         }
                     }
                 }
-            }
         } else {
             event.getJDA().shutdown();
             Reconnector.reconnect();
@@ -626,12 +582,6 @@ public class MyListener implements EventListener {
             stmt.getConnection().commit();
             stmt.close();
             Logger.logger.logEvent("GUILD HAS LEAVED", event.getGuild());
-            if (Global.getGbl().getMapGuild().containsKey(event.getGuild().getIdLong())){
-                LogLinker act = Global.getGbl().getMapGuild().get(event.getGuild().getIdLong());
-                act.getChannel().sendMessage(output.getString("console-stopped")).queue();
-                Logger.logger.logReponse("console daemon stopped in channel:" + act.getChannel().getName(), event.getJDA().getGuildById(System.getenv("SUPPORT_GUILD_ID")), 0);
-                act.delete();
-            }
         } catch (SQLException ex) {
             Logger.logger.logGeneral("SQLError in : " + sql);
             Logger.logger.logError("SQLException: " + ex.getMessage());
@@ -810,131 +760,6 @@ public class MyListener implements EventListener {
     private boolean guildIdIsValid(long guildId, Message message) {
         JDA jda = message.getJDA();
         return jda.getGuildById(guildId) != null;
-    }
-
-
-    public void onConsoleMessageReceived(MessageReceivedEvent event) {
-        ResourceBundle output = ResourceBundle.getBundle("messages");
-
-        Guild remote = event.getGuild();
-        //get channel to send
-        MessageChannel channel = event.getChannel();
-        //get message
-        Message message = event.getMessage();
-        //get id
-        long messageId = message.getIdLong();
-        //get bind guild
-        Guild guild = event.getJDA().getGuildById(Global.getGbl().getMapChannel().get(channel.getIdLong()).getGuildId());
-
-        String args[] = message.getContentDisplay().split(" +");
-
-        switch (args[0].equals("") ? args[1] : args[0]) {
-            case "end":
-                Logger.logger.logMessage("end", message);
-                LogLinker act = Global.getGbl().getMapChannel().get(channel.getIdLong());
-                act.delete();
-                channel.sendMessage(output.getString("console-stopped")).queue();
-                Logger.logger.logReponse("console daemon stopped in channel:" + channel.getName(), guild, messageId);
-                break;
-            case "status":
-                Logger.logger.logRemoteMsg("status", message, guild);
-                channel.sendMessage(botGuild.printStatus(guild, output, messageId)).queue();
-                break;
-            case "enable":
-                Logger.logger.logRemoteMsg("enable", message, guild);
-                if (args.length >= 2) {
-                    channel.sendMessage(botGuild.enableRemoteGuild(guild, args[1], output, messageId, remote)).queue();
-                } else {
-                    Logger.logger.logRemoteRep("syntax", guild, messageId, remote);
-                }
-                break;
-            case "disable":
-                Logger.logger.logRemoteMsg("disable", message, guild);
-                if (args.length >= 2) {
-                    channel.sendMessage(botGuild.disableRemoteGuild(guild, args[1], output, messageId, remote)).queue();
-                } else {
-                    Logger.logger.logRemoteRep("syntax", guild, messageId, remote);
-                }
-                break;
-            case "register":
-                Logger.logger.logRemoteMsg("register", message, guild);
-                if (args.length >= 2) {
-                    if (args[1].length() <= 10) {
-                        channel.sendMessage(botGuild.registerRemoteGuild(guild, args[1], output, messageId, remote)).queue();
-                    } else {
-                        Logger.logger.logRemoteRep("long server title", guild, messageId, remote);
-                        channel.sendMessage(output.getString("error-long-title")).queue();
-                    }
-                } else {
-                    Logger.logger.logRemoteRep("syntax", guild, messageId, remote);
-                }
-                break;
-            case "unregister":
-                Logger.logger.logRemoteMsg("register", message, guild);
-                channel.sendMessage(botGuild.unRegisterRemoteGuild(guild, output, messageId, remote)).queue();
-                break;
-            case "toggle":
-                Logger.logger.logRemoteMsg("toggle", message, guild);
-                channel.sendMessage(botGuild.toggleRemoteEmoji(guild, output, messageId, remote)).queue();
-                break;
-            case "modrole":
-                //if member is allowed
-                if (args.length > 1) {
-                    //get mentioned roles
-                    List<Role> mentions = message.getMentionedRoles();
-                    //test on second arg
-                    switch (args[1]) {
-                        case "add":
-                            //if there is a mentioned role
-                            Logger.logger.logRemoteMsg("modrole add", message,guild);
-                            if (mentions.size() >= 1) {
-                                //call class method to add roles
-                                channel.sendMessage(botGuild.addRemoteModRole(mentions.get(0), guild, output, messageId,remote)).queue();
-                            }
-                            break;
-                        case "remove":
-                            //if there is a mentioned user
-                            Logger.logger.logRemoteMsg("modrole remove", message,guild);
-                            if (mentions.size() >= 1) {
-                                //call class method to remove roles
-                                channel.sendMessage(botGuild.removeRemoteModRole(mentions.get(0), guild, output, messageId,remote)).queue();
-                            }
-                            break;
-                        case "clear":
-                            Logger.logger.logRemoteMsg("modrole clear", message,guild);
-                            channel.sendMessage(botGuild.clearRemoteModrole(guild, output, messageId,remote)).queue();
-                            Logger.logger.logRemoteRep("modroles cleared", guild, messageId,remote);
-                            break;
-                        case "auto":
-                            Logger.logger.logRemoteMsg("modrole auto", message,guild);
-                            botGuild.autoModRole(guild);
-                            channel.sendMessage(output.getString("modrole-auto")).queue();
-                            Logger.logger.logRemoteRep("modroles updated", guild, messageId,remote);
-                        case "list":
-                            //list all modroles
-                            Logger.logger.logRemoteMsg("modrole list", message,guild);
-                            SendMsg(channel, botGuild.listRemoteModrole(guild, output, messageId,remote));
-                            break;
-
-                    }
-
-                }
-                break;
-            case "whoami":
-                Logger.logger.logMessage("whoami", message);
-                EmbedBuilder eb = new EmbedBuilder();
-                eb.setAuthor(guild.getName(),null,guild.getIconUrl());
-                eb.setDescription(guild.getId());
-                channel.sendMessage(eb.build()).queue();
-                Logger.logger.logReponse("info shown",remote,messageId);
-                break;
-            case "help":
-                Logger.logger.logMessage("console help", message);
-                channel.sendMessage(output.getString("help-console-def")).queue();
-                Logger.logger.logReponse("help shown",remote,messageId);
-                break;
-        }
-
     }
 
     public MyListener(Connection conn) {

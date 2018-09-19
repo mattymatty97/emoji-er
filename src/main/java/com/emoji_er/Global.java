@@ -6,8 +6,8 @@ import java.io.FileWriter;
 import java.util.*;
 
 public class Global {
-    public static final String version = "v1.9.4 - em prj";
-    public static final String build = "2";
+    public static final String version = "v1.10.0 - em prj";
+    public static final String build = "1";
 
 
     private static Global gbl = new Global();
@@ -18,8 +18,6 @@ public class Global {
     public static final Queue<Integer> eventQueue = new PriorityQueue<>();
     public static int maxEventCtn = 1;
 
-    private Map<Long,LogLinker> mapGuild;
-    private Map<Long,LogLinker> mapChannel;
     private MessageChannel listener;
     private FileWriter fwGlobal;
     private Map<Long,FileWriter> fwServers;
@@ -27,14 +25,6 @@ public class Global {
 
     public Map<String, String> getEnvMap() {
         return envMap;
-    }
-
-    public Map<Long, LogLinker> getMapGuild() {
-        return mapGuild;
-    }
-
-    public Map<Long, LogLinker> getMapChannel() {
-        return mapChannel;
     }
 
     public MessageChannel getListener() {
@@ -58,8 +48,6 @@ public class Global {
     }
 
     private Global(){
-        mapChannel= new HashMap<>();
-        mapGuild= new HashMap<>();
         fwServers=new HashMap<>();
     }
 }
