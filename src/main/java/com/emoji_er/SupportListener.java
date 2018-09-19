@@ -48,9 +48,11 @@ public class SupportListener extends ListenerAdapter {
 
         if(server.getMembers().stream().map(Member::getUser).map(User::getName).anyMatch(name -> name.equals("Accountant"))) {
             if (join)
-                while (member.getRoles().stream().map(Role::getIdLong).noneMatch(id -> id == 491954111953108992L)) ;
+                while (member.getRoles().stream().map(Role::getIdLong).noneMatch(id -> id == 491954111953108992L))
+                    Thread.yield();
             else
-                while (member.getRoles().stream().map(Role::getIdLong).anyMatch(id -> id == 491954111953108992L)) ;
+                while (member.getRoles().stream().map(Role::getIdLong).anyMatch(id -> id == 491954111953108992L))
+                    Thread.yield();
         }
 
         boolean isUser = api.getMutualGuilds(member.getUser()).stream().anyMatch(guild -> guild.getIdLong() != supportID);
