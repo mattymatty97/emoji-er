@@ -30,28 +30,29 @@ public class SupportListener extends ListenerAdapter {
     public void onGuildMemberJoin(GuildMemberJoinEvent event) {
         if (event.getUser().getIdLong() == 417349274481721345L)
             if (event.getGuild().getIdLong() != supportID)
-                try {
-                    Thread.sleep(1000);
-                    userUpdate(event.getJDA(), event.getUser());
-                }catch (InterruptedException ignored){}
+                    userUpdate(event.getJDA(), event.getUser(),event.getGuild(),true);
     }
 
     @Override
     public void onGuildMemberLeave(GuildMemberLeaveEvent event) {
             if (event.getUser().getIdLong() == 417349274481721345L)
                 if (event.getGuild().getIdLong() != supportID)
-                    try {
-                        Thread.sleep(1000);
-                        userUpdate(event.getJDA(), event.getUser());
-                    }catch (InterruptedException ignored){}
+                        userUpdate(event.getJDA(), event.getUser(),event.getGuild(),false);
     }
 
 
-    private void userUpdate(JDA api, User user) {
+    private void userUpdate(JDA api, User user,Guild server,boolean join) {
         Member member = api.getGuildById(supportID).getMemberById(user.getIdLong());
         if (member == null)
             return;
-        
+
+        if(server.getMembers().stream().map(Member::getUser).map(User::getName).anyMatch(name -> name.equals("Accountant"))) {
+            if (join)
+                while (member.getRoles().stream().map(Role::getIdLong).noneMatch(id -> id == 491954111953108992L)) ;
+            else
+                while (member.getRoles().stream().map(Role::getIdLong).anyMatch(id -> id == 491954111953108992L)) ;
+        }
+
         boolean isUser = api.getMutualGuilds(member.getUser()).stream().anyMatch(guild -> guild.getIdLong() != supportID);
 
         boolean hasrole = member.getRoles().contains(botRole);
@@ -65,22 +66,16 @@ public class SupportListener extends ListenerAdapter {
 
     @Override
     public void onGuildJoin(GuildJoinEvent event) {
-        try {
-            Thread.sleep(1000*event.getGuild().getMembers().size());
             if (false) {
-                event.getGuild().getMembers().forEach(member -> userUpdate(event.getJDA(), member.getUser()));
+                event.getGuild().getMembers().forEach(member -> userUpdate(event.getJDA(), member.getUser(),member.getGuild(),true));
             }
-        }catch (InterruptedException ignored){}
     }
 
     @Override
     public void onGuildLeave(GuildLeaveEvent event) {
-        try {
-            Thread.sleep(1000*event.getGuild().getMembers().size());
             if (false) {
-                event.getGuild().getMembers().forEach(member -> userUpdate(event.getJDA(), member.getUser()));
+                event.getGuild().getMembers().forEach(member -> userUpdate(event.getJDA(), member.getUser(),member.getGuild(),false));
             }
-        }catch (InterruptedException ignored){}
     }
 
     public SupportListener(long roleID) {
