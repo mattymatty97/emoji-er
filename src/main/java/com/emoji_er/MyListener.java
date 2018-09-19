@@ -464,7 +464,7 @@ public class MyListener implements EventListener {
                                             }catch (IndexOutOfBoundsException ex) {
                                                 emoji = null;
                                             }
-                                            if (emoji != null && !message.getContentRaw().contains(emoji.getAsMention())) {
+                                            if (emoji != null && !isNitro(member.getUser())) {
                                                 ret.append(emoji.getAsMention());
                                                 if(!used)
                                                     channel.sendTyping().complete();
