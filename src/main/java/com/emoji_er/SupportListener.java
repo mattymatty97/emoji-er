@@ -73,7 +73,6 @@ public class SupportListener extends ListenerAdapter {
             DatagramPacket sendPacket = new DatagramPacket(sendData,40, IPAddress, 23445);
             clientSocket.send(sendPacket);
             clientSocket.close();
-            System.out.println("sending: "+action);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
