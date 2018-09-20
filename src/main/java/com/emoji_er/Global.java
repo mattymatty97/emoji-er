@@ -7,7 +7,7 @@ import java.util.*;
 
 public class Global {
     public static final String version = "v1.11.0 - em prj";
-    public static final String build = "5";
+    public static final String build = "6";
 
 
     private static Global gbl = new Global();
