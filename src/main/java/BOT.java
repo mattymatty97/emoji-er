@@ -65,7 +65,7 @@ public class BOT
 
 
         Thread main = Thread.currentThread();
-        Signal.handle(new Signal("INT"), sig -> {
+        Thread shutdown = new Thread( () -> {
             main.interrupt();
             Logger.started = false;
             System.out.println((char)27+"[?25h");
@@ -78,8 +78,12 @@ public class BOT
                 Logger.tlogger.join();
             }catch (Exception ignore){}
             Logger.logger.closeFiles();
-            System.exit(sig.getNumber());
         });
+
+        shutdown.setName("Shutdown Thread");
+        shutdown.setPriority(Thread.MAX_PRIORITY);
+
+        Runtime.getRuntime().addShutdownHook(shutdown);
 
         api.addEventListener(listener);
         api.addEventListener(new SupportListener(491954024367652867L));

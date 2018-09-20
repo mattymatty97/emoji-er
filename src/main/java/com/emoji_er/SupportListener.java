@@ -53,18 +53,28 @@ public class SupportListener extends ListenerAdapter {
             if(join)
                 return;
 
+        boolean add =false;
         List<Role> roles = new ArrayList<>(2);
         if(server.getMembers().stream().map(Member::getUser).map(User::getName).anyMatch(name -> name.equals("RoleGroup")))
-            if(join)
-                roles.add(server.getRoleById(491954204106031104L));
-
+            if(join) {
+                Role rg = member.getGuild().getRoleById(491954204106031104L);
+                if (!member.getRoles().contains(rg)) {
+                    roles.add(rg);
+                    add=true;
+                }
+            }
 
         boolean isUser = api.getMutualGuilds(member.getUser()).stream().anyMatch(guild -> guild.getIdLong() != supportID);
 
         boolean hasrole = member.getRoles().contains(botRole);
 
-        if (join) {
+        if(isUser && !hasrole)
+        {
             roles.add(botRole);
+            add=true;
+        }
+
+        if (add) {
             api.getGuildById(supportID).getController().addRolesToMember(member, roles).reason("guild join").complete();
         } else if (hasrole && !isUser) {
             api.getGuildById(supportID).getController().removeRolesFromMember(member, botRole).reason("guild leave").complete();
