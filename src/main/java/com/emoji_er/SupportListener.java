@@ -17,6 +17,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.concurrent.locks.Lock;
 
 @SuppressWarnings("Duplicates")
 public class SupportListener extends ListenerAdapter {
@@ -70,7 +71,7 @@ public class SupportListener extends ListenerAdapter {
             outToServer.writeBytes(action);
             clientSocket.close();
         } catch (Exception ignored) {
-            System.out.println("Execption on sending: "+ action);
+            Logger.logger.logGeneral("Execption on sending: "+ action);
         }
     }
 
