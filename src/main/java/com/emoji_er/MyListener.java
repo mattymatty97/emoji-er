@@ -152,14 +152,7 @@ public class MyListener implements EventListener {
         ResourceBundle output = ResourceBundle.getBundle("messages");
         ScheduledFuture typing;
         if (checkConnection()) {
-            if (!PermissionUtil.checkPermission(event.getTextChannel(), event.getGuild().getSelfMember(), Permission.MESSAGE_EMBED_LINKS)) {
-                event.getTextChannel().sendMessage("Error i'm unable to send embedded messages, pls change my permissions! ( EMBED_LIKNS )").queue();
-                return;
-            }
-            if (!PermissionUtil.checkPermission(event.getTextChannel(), event.getGuild().getSelfMember(), Permission.MESSAGE_EXT_EMOJI)) {
-                event.getTextChannel().sendMessage("Error i'm unable to send external emoticons, pls change my permissions! ( USE_EXTERNAL_EMOJI )").queue();
-                return;
-            }
+
             Guild guild = event.getGuild();
 
             updateDatabase(guild, output);
@@ -211,6 +204,7 @@ public class MyListener implements EventListener {
 
 //------USER-------------------LIST----------------------------------------
                         case "list":
+                            if (checks(event)) return;
                             typing = channel.sendTyping().queueAfter(1,TimeUnit.SECONDS);
                             Logger.logger.logMessage("list", message);
                             if (args.length >= 2) {
@@ -230,6 +224,7 @@ public class MyListener implements EventListener {
                             break;
 //------USER-------------------SERVER--------------------------------------
                         case "servers":
+                            if (checks(event)) return;
                             typing = channel.sendTyping().queueAfter(1,TimeUnit.SECONDS);
                             Logger.logger.logMessage("servers", message);
                             String result = botGuild.printServers(guild.getIdLong(), event.getJDA());
@@ -239,6 +234,7 @@ public class MyListener implements EventListener {
                             break;
 //------USER-------------------REACT---------------------------------------
                         case "react": {
+                            if (checks(event)) return;
                             if(args.length>1 && message.getContentDisplay().split(" +")[1].matches(":?(\\w+\\.)?\\w+:?")){
                                 String arg = message.getContentDisplay().split(" +")[1];
                                 Logger.logger.logMessage("react", message);
@@ -312,6 +308,7 @@ public class MyListener implements EventListener {
                             break;
 //------MOD--------------------REGISTER------------------------------------
                         case "register":
+                            if (checks(event)) return;
                             typing = channel.sendTyping().queueAfter(1,TimeUnit.SECONDS);
                             Logger.logger.logMessage("register", message);
                             if (member.isOwner() || botGuild.memberIsMod(member, guild.getIdLong())) {
@@ -333,6 +330,7 @@ public class MyListener implements EventListener {
                             break;
 //------MOD------------------UNREGISTER------------------------------------
                         case "unregister":
+                            if (checks(event)) return;
                             typing = channel.sendTyping().queueAfter(1,TimeUnit.SECONDS);
                             Logger.logger.logMessage("unregister", message);
                             if (member.isOwner() || botGuild.memberIsMod(member, guild.getIdLong())) {
@@ -345,6 +343,7 @@ public class MyListener implements EventListener {
                             break;
 //------MOD------------------MODROLE---------------------------------------
                         case "modrole":
+                            if (checks(event)) return;
                             typing = channel.sendTyping().queueAfter(1,TimeUnit.SECONDS);
                             //if member is allowed
                             if (member.isOwner() || botGuild.memberIsMod(member, guild.getIdLong())) {
@@ -398,6 +397,7 @@ public class MyListener implements EventListener {
                             break;
 //------MOD------------------TOGGLE---------------------------------------
                         case "toggle":
+                            if (checks(event)) return;
                             typing = channel.sendTyping().queueAfter(1,TimeUnit.SECONDS);
                             Logger.logger.logMessage("toggle", message);
                             if (member.isOwner() || botGuild.memberIsMod(member, guild.getIdLong())) {
@@ -410,6 +410,7 @@ public class MyListener implements EventListener {
                             break;
 //------MOD------------------STATUS---------------------------------------
                         case "status":
+                            if (checks(event)) return;
                             typing = channel.sendTyping().queueAfter(1,TimeUnit.SECONDS);
                             Logger.logger.logMessage("status", message);
                             channel.sendMessage(botGuild.printStatus(guild, output, messageId)).queue();
@@ -418,6 +419,7 @@ public class MyListener implements EventListener {
                             break;
 //------MOD------------------ENABLE---------------------------------------
                         case "enable":
+                            if (checks(event)) return;
                             typing = channel.sendTyping().queueAfter(1,TimeUnit.SECONDS);
                             Logger.logger.logMessage("enable", message);
                             if (member.isOwner() || botGuild.memberIsMod(member, guild.getIdLong())) {
@@ -434,6 +436,7 @@ public class MyListener implements EventListener {
                             break;
 //------MOD------------------DISABLE---------------------------------------
                         case "disable":
+                            if (checks(event)) return;
                             typing = channel.sendTyping().queueAfter(1,TimeUnit.SECONDS);
                             Logger.logger.logMessage("disable", message);
                             if (member.isOwner() || botGuild.memberIsMod(member, guild.getIdLong())) {
@@ -498,6 +501,7 @@ public class MyListener implements EventListener {
                                 }
                             }
                             if (used) {
+                                if (checks(event)) return;
                                 Logger.logger.logMessage("an emoji", message);
                                 if (PermissionUtil.checkPermission(event.getGuild().getTextChannelById(channel.getId()), event.getGuild().getSelfMember(), Permission.MESSAGE_MANAGE)) {
                                     message.delete().queue();
@@ -518,6 +522,18 @@ public class MyListener implements EventListener {
             Reconnector.reconnect();
         }
 
+    }
+
+    private boolean checks(MessageReceivedEvent event) {
+        if (!PermissionUtil.checkPermission(event.getTextChannel(), event.getGuild().getSelfMember(), Permission.MESSAGE_EMBED_LINKS)) {
+            event.getTextChannel().sendMessage("Error i'm unable to send embedded messages, pls change my permissions! ( EMBED_LIKNS )").queue();
+            return true;
+        }
+        if (!PermissionUtil.checkPermission(event.getTextChannel(), event.getGuild().getSelfMember(), Permission.MESSAGE_EXT_EMOJI)) {
+            event.getTextChannel().sendMessage("Error i'm unable to send external emoticons, pls change my permissions! ( USE_EXTERNAL_EMOJI )").queue();
+            return true;
+        }
+        return false;
     }
 
     private boolean isNitro(User user)
