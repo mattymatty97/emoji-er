@@ -1,14 +1,10 @@
 import com.emoji_er.*;
-
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
-
-import java.sql.*;
-
 import net.dv8tion.jda.core.entities.Game;
-import sun.misc.Signal;
 import org.fusesource.jansi.AnsiConsole;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;

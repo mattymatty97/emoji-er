@@ -3,11 +3,14 @@ package com.emoji_er;
 import net.dv8tion.jda.core.entities.MessageChannel;
 
 import java.io.FileWriter;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Queue;
 
 public class Global {
     public static final String version = "v1.11.3 - em prj";
-    public static final String build = "1";
+    public static final String build = "2";
 
 
     private static Global gbl = new Global();
