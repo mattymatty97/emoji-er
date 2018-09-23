@@ -455,7 +455,7 @@ public class MyListener implements EventListener {
                     /*--------------------EMOJI REPLACEMENT------------------*/
                 } else {
                     if (botGuild.emojiEnabled(guild)) {
-                        String args[] = message.getContentDisplay().split(System.getenv("DEFAULT_EMOJI_PREFIX"));
+                        String args[] = message.getContentRaw().split("( " + System.getenv("DEFAULT_EMOJI_PREFIX") + ")|("+ System.getenv("DEFAULT_EMOJI_PREFIX") + " )");
                         if (args.length >= 1) {
                             StringBuilder ret = new StringBuilder(args[0]);
                             boolean found = false;
