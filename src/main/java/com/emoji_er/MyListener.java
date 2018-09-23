@@ -165,10 +165,10 @@ public class MyListener implements EventListener {
             //get id
             long messageId = message.getIdLong();
 
-                if (message.getContentDisplay().matches(System.getenv("DEFAULT_EMOJI_PREFIX") + "emoji\\.\\w+" + System.getenv("DEFAULT_EMOJI_PREFIX")) || message.getContentDisplay().matches(System.getenv("DEFAULT_EMOJI_PREFIX") + "emoji\\.\\w+" + System.getenv("DEFAULT_EMOJI_PREFIX") + " .+")) {
+                if (message.getContentDisplay().matches(System.getenv("DEFAULT_EMOJI_PREFIX").trim() + "emoji\\.\\w+" + System.getenv("DEFAULT_EMOJI_PREFIX").trim()) || message.getContentDisplay().matches(System.getenv("DEFAULT_EMOJI_PREFIX") + "emoji\\.\\w+" + System.getenv("DEFAULT_EMOJI_PREFIX") + " .+")) {
 
                     String args[] = message.getContentRaw().split(" +");
-                    String command = args[0].split(System.getenv("DEFAULT_EMOJI_PREFIX"))[1].split("\\.")[1];
+                    String command = args[0].split(System.getenv("DEFAULT_EMOJI_PREFIX").trim())[1].split("\\.")[1];
                     switch (command) {
 //------USER---------------------HELP--------------------------------------
 
@@ -453,7 +453,7 @@ public class MyListener implements EventListener {
                     /*--------------------EMOJI REPLACEMENT------------------*/
                 } else {
                     if (botGuild.emojiEnabled(guild)) {
-                        String args[] = message.getContentRaw().split("(( |^)" + System.getenv("DEFAULT_EMOJI_PREFIX") + ")|("+ System.getenv("DEFAULT_EMOJI_PREFIX") + "( |$))");
+                        String args[] = message.getContentRaw().split("((^| +)"+System.getenv("DEFAULT_EMOJI_PREFIX").trim()+")|("+System.getenv("DEFAULT_EMOJI_PREFIX").trim()+"( +|$))");
                         if (args.length >= 1) {
                             StringBuilder ret = new StringBuilder(args[0]);
                             boolean found = false;
