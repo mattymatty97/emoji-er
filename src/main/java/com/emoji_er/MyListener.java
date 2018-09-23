@@ -17,7 +17,6 @@ import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
-import org.apache.logging.log4j.core.util.SystemMillisClock;
 import org.json.JSONObject;
 
 import java.awt.*;
@@ -30,7 +29,6 @@ import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
-
 
 import static org.fusesource.jansi.Ansi.ansi;
 
@@ -455,7 +453,7 @@ public class MyListener implements EventListener {
                     /*--------------------EMOJI REPLACEMENT------------------*/
                 } else {
                     if (botGuild.emojiEnabled(guild)) {
-                        String args[] = message.getContentRaw().split("( " + System.getenv("DEFAULT_EMOJI_PREFIX") + ")|("+ System.getenv("DEFAULT_EMOJI_PREFIX") + " )");
+                        String args[] = message.getContentRaw().split("(( |^)" + System.getenv("DEFAULT_EMOJI_PREFIX") + ")|("+ System.getenv("DEFAULT_EMOJI_PREFIX") + "( |$))");
                         if (args.length >= 1) {
                             StringBuilder ret = new StringBuilder(args[0]);
                             boolean found = false;
