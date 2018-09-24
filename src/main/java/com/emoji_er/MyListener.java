@@ -515,7 +515,7 @@ public class MyListener implements EventListener {
                                 String msg = ret.toString();
                                 for (User u : message.getMentionedUsers())
                                 {
-                                    msg = msg.replace("@"+u.getName()+"#"+u.getDiscriminator(),u.getAsMention());
+                                    msg = msg.replace("@"+u.getName(),u.getAsMention());
                                 }
                                 for (TextChannel ch : message.getMentionedChannels())
                                 {
