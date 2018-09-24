@@ -453,7 +453,7 @@ public class MyListener implements EventListener {
                     /*--------------------EMOJI REPLACEMENT------------------*/
                 } else {
                     if (botGuild.emojiEnabled(guild)) {
-                        String args[] = message.getContentRaw().split("((^| +)"+System.getenv("DEFAULT_EMOJI_PREFIX").trim()+")|("+System.getenv("DEFAULT_EMOJI_PREFIX").trim()+"( +|$))");
+                        String args[] = message.getContentDisplay().split(System.getenv("DEFAULT_EMOJI_PREFIX").trim());
                         if (args.length >= 1) {
                             StringBuilder ret = new StringBuilder(args[0]);
                             boolean found = false;
@@ -467,11 +467,13 @@ public class MyListener implements EventListener {
                                             Emote emoji;
                                             emoji = botGuild.getEmoji(arg, guild.getIdLong(), event.getJDA());
                                             if (emoji != null) {
-                                                ret.append(emoji.getAsMention());
-                                                if(!used)
-                                                    channel.sendTyping().complete();
-                                                found = true;
-                                                used = true;
+                                                if(!message.getEmotes().contains(emoji)) {
+                                                    ret.append(emoji.getAsMention());
+                                                    if (!used)
+                                                        channel.sendTyping().complete();
+                                                    found = true;
+                                                    used = true;
+                                                }
                                             }
                                         }else if(arg.matches("\\w+")){
                                             Emote emoji;
@@ -480,12 +482,14 @@ public class MyListener implements EventListener {
                                             }catch (IndexOutOfBoundsException ex) {
                                                 emoji = null;
                                             }
-                                            if (emoji != null && !message.getContentRaw().contains(emoji.getAsMention())) {
-                                                ret.append(emoji.getAsMention());
-                                                if(!used)
-                                                    channel.sendTyping().complete();
-                                                found = true;
-                                                used = true;
+                                            if (emoji != null) {
+                                                if(!message.getEmotes().contains(emoji)) {
+                                                    ret.append(emoji.getAsMention());
+                                                    if (!used)
+                                                        channel.sendTyping().complete();
+                                                    found = true;
+                                                    used = true;
+                                                }
                                             }
                                         }
                                     }
@@ -508,7 +512,21 @@ public class MyListener implements EventListener {
                                 EmbedBuilder eb = new EmbedBuilder();
                                 eb.setColor(member.getColor());
                                 eb.setAuthor(member.getEffectiveName(), null, member.getUser().getAvatarUrl());
+                                String msg = ret.toString();
+                                for (User u : message.getMentionedUsers())
+                                {
+                                    msg = msg.replace("@"+u.getName()+"#"+u.getDiscriminator(),u.getAsMention());
+                                }
+                                for (TextChannel ch : message.getMentionedChannels())
+                                {
+                                    msg = msg.replace("#"+ch.getName(),ch.getAsMention());
+                                }
+                                for (Emote em : message.getEmotes())
+                                {
+                                    msg = msg.replaceAll("([^<]|^):"+em.getName()+":([^>]|$)","$1"+em.getAsMention()+"$2");
+                                }
                                 channel.sendMessage(eb.build()).queue();
+
                                 channel.sendMessage(ret.toString()).queue();
                                 Logger.logger.logReponse("message reposted", guild, messageId);
                             }
