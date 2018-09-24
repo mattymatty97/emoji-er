@@ -85,9 +85,16 @@ public class MyListener implements EventListener {
             String topic = ev.getMessage().getTextChannel().getTopic();
             //get message
             Message message = ev.getMessage();
-            if ( (topic == null || !topic.contains(":emoji.deny:")) &&
-                    message.getContentDisplay().matches(".*"+ System.getenv("DEFAULT_EMOJI_PREFIX") +"(\\w+\\.)?\\w+"+ System.getenv("DEFAULT_EMOJI_PREFIX") + ".*"))
-                eventThreads.execute(() -> onMessageReceived((MessageReceivedEvent) event));
+            if ( (topic == null || !topic.contains(":emoji.deny:"))) {
+                char[] arr = message.getContentDisplay().toCharArray();
+                int ctn=0;
+                for (char c : arr)
+                    if(c==System.getenv("DEFAULT_EMOJI_PREFIX").charAt(0))
+                        if(++ctn == 2)
+                            break;
+                if(ctn==2)
+                    eventThreads.execute(() -> onMessageReceived((MessageReceivedEvent) event));
+            }
         }
         else if (event instanceof RoleDeleteEvent)
             eventThreads.execute(() -> onRoleDelete((RoleDeleteEvent) event));
