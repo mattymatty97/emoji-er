@@ -458,7 +458,7 @@ public class MyListener implements EventListener {
                         int ctn=0;
                         HashSet<Emote> emotes = new HashSet<>(message.getEmotes());
                         for (Emote e : emotes){
-                               msg = msg.replaceAll(e.getAsMention(),"\007"+ctn+"\007");
+                               msg = msg.replace(e.getAsMention(),"\007"+ctn+"\007");
                                ctn++;
                         }
 
@@ -526,7 +526,7 @@ public class MyListener implements EventListener {
 
                                 ctn=0;
                                 for (Emote e : emotes){
-                                    msg = msg.replaceAll("\\007"+ctn+"\\007",e.getAsMention());
+                                    msg = msg.replace("\007"+ctn+"\007",e.getAsMention());
                                     ctn++;
                                 }
 
