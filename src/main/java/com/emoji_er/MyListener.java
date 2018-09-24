@@ -476,13 +476,11 @@ public class MyListener implements EventListener {
                                             Emote emoji;
                                             emoji = botGuild.getEmoji(arg, guild.getIdLong(), event.getJDA());
                                             if (emoji != null) {
-                                                if(!message.getEmotes().contains(emoji)) {
-                                                    ret.append(emoji.getAsMention());
-                                                    if (!used)
-                                                        channel.sendTyping().complete();
-                                                    found = true;
-                                                    used = true;
-                                                }
+                                                ret.append(emoji.getAsMention());
+                                                if (!used)
+                                                    channel.sendTyping().complete();
+                                                found = true;
+                                                used = true;
                                             }
                                         }else if(arg.matches("\\w+")){
                                             Emote emoji;
@@ -492,13 +490,11 @@ public class MyListener implements EventListener {
                                                 emoji = null;
                                             }
                                             if (emoji != null) {
-                                                if(!message.getEmotes().contains(emoji)) {
-                                                    ret.append(emoji.getAsMention());
-                                                    if (!used)
-                                                        channel.sendTyping().complete();
-                                                    found = true;
-                                                    used = true;
-                                                }
+                                                ret.append(emoji.getAsMention());
+                                                if (!used)
+                                                    channel.sendTyping().complete();
+                                                found = true;
+                                                used = true;
                                             }
                                         }
                                     }
