@@ -285,6 +285,7 @@ public class MyListener implements EventListener {
                                 messages.stream().filter(m2->m2.getEmotes().size()<20).forEach(m2 -> m2.addReaction(emoji).complete());
 
                                 long stop = System.currentTimeMillis();
+                                List<MessageReaction> reactions = messages.stream().map(m2 -> m2.getChannel().getMessageById(m2.getId()).complete()).flatMap((Message m2)-> m2.getReactions().stream()).collect(Collectors.toList());
                                 try {
                                     Thread.sleep(11000 - (stop-start));
                                 } catch (InterruptedException ex) {
@@ -293,7 +294,6 @@ public class MyListener implements EventListener {
 
                                 m.delete().queue();
 
-                                List<MessageReaction> reactions = messages.stream().map(m2 -> m2.getChannel().getMessageById(m2.getId()).complete()).flatMap((Message m2)-> m2.getReactions().stream()).collect(Collectors.toList());
                                 reactions.forEach(r ->r.removeReaction().queue());
 
                                 Logger.logger.logReponse("success", guild, messageId);
