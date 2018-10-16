@@ -282,7 +282,7 @@ public class MyListener implements EventListener {
                                 for (int ctn=1;ctn<=10;ctn++){
                                     m.editMessage(output.getString("emoji-react-success").replace("{time}",String.valueOf(10-ctn)).replace("{user}",member.getAsMention())).queueAfter(ctn,TimeUnit.SECONDS);
                                 }
-                                messages.stream().filter(m2->m2.getEmotes().size()<20).forEach(m2 -> m2.addReaction(emoji).complete());
+                                messages.stream().filter(m2->m2.getReactions().size()<20).forEach(m2 -> m2.addReaction(emoji).complete());
 
                                 long stop = System.currentTimeMillis();
                                 List<MessageReaction> reactions = messages.stream().map(m2 -> m2.getChannel().getMessageById(m2.getId()).complete()).flatMap((Message m2)-> m2.getReactions().stream()).collect(Collectors.toList());
