@@ -277,15 +277,16 @@ public class MyListener implements EventListener {
                                 history.retrievePast(10).complete();
                                 List<Message> messages = history.getRetrievedHistory();
 
+                                long start = System.currentTimeMillis();
                                 Message m = channel.sendMessage(output.getString("emoji-react-success").replace("{time}","6").replace("{user}",member.getAsMention())).complete();
-
-                                messages.forEach(m2 -> m2.addReaction(emoji).complete());
-                                for (int ctn=5;ctn>0;ctn--){
-                                        m.editMessage(output.getString("emoji-react-success").replace("{time}",String.valueOf(ctn)).replace("{user}",member.getAsMention())).queueAfter(5-ctn,TimeUnit.SECONDS);
+                                for (int ctn=1;ctn<=5;ctn++){
+                                    m.editMessage(output.getString("emoji-react-success").replace("{time}",String.valueOf(6-ctn)).replace("{user}",member.getAsMention())).queueAfter(ctn,TimeUnit.SECONDS);
                                 }
+                                messages.stream().filter(m2->m2.getEmotes().size()<20).forEach(m2 -> m2.addReaction(emoji).complete());
 
+                                long stop = System.currentTimeMillis();
                                 try {
-                                    Thread.sleep(5000);
+                                    Thread.sleep(5000 - (stop-start));
                                 } catch (InterruptedException ex) {
                                     return;
                                 }

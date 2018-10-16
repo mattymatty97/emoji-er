@@ -9,8 +9,8 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 
 public class Global {
-    public static final String version = "v1.11.4 - em prj";
-    public static final String build = "6";
+    public static final String version = "v1.11.5 - em prj";
+    public static final String build = "1";
 
 
     private static Global gbl = new Global();
