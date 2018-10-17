@@ -281,7 +281,11 @@ public class MyListener implements EventListener {
                                 for (int ctn=1;ctn<=10;ctn++){
                                     m.editMessage(output.getString("emoji-react-success").replace("{time}",String.valueOf(10-ctn)).replace("{user}",member.getAsMention())).queueAfter(ctn,TimeUnit.SECONDS);
                                 }
-                                messages.forEach(m2 -> m2.addReaction(emoji).setCheck(() -> m2.getReactions().size()<20).complete());
+                                messages.forEach(m2 -> {
+                                    try {
+                                        m2.addReaction(emoji).setCheck(() -> m2.getReactions().size()<20).complete();
+                                    }catch(CancellationException ignored) {}
+                                });
 
                                 long stop = System.currentTimeMillis();
                                 try {
