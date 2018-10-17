@@ -28,7 +28,6 @@ import java.sql.Statement;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
-import java.util.stream.Collectors;
 
 import static org.fusesource.jansi.Ansi.ansi;
 
@@ -282,19 +281,22 @@ public class MyListener implements EventListener {
                                 for (int ctn=1;ctn<=10;ctn++){
                                     m.editMessage(output.getString("emoji-react-success").replace("{time}",String.valueOf(10-ctn)).replace("{user}",member.getAsMention())).queueAfter(ctn,TimeUnit.SECONDS);
                                 }
-                                messages.stream().filter(m2->m2.getReactions().size()<20).forEach(m2 -> m2.addReaction(emoji).complete());
+                                messages.forEach(m2 -> m2.addReaction(emoji).setCheck(() -> m2.getReactions().size()<20).complete());
 
                                 long stop = System.currentTimeMillis();
-                                List<MessageReaction> reactions = messages.stream().map(m2 -> m2.getChannel().getMessageById(m2.getId()).complete()).flatMap((Message m2)-> m2.getReactions().stream()).collect(Collectors.toList());
                                 try {
                                     Thread.sleep(11000 - (stop-start));
                                 } catch (InterruptedException ex) {
                                     return;
                                 }
 
+                                history = reactChannel.getHistoryBefore(m,10).complete();
+
                                 m.delete().queue();
 
-                                reactions.forEach(r ->r.removeReaction().queue());
+
+                                history.getRetrievedHistory().stream().flatMap((Message m2)-> m2.getReactions().stream().filter(MessageReaction::isSelf))
+                                        .forEach(r ->r.removeReaction().queue());
 
                                 Logger.logger.logReponse("success", guild, messageId);
                             }
