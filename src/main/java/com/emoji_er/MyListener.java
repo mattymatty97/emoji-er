@@ -11,6 +11,7 @@ import net.dv8tion.jda.core.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.role.RoleDeleteEvent;
 import net.dv8tion.jda.core.exceptions.InsufficientPermissionException;
+import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import net.dv8tion.jda.core.hooks.EventListener;
 import net.dv8tion.jda.core.utils.PermissionUtil;
 import okhttp3.MediaType;
@@ -283,8 +284,8 @@ public class MyListener implements EventListener {
                                 }
                                 messages.forEach(m2 -> {
                                     try {
-                                        m2.addReaction(emoji).setCheck(() -> m2.getReactions().size()<20).complete();
-                                    }catch(CancellationException ignored) {}
+                                        m2.addReaction(emoji).complete(false);
+                                    }catch(RateLimitedException ignored) {}
                                 });
 
                                 long stop = System.currentTimeMillis();
