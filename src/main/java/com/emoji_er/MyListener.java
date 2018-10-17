@@ -11,8 +11,8 @@ import net.dv8tion.jda.core.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.role.RoleDeleteEvent;
 import net.dv8tion.jda.core.exceptions.InsufficientPermissionException;
-import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import net.dv8tion.jda.core.hooks.EventListener;
+import net.dv8tion.jda.core.requests.RequestFuture;
 import net.dv8tion.jda.core.utils.PermissionUtil;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -29,6 +29,7 @@ import java.sql.Statement;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.function.Function;
 
 import static org.fusesource.jansi.Ansi.ansi;
 
@@ -283,9 +284,23 @@ public class MyListener implements EventListener {
                                     m.editMessage(output.getString("emoji-react-success").replace("{time}",String.valueOf(10-ctn)).replace("{user}",member.getAsMention())).queueAfter(ctn,TimeUnit.SECONDS);
                                 }
                                 messages.forEach(m2 -> {
-                                    try {
-                                        m2.addReaction(emoji).complete(false);
-                                    }catch(RateLimitedException ignored) {}
+                                        RequestFuture<Void> rf = m2.addReaction(emoji).submit(true);
+                                        rf.exceptionally(new Function<Throwable, Void>(){
+                                            @Override
+                                            public Void apply(Throwable throwable) {
+                                                return null;
+                                            }
+
+                                            @Override
+                                            public <V> Function<V, Void> compose(Function<? super V, ? extends Throwable> before) {
+                                                return null;
+                                            }
+
+                                            @Override
+                                            public <V> Function<Throwable, V> andThen(Function<? super Void, ? extends V> after) {
+                                                return null;
+                                            }
+                                        });
                                 });
 
                                 long stop = System.currentTimeMillis();
